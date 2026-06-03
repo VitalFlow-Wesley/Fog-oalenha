@@ -1,0 +1,162 @@
+import { useMemo, useState } from 'react'
+import { products } from '../data/mockData.js'
+import TableCard from '../components/TableCard.jsx'
+import { Printer, X } from 'lucide-react'
+
+const categories = [...new Set(products.map(p => p.category))]
+
+export default function Mesas({ tables, setTables }) {
+  const [selected, setSelected] = useState(null)
+  const [activeCategory, setActiveCategory] = useState(categories[0])
+  const [observation, setObservation] = useState('')
+
+  const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
+
+  function updateTable(id, patch) {
+    setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
+  }
+
+  function openTable(t) {
+    if (t.status === 'livre') {
+      const updated = { ...t, status: 'ocupada', guests: 2, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
+      updateTable(t.id, updated)
+      setSelected(updated)
+      return
+    }
+    setSelected(t)
+  }
+
+  function addItem(product) {
+    const current = tables.find(t => t.id === selected.id)
+    const existing = current.items.find(i => i.id === product.id && i.observation === observation)
+    let items
+    if (existing) {
+      items = current.items.map(i => i.id === product.id && i.observation === observation ? { ...i, qty: i.qty + 1 } : i)
+    } else {
+      items = [...current.items, { ...product, qty: 1, observation }]
+    }
+    updateTable(current.id, { items, status: 'ocupada' })
+    setObservation('')
+  }
+
+  function changeQty(item, delta) {
+    const current = tables.find(t => t.id === selected.id)
+    const items = current.items
+      .map(i => i.id === item.id && i.observation === item.observation ? { ...i, qty: i.qty + delta } : i)
+      .filter(i => i.qty > 0)
+    updateTable(current.id, { items })
+  }
+
+  function sendKitchen() {
+    updateTable(selected.id, { status: 'enviado', kitchenStatus: 'novo' })
+  }
+
+  function requestBill() {
+    updateTable(selected.id, { status: 'conta', billRequested: true })
+  }
+
+  function closeTable() {
+    updateTable(selected.id, { status: 'livre', guests: 0, openedAt: null, items: [], kitchenStatus: null, billRequested: false })
+    setSelected(null)
+  }
+
+  const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
+  const kitchenItems = table?.items.filter(i => i.imprimeCozinha) || []
+  const filteredProducts = products.filter(p => p.category === activeCategory)
+
+  return (
+    <div className="page">
+      <div className="pageHeader">
+        <div>
+          <span className="eyebrow">Salão</span>
+          <h1>Mesas e comandas</h1>
+        </div>
+      </div>
+
+      <div className="tablesGrid">
+        {tables.map(table => <TableCard table={table} key={table.id} onOpen={openTable} />)}
+      </div>
+
+      {table && (
+        <div className="drawerOverlay">
+          <aside className="drawer">
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Comanda aberta</span>
+                <h2>Mesa {table.number}</h2>
+              </div>
+              <button className="iconBtn" onClick={() => setSelected(null)}><X size={22} /></button>
+            </div>
+
+            <div className="drawerColumns">
+              <section>
+                <h3>Itens da comanda</h3>
+                <div className="itemsList">
+                  {table.items.length === 0 && <p className="empty">Nenhum item lançado ainda.</p>}
+                  {table.items.map((item, index) => (
+                    <div className="orderItem" key={`${item.id}-${index}-${item.observation}`}>
+                      <div>
+                        <strong>{item.name}</strong>
+                        <span>{item.localSaida === 'bar' ? 'Bar • não imprime' : 'Cozinha/churrasqueira • imprime'}</span>
+                        {item.observation && <small>Obs: {item.observation}</small>}
+                      </div>
+                      <div className="qty">
+                        <button onClick={() => changeQty(item, -1)}>-</button>
+                        <b>{item.qty}</b>
+                        <button onClick={() => changeQty(item, 1)}>+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="billBox">
+                  <span>Total da mesa</span>
+                  <strong>R$ {total.toFixed(2).replace('.', ',')}</strong>
+                </div>
+
+                <div className="actionsRow">
+                  <button className="secondaryBtn" onClick={sendKitchen}>Enviar cozinha</button>
+                  <button className="secondaryBtn" onClick={requestBill}>Solicitar conta</button>
+                  <button className="dangerBtn" onClick={closeTable}>Fechar mesa</button>
+                </div>
+
+                <div className="printPreview">
+                  <div className="printTitle"><Printer size={18} /> Simulação de impressão</div>
+                  <strong>Pedido Cozinha • Mesa {table.number}</strong>
+                  {kitchenItems.length === 0 ? (
+                    <span>Nenhum item de cozinha para imprimir.</span>
+                  ) : (
+                    kitchenItems.map((item, index) => (
+                      <span key={`${item.id}-print-${index}`}>{item.qty}x {item.name}{item.observation ? ` — ${item.observation}` : ''}</span>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section>
+                <h3>Adicionar pedido</h3>
+                <input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex: sem cebola" />
+
+                <div className="categoryTabs">
+                  {categories.map(cat => (
+                    <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{cat}</button>
+                  ))}
+                </div>
+
+                <div className="productGrid">
+                  {filteredProducts.map(product => (
+                    <button className="productCard" key={product.id} onClick={() => addItem(product)}>
+                      <strong>{product.name}</strong>
+                      <span>R$ {product.price.toFixed(2).replace('.', ',')}</span>
+                      <small>{product.imprimeCozinha ? 'Imprime na cozinha' : 'Só registra na mesa'}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  )
+}
