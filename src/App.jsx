@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Sidebar from './components/Sidebar.jsx'
 import Login from './pages/Login.jsx'
-import Home from './pages/Home.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Mesas from './pages/Mesas.jsx'
 import Relatorios from './pages/Relatorios.jsx'
@@ -11,11 +10,14 @@ import { initialUsers } from './data/users.js'
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null)
-  const [page, setPage] = useState('home')
+  const [page, setPage] = useState('mesas')
   const [tables, setTables] = useState(initialTables)
   const [users, setUsers] = useState(initialUsers)
 
-  if (!currentUser) return <Login users={users} onLogin={user => setCurrentUser(user)} />
+  if (!currentUser) return <Login users={users} onLogin={user => {
+    setCurrentUser(user)
+    setPage('mesas')
+  }} />
 
   return (
     <div className="appShell">
@@ -26,7 +28,6 @@ export default function App() {
         onLogout={() => setCurrentUser(null)}
       />
       <main className="content">
-        {page === 'home' && <Home setPage={setPage} />}
         {page === 'dashboard' && <Dashboard tables={tables} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
