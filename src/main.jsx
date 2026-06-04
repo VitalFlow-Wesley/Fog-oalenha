@@ -5,5 +5,6 @@ import './styles.css'
 import './theme.css'
 import './cancel.css'
 import './login-premium.css'
+import './restaurant-tables.css'
 
 createRoot(document.getElementById('root')).render(<App />)
