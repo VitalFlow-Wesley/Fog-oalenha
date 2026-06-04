@@ -35,16 +35,10 @@ export default function Login({ onLogin, users }) {
             <small>Comida caseira • Bar • Churrasco</small>
           </div>
         </div>
-
-        <div className="loginBrandText">
-          <h1>Fogão a Lenha</h1>
-          <p>Gestão simples para atendimento, mesas e pedidos da cozinha.</p>
-        </div>
       </section>
 
       <section className="loginCard">
         <h2>Entrar no sistema</h2>
-        <p>Informe seu acesso de administrador, gerente ou garçom.</p>
 
         <form onSubmit={handleSubmit}>
           <label>
