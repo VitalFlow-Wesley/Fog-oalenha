@@ -2,7 +2,7 @@
   max-width: 1240px;
   min-height: calc(100vh - 32px);
   margin: 0 auto;
-  padding: 34px 34px 28px;
+  padding: 26px 28px 24px;
   border: 1px solid rgba(234, 215, 191, .95);
   border-radius: 26px;
   background:
@@ -17,10 +17,10 @@
 .operationDashboardPage::after {
   content: '❧';
   position: absolute;
-  right: 36px;
-  top: 12px;
-  font-size: 88px;
-  color: rgba(120, 73, 43, .045);
+  right: 28px;
+  top: 8px;
+  font-size: 70px;
+  color: rgba(120, 73, 43, .04);
   transform: rotate(-22deg);
   pointer-events: none;
 }
@@ -29,29 +29,30 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 22px;
-  margin-bottom: 24px;
+  gap: 18px;
+  margin-bottom: 18px;
   position: relative;
   z-index: 1;
 }
 
 .dashboardEyebrow {
   color: #c24928;
-  letter-spacing: .24em;
+  letter-spacing: .22em;
   font-weight: 900;
+  font-size: 12px;
 }
 
 .dashboardEyebrow::before,
 .dashboardEyebrow::after {
   content: '—';
-  margin: 0 8px;
+  margin: 0 7px;
   color: #c24928;
 }
 
 .dashboardHeader h1 {
-  margin-top: 10px;
+  margin-top: 7px;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(40px, 4.1vw, 60px);
+  font-size: clamp(36px, 3.45vw, 50px);
   line-height: .96;
   letter-spacing: -.045em;
   color: #341d13;
@@ -60,8 +61,8 @@
 .dashboardActions {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding-top: 34px;
+  gap: 10px;
+  padding-top: 28px;
 }
 
 .dateSelect,
@@ -69,15 +70,16 @@
   border: 1px solid #ead7bf;
   background: rgba(255, 249, 239, .9);
   color: #3b2419;
-  min-height: 42px;
+  min-height: 38px;
   border-radius: 999px;
-  padding: 0 18px;
+  padding: 0 15px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(90, 45, 20, .05);
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
+  font-size: 14px;
 }
 
 .dashboardRefresh {
@@ -87,72 +89,73 @@
 .dashboardStatsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 18px;
   position: relative;
   z-index: 1;
 }
 
 .dashboardStatCard {
-  min-height: 190px;
+  min-height: 128px;
   background: rgba(255, 253, 248, .92);
   border: 1px solid #ead7bf;
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow: 0 14px 34px rgba(90, 45, 20, .065);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(90, 45, 20, .055);
   position: relative;
   overflow: hidden;
 }
 
 .dashboardStatCard em {
   position: absolute;
-  right: 18px;
-  bottom: 0;
+  right: 12px;
+  bottom: -6px;
   font-style: normal;
-  font-size: 78px;
-  opacity: .07;
+  font-size: 52px;
+  opacity: .06;
   pointer-events: none;
 }
 
 .dashboardStatTop {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 54px;
+  gap: 11px;
+  min-height: 42px;
 }
 
 .dashboardStatIcon {
-  width: 58px;
-  height: 58px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   color: white;
-  box-shadow: 0 12px 24px rgba(90, 45, 20, .12);
+  box-shadow: 0 10px 18px rgba(90, 45, 20, .10);
   flex: 0 0 auto;
 }
 
 .dashboardStatCard h3 {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 21px;
-  line-height: 1.1;
+  font-size: 19px;
+  line-height: 1.05;
   color: #3a2116;
 }
 
 .dashboardStatCard strong {
   display: block;
-  margin-top: 26px;
+  margin-top: 17px;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 42px;
+  font-size: 32px;
   line-height: 1;
   color: #c24928;
 }
 
 .dashboardStatCard span {
   display: block;
-  margin-top: 12px;
+  margin-top: 8px;
   color: #8a6c58;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .dashboardStatCard.fire .dashboardStatIcon { background: linear-gradient(135deg, #c44f2c, #f06738); color: #fff; }
@@ -164,8 +167,8 @@
 
 .dashboardMainGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(320px, .95fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 1.72fr) minmax(300px, .95fr);
+  gap: 16px;
   position: relative;
   z-index: 1;
 }
@@ -173,23 +176,23 @@
 .dashboardPanel {
   background: rgba(255, 253, 248, .92);
   border: 1px solid #ead7bf;
-  border-radius: 24px;
-  padding: 22px;
-  box-shadow: 0 14px 34px rgba(90, 45, 20, .065);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(90, 45, 20, .055);
 }
 
 .dashboardPanelTitle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 15px;
 }
 
 .dashboardPanelTitle > div {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -201,8 +204,8 @@
 .dashboardPanelTitle h2 {
   font-family: Georgia, 'Times New Roman', serif;
   color: #2a160e;
-  font-size: 25px;
-  line-height: 1.1;
+  font-size: 24px;
+  line-height: 1.08;
 }
 
 .dashboardPanelTitle::after {
@@ -217,32 +220,32 @@
 
 .premiumKitchenList {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .premiumKitchenOrder {
   display: grid;
-  grid-template-columns: 58px 1fr auto;
+  grid-template-columns: 50px 1fr auto;
   align-items: center;
-  gap: 16px;
-  min-height: 82px;
-  padding: 14px 16px;
+  gap: 13px;
+  min-height: 66px;
+  padding: 10px 12px;
   border: 1px solid #ecd8c2;
-  border-radius: 18px;
+  border-radius: 15px;
   background: rgba(255, 252, 246, .74);
-  box-shadow: 0 8px 22px rgba(90, 45, 20, .035);
+  box-shadow: 0 6px 16px rgba(90, 45, 20, .03);
 }
 
 .tableNumberBadge {
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, #b63b18, #ef6336);
   color: #fffaf0;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 25px;
+  font-size: 20px;
   font-weight: 900;
 }
 
@@ -250,56 +253,55 @@
   display: block;
   color: #2a160e;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 23px;
-  margin-bottom: 4px;
+  font-size: 21px;
+  margin-bottom: 3px;
 }
 
 .premiumKitchenOrder span {
   color: #5f4435;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .premiumKitchenOrder b {
-  border-left: 1px dashed #e2c8ad;
-  padding-left: 20px;
   color: #315f3d;
   background: #e8f5e6;
   border-radius: 999px;
-  padding: 8px 13px;
+  padding: 7px 11px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   white-space: nowrap;
+  font-size: 13px;
 }
 
 .emptyKitchenState {
-  min-height: 150px;
+  min-height: 118px;
   display: grid;
   place-items: center;
   text-align: center;
   color: #8a6c58;
   border: 1px dashed #e3cdb3;
-  border-radius: 18px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 18px;
 }
 
 .emptyKitchenState svg { color: #c24928; }
-.emptyKitchenState strong { color: #2a160e; margin-top: 8px; }
+.emptyKitchenState strong { color: #2a160e; margin-top: 6px; }
 .emptyKitchenState span { max-width: 420px; }
 
 .viewAllOrders {
-  margin: 20px auto 0;
+  margin: 14px auto 0;
   display: block;
   border: 0;
   background: transparent;
   color: #c24928;
   font-weight: 900;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .operationalPanel {
-  padding: 22px;
+  padding: 18px;
 }
 
 .operationalList {
@@ -309,10 +311,10 @@
 
 .operationalItem {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 44px 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 15px 0;
+  gap: 11px;
+  padding: 12px 0;
   border-bottom: 1px solid #ead7bf;
 }
 
@@ -321,8 +323,8 @@
 }
 
 .operationalIcon {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -336,13 +338,13 @@
 .operationalItem span {
   display: block;
   color: #5f4435;
-  font-size: 13px;
-  margin-bottom: 4px;
+  font-size: 12px;
+  margin-bottom: 3px;
 }
 
 .operationalItem strong {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 22px;
+  font-size: 19px;
   color: #2a160e;
 }
 
@@ -351,27 +353,27 @@
 
 .operationalItem b {
   border-radius: 999px;
-  padding: 7px 11px;
+  padding: 6px 9px;
   background: #e8f5e6;
   color: #315f3d;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .operationalItem.orange b { background: #ffe2d4; color: #c24928; }
 .operationalItem.brown b { background: #e8f5e6; color: #315f3d; }
 
 .operationMessage {
-  margin-top: 18px;
-  min-height: 44px;
-  border-radius: 13px;
+  margin-top: 12px;
+  min-height: 38px;
+  border-radius: 12px;
   background: #fff0d1;
   color: #9a5f18;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 12px 14px;
-  font-size: 13px;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
 }
 
 @media (max-width: 1220px) {
@@ -384,7 +386,7 @@
   }
 
   .operationDashboardPage {
-    padding: 26px;
+    padding: 22px;
   }
 }
 
