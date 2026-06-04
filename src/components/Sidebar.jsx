@@ -1,16 +1,20 @@
 import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings } from 'lucide-react'
 import fogaoLogo from '../assets/fogao-logo.png'
 
-const baseMenu = [
+const waiterMenu = [
+  { key: 'mesas', label: 'Mesas', icon: ReceiptText },
+]
+
+const managerMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+  { key: 'usuarios', label: 'Configurações', icon: Settings },
 ]
 
 export default function Sidebar({ page, setPage, onLogout, currentUser }) {
-  const menu = currentUser?.role === 'admin'
-    ? [...baseMenu, { key: 'usuarios', label: 'Configurações', icon: Settings }]
-    : baseMenu
+  const canSeeManagement = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
+  const menu = canSeeManagement ? managerMenu : waiterMenu
 
   return (
     <aside className="sidebar premiumSidebar compactSidebar">
