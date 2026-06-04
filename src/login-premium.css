@@ -1,163 +1,40 @@
 .loginPremiumPage {
   min-height: 100vh;
-  grid-template-columns: 1.05fr .95fr;
-  gap: 44px;
-  padding: 0 72px;
+  display: flex;
   align-items: center;
-  background:
-    linear-gradient(112deg, rgba(112, 43, 20, .82) 0 11%, transparent 11.1%),
-    radial-gradient(circle at 10% 12%, rgba(76, 31, 16, .18), transparent 25%),
-    radial-gradient(circle at 92% 15%, rgba(223, 190, 142, .30), transparent 32%),
-    radial-gradient(circle at 82% 90%, rgba(211, 78, 43, .12), transparent 28%),
-    linear-gradient(135deg, #fff8ee 0%, #f6e7cf 55%, #fffaf2 100%);
+  justify-content: flex-end;
+  padding: 0 130px 0 40px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   position: relative;
   overflow: hidden;
 }
 
-.loginPremiumPage::before {
-  content: '';
-  position: fixed;
-  left: -365px;
-  top: -270px;
-  width: 900px;
-  height: 900px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 26% 68%, rgba(28, 11, 7, .36), transparent 35%),
-    linear-gradient(135deg, rgba(90, 35, 18, .90), rgba(190, 82, 42, .38));
-  pointer-events: none;
-  opacity: .78;
-}
-
-.loginPremiumPage::after {
-  content: '';
-  position: fixed;
-  right: -210px;
-  bottom: -230px;
-  width: 530px;
-  height: 530px;
-  border-radius: 999px;
-  border: 52px solid rgba(211, 78, 43, .16);
-  pointer-events: none;
-}
-
-.loginPremiumBrand {
-  min-height: 100vh;
-  max-height: 100vh;
-  padding: 34px 10px 38px;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-  color: var(--text);
-  justify-content: center;
-  gap: 8px;
-  position: relative;
-}
-
+.loginPremiumPage::before,
+.loginPremiumPage::after,
+.loginPremiumBrand,
 .loginPremiumBrand::before,
-.loginPremiumBrand::after {
-  display: none;
-}
-
-.fogaoPremiumLogo {
-  width: min(480px, 38vw);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  position: relative;
-  z-index: 2;
-  margin-bottom: -10px;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.fogaoPremiumLogo img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  mix-blend-mode: normal;
-  transform: none;
-  filter: drop-shadow(0 22px 34px rgba(82, 39, 20, .16));
-}
-
-.fogaoPremiumCaption {
-  width: min(430px, 38vw);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 22px;
-  color: #c65b35;
-  letter-spacing: .34em;
-  font-size: 18px;
-  margin-top: -4px;
-  position: relative;
-  z-index: 2;
-}
-
-.fogaoPremiumCaption span {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(198, 91, 53, .62), transparent);
-}
-
-.fogaoPremiumSubtitle {
-  margin: 2px 0 0;
-  color: #3b2419;
-  font-size: 21px;
-  letter-spacing: .01em;
-  position: relative;
-  z-index: 2;
-}
-
-.fogaoPremiumCutlery {
-  margin-top: 10px;
-  color: #d55f37;
-  font-size: 24px;
-  transform: rotate(45deg);
-  opacity: .72;
-  position: relative;
-  z-index: 2;
-}
-
-.brandDecor {
-  position: absolute;
-  pointer-events: none;
-}
-
-.brandDecorLeft {
-  left: -120px;
-  top: 0;
-  width: 250px;
-  height: 100%;
-  opacity: .18;
-  background:
-    radial-gradient(circle at 5% 70%, rgba(34, 12, 7, .45), transparent 48%),
-    linear-gradient(180deg, rgba(96, 44, 22, .34), transparent 65%);
-}
-
+.loginPremiumBrand::after,
+.fogaoPremiumLogo,
+.fogaoPremiumCaption,
+.fogaoPremiumSubtitle,
+.fogaoPremiumCutlery,
+.brandDecor,
+.brandDecorLeft,
 .brandDecorBottom {
-  left: 5%;
-  bottom: 18px;
-  width: 85%;
-  height: 150px;
-  opacity: .28;
-  background:
-    radial-gradient(ellipse at center, rgba(126, 83, 43, .18), transparent 68%),
-    linear-gradient(180deg, transparent, rgba(117, 72, 42, .10));
-  border-radius: 100% 100% 0 0;
+  display: none !important;
 }
 
-.loginPremiumCard {
-  width: min(500px, 100%);
-  justify-self: center;
-  align-self: center;
+.loginPremiumCard,
+.loginOnlyCard {
+  width: min(520px, 92vw);
   border-radius: 34px;
-  padding: 38px 40px;
-  background: rgba(255, 252, 246, .90);
-  border: 1px solid rgba(231, 207, 174, .92);
-  box-shadow: 0 30px 90px rgba(88, 45, 18, .16);
-  backdrop-filter: blur(16px);
+  padding: 42px 44px;
+  background: rgba(255, 252, 246, .88);
+  border: 1px solid rgba(231, 207, 174, .88);
+  box-shadow: 0 30px 90px rgba(88, 45, 18, .18);
+  backdrop-filter: blur(12px);
   position: relative;
   z-index: 2;
 }
@@ -256,51 +133,25 @@
 
 @media (max-width: 1050px) {
   .loginPremiumPage {
-    grid-template-columns: 1fr;
-    padding: 20px;
-    gap: 14px;
-    overflow: auto;
+    justify-content: center;
+    padding: 24px;
+    background-position: center left;
   }
 
-  .loginPremiumBrand {
-    min-height: auto;
-    max-height: none;
-    padding: 10px 20px 0;
-  }
-
-  .fogaoPremiumLogo {
-    width: min(330px, 70vw);
-  }
-
-  .fogaoPremiumCaption {
-    width: min(340px, 75vw);
-  }
-
-  .loginPremiumCard {
-    padding: 30px;
+  .loginPremiumCard,
+  .loginOnlyCard {
+    padding: 34px;
   }
 }
 
 @media (max-width: 680px) {
   .loginPremiumPage {
     padding: 14px;
+    background-position: 32% center;
   }
 
-  .fogaoPremiumLogo {
-    width: min(250px, 74vw);
-  }
-
-  .fogaoPremiumCaption {
-    font-size: 13px;
-    gap: 12px;
-    letter-spacing: .20em;
-  }
-
-  .fogaoPremiumSubtitle {
-    font-size: 16px;
-  }
-
-  .loginPremiumCard {
+  .loginPremiumCard,
+  .loginOnlyCard {
     padding: 24px;
     border-radius: 24px;
   }
