@@ -1,0 +1,47 @@
+.qtyWithCancel {
+  gap: 8px;
+}
+
+.cancelQtyBtn {
+  width: auto !important;
+  min-width: 86px;
+  padding: 0 10px;
+  background: #ffe5df !important;
+  color: var(--danger);
+  border-color: #f1b5a8 !important;
+}
+
+.authModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(45, 23, 12, .48);
+}
+
+.authModal {
+  width: min(480px, 94vw);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 28px 80px rgba(45, 23, 12, .28);
+}
+
+.authModal p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.authModal input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: white;
+  color: var(--text);
+  outline: none;
+}
