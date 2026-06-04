@@ -1,9 +1,7 @@
 const statusLabel = {
   livre: 'Livre',
   ocupada: 'Ocupada',
-  enviado: 'Pedido enviado',
-  preparo: 'Em preparo',
-  pronto: 'Pronto',
+  enviado: 'Enviado para cozinha',
   conta: 'Conta solicitada',
   fechada: 'Fechada'
 }
@@ -14,7 +12,7 @@ export default function TableCard({ table, onOpen }) {
     <button className={`tableCard ${table.status}`} onClick={() => onOpen(table)}>
       <div className="tableTop">
         <strong>Mesa {table.number}</strong>
-        <span>{statusLabel[table.status]}</span>
+        <span>{statusLabel[table.status] || 'Ocupada'}</span>
       </div>
       <div className="tableMeta">
         <span>{table.guests || 0} pessoas</span>
