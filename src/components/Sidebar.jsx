@@ -1,4 +1,4 @@
-import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Users } from 'lucide-react'
+import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings } from 'lucide-react'
 import fogaoLogo from '../assets/fogao-logo.png'
 
 const baseMenu = [
@@ -9,7 +9,7 @@ const baseMenu = [
 
 export default function Sidebar({ page, setPage, onLogout, currentUser }) {
   const menu = currentUser?.role === 'admin'
-    ? [...baseMenu, { key: 'usuarios', label: 'Usuários', icon: Users }]
+    ? [...baseMenu, { key: 'usuarios', label: 'Configurações', icon: Settings }]
     : baseMenu
 
   return (
