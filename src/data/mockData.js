@@ -36,6 +36,6 @@ export const initialTables = Array.from({ length: 12 }, (_, index) => ({
     { ...products[14], qty: 2, observation: '' },
     { ...products[9], qty: 2, observation: '' },
   ] : [],
-  kitchenStatus: index === 0 ? 'novo' : index === 1 ? 'preparo' : index === 2 ? 'pronto' : null,
+  kitchenSent: index === 1 || index === 2,
   billRequested: false
 }))
