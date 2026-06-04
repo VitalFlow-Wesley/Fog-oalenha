@@ -5,10 +5,13 @@ import { Printer, X } from 'lucide-react'
 
 const categories = [...new Set(products.map(p => p.category))]
 
-export default function Mesas({ tables, setTables }) {
+export default function Mesas({ tables, setTables, users, currentUser }) {
   const [selected, setSelected] = useState(null)
   const [activeCategory, setActiveCategory] = useState(categories[0])
   const [observation, setObservation] = useState('')
+  const [cancelRequest, setCancelRequest] = useState(null)
+  const [cancelCredentials, setCancelCredentials] = useState({ username: '', password: '' })
+  const [cancelError, setCancelError] = useState('')
 
   const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
 
@@ -35,16 +38,42 @@ export default function Mesas({ tables, setTables }) {
     } else {
       items = [...current.items, { ...product, qty: 1, observation }]
     }
-    updateTable(current.id, { items, status: 'ocupada' })
+    updateTable(current.id, { items, status: current.status === 'livre' ? 'ocupada' : current.status })
     setObservation('')
   }
 
-  function changeQty(item, delta) {
+  function increaseQty(item) {
     const current = tables.find(t => t.id === selected.id)
-    const items = current.items
-      .map(i => i.id === item.id && i.observation === item.observation ? { ...i, qty: i.qty + delta } : i)
-      .filter(i => i.qty > 0)
+    const items = current.items.map(i => i.id === item.id && i.observation === item.observation ? { ...i, qty: i.qty + 1 } : i)
     updateTable(current.id, { items })
+  }
+
+  function askCancelItem(item) {
+    setCancelRequest(item)
+    setCancelCredentials({ username: '', password: '' })
+    setCancelError('')
+  }
+
+  function confirmCancelItem(event) {
+    event.preventDefault()
+    const authorizedUser = users.find(user =>
+      user.active &&
+      ['admin', 'gerente'].includes(user.role) &&
+      user.username.trim().toLowerCase() === cancelCredentials.username.trim().toLowerCase() &&
+      user.password === cancelCredentials.password
+    )
+
+    if (!authorizedUser) {
+      setCancelError('Cancelamento permitido somente com login e senha de administrador ou gerente.')
+      return
+    }
+
+    const current = tables.find(t => t.id === selected.id)
+    const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation))
+    updateTable(current.id, { items })
+    setCancelRequest(null)
+    setCancelCredentials({ username: '', password: '' })
+    setCancelError('')
   }
 
   function sendKitchen() {
@@ -100,10 +129,10 @@ export default function Mesas({ tables, setTables }) {
                         <span>{item.localSaida === 'bar' ? 'Bar • não imprime' : 'Cozinha/churrasqueira • imprime'}</span>
                         {item.observation && <small>Obs: {item.observation}</small>}
                       </div>
-                      <div className="qty">
-                        <button onClick={() => changeQty(item, -1)}>-</button>
+                      <div className="qty qtyWithCancel">
+                        <button className="cancelQtyBtn" onClick={() => askCancelItem(item)}>Cancelar</button>
                         <b>{item.qty}</b>
-                        <button onClick={() => changeQty(item, 1)}>+</button>
+                        <button onClick={() => increaseQty(item)}>+</button>
                       </div>
                     </div>
                   ))}
@@ -156,6 +185,41 @@ export default function Mesas({ tables, setTables }) {
               </section>
             </div>
           </aside>
+        </div>
+      )}
+
+      {cancelRequest && (
+        <div className="authModalOverlay">
+          <form className="authModal" onSubmit={confirmCancelItem}>
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Autorização obrigatória</span>
+                <h2>Cancelar item</h2>
+              </div>
+              <button type="button" className="iconBtn" onClick={() => setCancelRequest(null)}><X size={22} /></button>
+            </div>
+
+            <p>
+              Para cancelar <strong>{cancelRequest.name}</strong>, informe o login e a senha de um administrador ou gerente.
+            </p>
+
+            <label>
+              <span>Login autorizado</span>
+              <input value={cancelCredentials.username} onChange={e => setCancelCredentials({ ...cancelCredentials, username: e.target.value })} placeholder="Login do gerente/admin" />
+            </label>
+
+            <label>
+              <span>Senha</span>
+              <input value={cancelCredentials.password} onChange={e => setCancelCredentials({ ...cancelCredentials, password: e.target.value })} type="password" placeholder="Senha" />
+            </label>
+
+            {cancelError && <div className="loginError">{cancelError}</div>}
+
+            <div className="actionsRow">
+              <button className="dangerBtn" type="submit">Confirmar cancelamento</button>
+              <button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button>
+            </div>
+          </form>
         </div>
       )}
     </div>
