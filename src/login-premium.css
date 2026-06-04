@@ -1,13 +1,14 @@
 .loginPremiumPage {
   min-height: 100vh;
-  grid-template-columns: 1fr .92fr;
-  gap: 58px;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 44px;
   padding: 0 72px;
   align-items: center;
   background:
-    linear-gradient(115deg, rgba(112, 43, 20, .82) 0 13%, transparent 13.1%),
-    radial-gradient(circle at 16% 64%, rgba(255, 128, 61, .22), transparent 26%),
-    radial-gradient(circle at 92% 14%, rgba(223, 190, 142, .32), transparent 31%),
+    linear-gradient(112deg, rgba(112, 43, 20, .82) 0 11%, transparent 11.1%),
+    radial-gradient(circle at 10% 12%, rgba(76, 31, 16, .18), transparent 25%),
+    radial-gradient(circle at 92% 15%, rgba(223, 190, 142, .30), transparent 32%),
+    radial-gradient(circle at 82% 90%, rgba(211, 78, 43, .12), transparent 28%),
     linear-gradient(135deg, #fff8ee 0%, #f6e7cf 55%, #fffaf2 100%);
   position: relative;
   overflow: hidden;
@@ -16,16 +17,16 @@
 .loginPremiumPage::before {
   content: '';
   position: fixed;
-  left: -275px;
-  top: -255px;
-  width: 850px;
-  height: 850px;
+  left: -365px;
+  top: -270px;
+  width: 900px;
+  height: 900px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 22% 70%, rgba(30, 12, 7, .45), transparent 38%),
-    linear-gradient(135deg, rgba(92, 34, 16, .96), rgba(183, 72, 35, .54));
+    radial-gradient(circle at 26% 68%, rgba(28, 11, 7, .36), transparent 35%),
+    linear-gradient(135deg, rgba(90, 35, 18, .90), rgba(190, 82, 42, .38));
   pointer-events: none;
-  opacity: .86;
+  opacity: .78;
 }
 
 .loginPremiumPage::after {
@@ -36,20 +37,20 @@
   width: 530px;
   height: 530px;
   border-radius: 999px;
-  border: 52px solid rgba(211, 78, 43, .18);
+  border: 52px solid rgba(211, 78, 43, .16);
   pointer-events: none;
 }
 
 .loginPremiumBrand {
   min-height: 100vh;
   max-height: 100vh;
-  padding: 28px 10px 38px;
+  padding: 34px 10px 38px;
   border-radius: 0;
   box-shadow: none;
   background: transparent;
   color: var(--text);
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
 }
 
@@ -59,26 +60,26 @@
 }
 
 .fogaoPremiumLogo {
-  width: min(430px, 34vw);
+  width: min(480px, 38vw);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   position: relative;
   z-index: 2;
-  margin-bottom: 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: radial-gradient(circle, #fffaf0 0%, #fff7ea 64%, rgba(255, 247, 234, .72) 76%, transparent 77%);
-  box-shadow: 0 34px 70px rgba(93, 53, 24, .08);
+  margin-bottom: -10px;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .fogaoPremiumLogo img {
-  width: 118%;
-  height: 118%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  mix-blend-mode: multiply;
-  transform: scale(1.08);
-  filter: drop-shadow(0 16px 24px rgba(82, 39, 20, .10));
+  mix-blend-mode: normal;
+  transform: none;
+  filter: drop-shadow(0 22px 34px rgba(82, 39, 20, .16));
 }
 
 .fogaoPremiumCaption {
@@ -90,7 +91,7 @@
   color: #c65b35;
   letter-spacing: .34em;
   font-size: 18px;
-  margin-top: -6px;
+  margin-top: -4px;
   position: relative;
   z-index: 2;
 }
@@ -110,7 +111,7 @@
 }
 
 .fogaoPremiumCutlery {
-  margin-top: 12px;
+  margin-top: 10px;
   color: #d55f37;
   font-size: 24px;
   transform: rotate(45deg);
@@ -125,11 +126,11 @@
 }
 
 .brandDecorLeft {
-  left: -110px;
+  left: -120px;
   top: 0;
   width: 250px;
   height: 100%;
-  opacity: .20;
+  opacity: .18;
   background:
     radial-gradient(circle at 5% 70%, rgba(34, 12, 7, .45), transparent 48%),
     linear-gradient(180deg, rgba(96, 44, 22, .34), transparent 65%);
@@ -140,7 +141,7 @@
   bottom: 18px;
   width: 85%;
   height: 150px;
-  opacity: .32;
+  opacity: .28;
   background:
     radial-gradient(ellipse at center, rgba(126, 83, 43, .18), transparent 68%),
     linear-gradient(180deg, transparent, rgba(117, 72, 42, .10));
@@ -153,7 +154,7 @@
   align-self: center;
   border-radius: 34px;
   padding: 38px 40px;
-  background: rgba(255, 252, 246, .88);
+  background: rgba(255, 252, 246, .90);
   border: 1px solid rgba(231, 207, 174, .92);
   box-shadow: 0 30px 90px rgba(88, 45, 18, .16);
   backdrop-filter: blur(16px);
@@ -202,7 +203,7 @@
   min-height: 58px;
   border-radius: 16px;
   border: 1px solid #e8cdb0;
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .86);
   box-shadow: 0 8px 24px rgba(84, 42, 18, .04);
 }
 
