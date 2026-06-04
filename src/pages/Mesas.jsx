@@ -10,7 +10,7 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
   const [activeCategory, setActiveCategory] = useState(categories[0])
   const [observation, setObservation] = useState('')
   const [cancelRequest, setCancelRequest] = useState(null)
-  const [cancelCredentials, setCancelCredentials] = useState({ username: '', password: '' })
+  const [cancelPassword, setCancelPassword] = useState('')
   const [cancelError, setCancelError] = useState('')
 
   const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
@@ -50,7 +50,7 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
 
   function askCancelItem(item) {
     setCancelRequest(item)
-    setCancelCredentials({ username: '', password: '' })
+    setCancelPassword('')
     setCancelError('')
   }
 
@@ -59,20 +59,19 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
     const authorizedUser = users.find(user =>
       user.active &&
       ['admin', 'gerente'].includes(user.role) &&
-      user.username.trim().toLowerCase() === cancelCredentials.username.trim().toLowerCase() &&
-      user.password === cancelCredentials.password
+      user.password === cancelPassword
     )
 
     if (!authorizedUser) {
-      setCancelError('Cancelamento permitido somente com login e senha de administrador ou gerente.')
+      setCancelError('Senha inválida. Cancelamento permitido somente com senha de administrador ou gerente.')
       return
     }
 
     const current = tables.find(t => t.id === selected.id)
     const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation))
-    updateTable(current.id, { items })
+    updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser.name })
     setCancelRequest(null)
-    setCancelCredentials({ username: '', password: '' })
+    setCancelPassword('')
     setCancelError('')
   }
 
@@ -200,17 +199,12 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
             </div>
 
             <p>
-              Para cancelar <strong>{cancelRequest.name}</strong>, informe o login e a senha de um administrador ou gerente.
+              Para cancelar <strong>{cancelRequest.name}</strong>, informe a senha de autorização.
             </p>
 
             <label>
-              <span>Login autorizado</span>
-              <input value={cancelCredentials.username} onChange={e => setCancelCredentials({ ...cancelCredentials, username: e.target.value })} placeholder="Login do gerente/admin" />
-            </label>
-
-            <label>
-              <span>Senha</span>
-              <input value={cancelCredentials.password} onChange={e => setCancelCredentials({ ...cancelCredentials, password: e.target.value })} type="password" placeholder="Senha" />
+              <span>Senha de autorização</span>
+              <input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha do gerente/admin" autoFocus />
             </label>
 
             {cancelError && <div className="loginError">{cancelError}</div>}
