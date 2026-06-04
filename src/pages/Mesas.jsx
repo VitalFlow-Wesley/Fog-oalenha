@@ -48,7 +48,7 @@ export default function Mesas({ tables, setTables }) {
   }
 
   function sendKitchen() {
-    updateTable(selected.id, { status: 'enviado', kitchenStatus: 'novo' })
+    updateTable(selected.id, { status: 'enviado', kitchenSent: true })
   }
 
   function requestBill() {
@@ -56,7 +56,7 @@ export default function Mesas({ tables, setTables }) {
   }
 
   function closeTable() {
-    updateTable(selected.id, { status: 'livre', guests: 0, openedAt: null, items: [], kitchenStatus: null, billRequested: false })
+    updateTable(selected.id, { status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false })
     setSelected(null)
   }
 
@@ -115,16 +115,17 @@ export default function Mesas({ tables, setTables }) {
                 </div>
 
                 <div className="actionsRow">
-                  <button className="secondaryBtn" onClick={sendKitchen}>Enviar cozinha</button>
+                  <button className="secondaryBtn" onClick={sendKitchen}>Enviar para cozinha</button>
                   <button className="secondaryBtn" onClick={requestBill}>Solicitar conta</button>
                   <button className="dangerBtn" onClick={closeTable}>Fechar mesa</button>
                 </div>
 
                 <div className="printPreview">
-                  <div className="printTitle"><Printer size={18} /> Simulação de impressão</div>
-                  <strong>Pedido Cozinha • Mesa {table.number}</strong>
+                  <div className="printTitle"><Printer size={18} /> Pedido enviado para cozinha</div>
+                  <strong>Mesa {table.number}</strong>
+                  <span>Sem controle de preparo no sistema. A cozinha recebe o pedido, prepara e entrega normalmente.</span>
                   {kitchenItems.length === 0 ? (
-                    <span>Nenhum item de cozinha para imprimir.</span>
+                    <span>Nenhum item de cozinha para enviar.</span>
                   ) : (
                     kitchenItems.map((item, index) => (
                       <span key={`${item.id}-print-${index}`}>{item.qty}x {item.name}{item.observation ? ` — ${item.observation}` : ''}</span>
@@ -148,7 +149,7 @@ export default function Mesas({ tables, setTables }) {
                     <button className="productCard" key={product.id} onClick={() => addItem(product)}>
                       <strong>{product.name}</strong>
                       <span>R$ {product.price.toFixed(2).replace('.', ',')}</span>
-                      <small>{product.imprimeCozinha ? 'Imprime na cozinha' : 'Só registra na mesa'}</small>
+                      <small>{product.imprimeCozinha ? 'Envia para cozinha' : 'Só registra na mesa'}</small>
                     </button>
                   ))}
                 </div>
