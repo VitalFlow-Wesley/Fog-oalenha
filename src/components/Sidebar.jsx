@@ -1,9 +1,8 @@
-import { Flame, Home, LayoutDashboard, ReceiptText, BarChart3, LogOut, Users } from 'lucide-react'
+import { Flame, LayoutDashboard, ReceiptText, BarChart3, LogOut, Users } from 'lucide-react'
 
 const baseMenu = [
-  { key: 'home', label: 'Home', icon: Home },
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
+  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'relatorios', label: 'Relatórios', icon: BarChart3 },
 ]
 
