@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { products } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
-import { Printer, X } from 'lucide-react'
+import { ClipboardList, Clock, DollarSign, Printer, RefreshCw, ReceiptText, Users, X } from 'lucide-react'
 
 const categories = [...new Set(products.map(p => p.category))]
 
@@ -14,6 +14,26 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
   const [cancelError, setCancelError] = useState('')
 
   const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
+
+  const summary = useMemo(() => {
+    const totalTables = tables.length || 1
+    const occupied = tables.filter(t => t.status === 'ocupada' || t.status === 'enviado').length
+    const free = tables.filter(t => t.status === 'livre').length
+    const bill = tables.filter(t => t.status === 'conta').length
+    const revenue = tables
+      .filter(t => t.status !== 'livre')
+      .reduce((sum, table) => sum + table.items.reduce((s, item) => s + item.price * item.qty, 0), 0)
+
+    return {
+      occupied,
+      free,
+      bill,
+      revenue,
+      occupiedPercent: Math.round((occupied / totalTables) * 100),
+      freePercent: Math.round((free / totalTables) * 100),
+      billPercent: Math.round((bill / totalTables) * 100),
+    }
+  }, [tables])
 
   function updateTable(id, patch) {
     setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
@@ -93,15 +113,56 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
   const filteredProducts = products.filter(p => p.category === activeCategory)
 
   return (
-    <div className="page">
-      <div className="pageHeader">
+    <div className="page restaurantTablesPage">
+      <div className="pageHeader restaurantPageHeader">
         <div>
-          <span className="eyebrow">Salão</span>
+          <span className="eyebrow restaurantEyebrow">SALÃO</span>
           <h1>Mesas e comandas</h1>
+          <p>Acompanhe ocupação, consumo e status das mesas.</p>
+        </div>
+
+        <div className="headerActions">
+          <span className="updatedPill"><Clock size={17} /> Atualizado agora há pouco</span>
+          <button className="refreshBtn" type="button"><RefreshCw size={20} /></button>
         </div>
       </div>
 
-      <div className="tablesGrid">
+      <div className="restaurantSummaryGrid">
+        <div className="restaurantSummaryCard occupied">
+          <div className="summaryIcon"><Users size={26} /></div>
+          <div>
+            <span>Mesas ocupadas</span>
+            <strong>{summary.occupied}</strong>
+            <small>{summary.occupiedPercent}% do salão</small>
+          </div>
+        </div>
+        <div className="restaurantSummaryCard free">
+          <div className="summaryIcon">▱</div>
+          <div>
+            <span>Mesas livres</span>
+            <strong>{summary.free}</strong>
+            <small>{summary.freePercent}% do salão</small>
+          </div>
+        </div>
+        <div className="restaurantSummaryCard bill">
+          <div className="summaryIcon"><ReceiptText size={26} /></div>
+          <div>
+            <span>Contas solicitadas</span>
+            <strong>{summary.bill}</strong>
+            <small>{summary.billPercent}% do salão</small>
+          </div>
+        </div>
+        <div className="restaurantSummaryCard revenue">
+          <div className="summaryIcon"><DollarSign size={28} /></div>
+          <div>
+            <span>Faturamento do salão</span>
+            <strong>R$ {summary.revenue.toFixed(2).replace('.', ',')}</strong>
+            <small>Hoje</small>
+          </div>
+        </div>
+      </div>
+
+      <div className="tablesGrid restaurantTablesGrid">
         {tables.map(table => <TableCard table={table} key={table.id} onOpen={openTable} />)}
       </div>
 
