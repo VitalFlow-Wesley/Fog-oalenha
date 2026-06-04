@@ -8,5 +8,6 @@ import './login-premium.css'
 import './restaurant-tables.css'
 import './dashboard-premium.css'
 import './reports-premium.css'
+import './settings-premium.css'
 
 createRoot(document.getElementById('root')).render(<App />)
