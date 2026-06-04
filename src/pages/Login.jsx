@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Flame, Lock, User } from 'lucide-react'
-import loginBackground from '../assets/loginBackground.js'
+import loginBackground from '../assets/login-bg.png'
 
 export default function Login({ onLogin, users }) {
   const [username, setUsername] = useState('')
