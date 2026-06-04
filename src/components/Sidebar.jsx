@@ -1,21 +1,36 @@
-import { Flame, Home, LayoutDashboard, ReceiptText, BarChart3, LogOut } from 'lucide-react'
+import { Flame, Home, LayoutDashboard, ReceiptText, BarChart3, LogOut, Users } from 'lucide-react'
 
-const menu = [
+const baseMenu = [
   { key: 'home', label: 'Home', icon: Home },
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
   { key: 'relatorios', label: 'Relatórios', icon: BarChart3 },
 ]
 
-export default function Sidebar({ page, setPage, onLogout }) {
+const roleLabel = {
+  admin: 'Administrador',
+  gerente: 'Gerente',
+  garcom: 'Garçom'
+}
+
+export default function Sidebar({ page, setPage, onLogout, currentUser }) {
+  const menu = currentUser?.role === 'admin'
+    ? [...baseMenu, { key: 'usuarios', label: 'Usuários', icon: Users }]
+    : baseMenu
+
   return (
     <aside className="sidebar">
       <div className="brand">
         <div className="brandIcon"><Flame size={26} /></div>
         <div>
-          <strong>Mesa & Brasa</strong>
-          <span>Churrascaria familiar</span>
+          <strong>Fogão a Lenha</strong>
+          <span>Gestão da churrascaria</span>
         </div>
+      </div>
+
+      <div className="loggedUserBox">
+        <strong>{currentUser?.name}</strong>
+        <span>{roleLabel[currentUser?.role] || 'Usuário'}</span>
       </div>
 
       <nav>
