@@ -1,4 +1,5 @@
-import { Flame, LayoutDashboard, ReceiptText, BarChart3, LogOut, Users } from 'lucide-react'
+import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Users, ChevronDown } from 'lucide-react'
+import fogaoLogo from '../assets/fogaoLogo.js'
 
 const baseMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
@@ -18,18 +19,19 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
     : baseMenu
 
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brandIcon"><Flame size={26} /></div>
-        <div>
-          <strong>Fogão a Lenha</strong>
-          <span>Gestão da churrascaria</span>
-        </div>
+    <aside className="sidebar premiumSidebar">
+      <div className="brand sidebarLogoBrand">
+        <img src={fogaoLogo} alt="Logo Fogão a Lenha" />
+        <span>Gestão da churrascaria</span>
       </div>
 
-      <div className="loggedUserBox">
-        <strong>{currentUser?.name}</strong>
-        <span>{roleLabel[currentUser?.role] || 'Usuário'}</span>
+      <div className="loggedUserBox premiumUserBox">
+        <div className="userAvatar">👤</div>
+        <div>
+          <strong>{currentUser?.name || 'Administrador'}</strong>
+          <span>{roleLabel[currentUser?.role] || 'Administrador'}</span>
+        </div>
+        <ChevronDown size={18} />
       </div>
 
       <nav>
@@ -41,7 +43,7 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
               className={`navItem ${page === item.key ? 'active' : ''}`}
               onClick={() => setPage(item.key)}
             >
-              <Icon size={19} />
+              <Icon size={20} />
               {item.label}
             </button>
           )
