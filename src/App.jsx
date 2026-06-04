@@ -31,7 +31,7 @@ export default function App() {
         {page === 'dashboard' && <Dashboard tables={tables} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
-        {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} currentUser={currentUser} />}
+        {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} />}
       </main>
     </div>
   )
