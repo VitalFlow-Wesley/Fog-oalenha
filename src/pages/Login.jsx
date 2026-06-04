@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Flame, Lock, User } from 'lucide-react'
-import fogaoLogo from '../assets/fogaoLogo.js'
+import loginBackground from '../assets/loginBackground.js'
 
 export default function Login({ onLogin, users }) {
   const [username, setUsername] = useState('')
@@ -27,26 +27,8 @@ export default function Login({ onLogin, users }) {
   }
 
   return (
-    <main className="loginPage loginPageClean loginPremiumPage">
-      <section className="loginBrandPanel loginPremiumBrand">
-        <div className="brandDecor brandDecorLeft" />
-        <div className="brandDecor brandDecorBottom" />
-
-        <div className="fogaoPremiumLogo">
-          <img src={fogaoLogo} alt="Logo Fogão a Lenha" />
-        </div>
-
-        <div className="fogaoPremiumCaption">
-          <span />
-          <strong>CHURRASCARIA</strong>
-          <span />
-        </div>
-
-        <p className="fogaoPremiumSubtitle">Comida caseira • Bar • Churrasco</p>
-        <div className="fogaoPremiumCutlery">⌘</div>
-      </section>
-
-      <section className="loginCard loginPremiumCard">
+    <main className="loginPage loginPageClean loginPremiumPage" style={{ backgroundImage: `url(${loginBackground})` }}>
+      <section className="loginCard loginPremiumCard loginOnlyCard">
         <div className="loginFireBadge">
           <Flame size={30} />
         </div>
