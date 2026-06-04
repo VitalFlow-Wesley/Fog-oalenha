@@ -29,7 +29,7 @@ export default function App() {
       />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} />}
-        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} />}
+        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} currentUser={currentUser} />}
       </main>
