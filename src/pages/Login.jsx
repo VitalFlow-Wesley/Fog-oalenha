@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Flame, Lock, User } from 'lucide-react'
+import { Eye, EyeOff, Flame, Lock, User } from 'lucide-react'
+import fogaoLogo from '../assets/fogaoLogo.js'
 
 export default function Login({ onLogin, users }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
   function handleSubmit(event) {
@@ -25,42 +27,62 @@ export default function Login({ onLogin, users }) {
   }
 
   return (
-    <main className="loginPage loginPageClean">
-      <section className="loginBrandPanel">
-        <div className="fogaoLogo">
-          <div className="fogaoLogoIcon"><Flame size={54} /></div>
-          <div>
-            <span>Churrascaria</span>
-            <strong>Fogão a Lenha</strong>
-            <small>Comida caseira • Bar • Churrasco</small>
-          </div>
+    <main className="loginPage loginPageClean loginPremiumPage">
+      <section className="loginBrandPanel loginPremiumBrand">
+        <div className="brandDecor brandDecorLeft" />
+        <div className="brandDecor brandDecorBottom" />
+
+        <div className="fogaoPremiumLogo">
+          <img src={fogaoLogo} alt="Logo Fogão a Lenha" />
         </div>
+
+        <div className="fogaoPremiumCaption">
+          <span />
+          <strong>CHURRASCARIA</strong>
+          <span />
+        </div>
+
+        <p className="fogaoPremiumSubtitle">Comida caseira • Bar • Churrasco</p>
+        <div className="fogaoPremiumCutlery">⌘</div>
       </section>
 
-      <section className="loginCard">
+      <section className="loginCard loginPremiumCard">
+        <div className="loginFireBadge">
+          <Flame size={30} />
+        </div>
+
         <h2>Entrar no sistema</h2>
+        <p>Bem-vindo ao sistema de gestão</p>
 
         <form onSubmit={handleSubmit}>
           <label>
             <span>Login</span>
-            <div className="inputIcon">
-              <User size={18} />
+            <div className="inputIcon premiumInputIcon">
+              <User size={20} />
               <input value={username} onChange={event => setUsername(event.target.value)} placeholder="Digite seu login" />
             </div>
           </label>
 
           <label>
             <span>Senha</span>
-            <div className="inputIcon">
-              <Lock size={18} />
-              <input value={password} onChange={event => setPassword(event.target.value)} type="password" placeholder="Digite sua senha" />
+            <div className="inputIcon premiumInputIcon passwordInputIcon">
+              <Lock size={20} />
+              <input value={password} onChange={event => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Digite sua senha" />
+              <button type="button" className="showPasswordBtn" onClick={() => setShowPassword(prev => !prev)} aria-label="Mostrar ou esconder senha">
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
           </label>
 
           {error && <div className="loginError">{error}</div>}
 
-          <button className="primaryBtn" type="submit">Acessar sistema</button>
+          <button className="primaryBtn premiumLoginBtn" type="submit">Acessar sistema</button>
         </form>
+
+        <div className="systemInternalBadge">
+          <Lock size={14} />
+          Sistema interno
+        </div>
       </section>
     </main>
   )
