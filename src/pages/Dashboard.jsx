@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, DollarSign, FlameKindling, RefreshCw, Utensils, Armchair, ShieldCheck, TrendingUp } from 'lucide-react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, DollarSign, FlameKindling, RefreshCw, Utensils, Armchair, ShieldCheck, TrendingUp, ReceiptText, PackageCheck } from 'lucide-react'
 
 function money(value) {
-  return `R$ ${value.toFixed(2).replace('.', ',')}`
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
 }
 
 export default function Dashboard({ tables, setPage }) {
@@ -12,7 +12,11 @@ export default function Dashboard({ tables, setPage }) {
 
   const openTables = tables.filter(t => t.status !== 'livre' && t.status !== 'juntada')
   const freeTables = tables.filter(t => t.status === 'livre')
+  const billTables = tables.filter(t => t.status === 'conta')
+  const items = tables.flatMap(table => table.items || [])
   const total = tables.reduce((sum, table) => sum + table.items.reduce((s, item) => s + item.price * item.qty, 0), 0)
+  const totalItems = items.reduce((sum, item) => sum + item.qty, 0)
+  const ticketMedio = openTables.length ? total / openTables.length : 0
   const kitchenOrders = openTables
     .map(table => ({
       ...table,
@@ -20,7 +24,6 @@ export default function Dashboard({ tables, setPage }) {
     }))
     .filter(table => table.kitchenItems.length && (table.kitchenSent || table.status === 'enviado'))
   const kitchenSent = kitchenOrders.length
-  const estimatedRevenue = total > 0 ? total * 5.09 : 1456
 
   function refreshDashboard() {
     setLastUpdate(new Date())
@@ -128,22 +131,27 @@ export default function Dashboard({ tables, setPage }) {
           <div className="operationalList">
             <div className="operationalItem positive">
               <div className="operationalIcon"><TrendingUp size={23} /></div>
-              <div><span>Faturamento {period.toLowerCase()}</span><strong>{money(estimatedRevenue)}</strong></div>
-              <b>↑ 12%</b>
+              <div><span>Faturamento atual</span><strong>{money(total)}</strong></div>
+              <b>{openTables.length} mesas</b>
             </div>
             <div className="operationalItem orange">
-              <div className="operationalIcon"><Clock size={23} /></div>
-              <div><span>Tempo médio dos pedidos</span><strong>18 min</strong></div>
-              <b>Bom</b>
+              <div className="operationalIcon"><DollarSign size={23} /></div>
+              <div><span>Ticket médio</span><strong>{money(ticketMedio)}</strong></div>
+              <b>Por mesa</b>
             </div>
             <div className="operationalItem brown">
-              <div className="operationalIcon"><ChefHat size={23} /></div>
-              <div><span>Status da cozinha</span><strong>Normal</strong></div>
-              <b>Em dia</b>
+              <div className="operationalIcon"><PackageCheck size={23} /></div>
+              <div><span>Itens lançados</span><strong>{totalItems}</strong></div>
+              <b>{kitchenSent} enviados</b>
+            </div>
+            <div className="operationalItem positive">
+              <div className="operationalIcon"><ReceiptText size={23} /></div>
+              <div><span>Contas solicitadas</span><strong>{billTables.length}</strong></div>
+              <b>Conferência</b>
             </div>
           </div>
 
-          <div className="operationMessage"><ShieldCheck size={18} /> Tudo funcionando bem! Mantenha o ritmo!</div>
+          <div className="operationMessage"><ShieldCheck size={18} /> Métricas calculadas pelas comandas abertas no sistema.</div>
         </aside>
       </div>
     </div>
