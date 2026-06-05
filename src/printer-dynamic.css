@@ -1,0 +1,125 @@
+.printerDynamicForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.establishmentField {
+  grid-column: 1 / -1;
+}
+
+.printerListEditor {
+  grid-column: 1 / -1;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255,248,237,.55);
+  padding: 12px;
+  display: grid;
+  gap: 9px;
+}
+
+.printerListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.printerListHeader strong {
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+}
+
+.addPrinterBtn {
+  min-height: 34px;
+  border: 1px solid #d95a34;
+  border-radius: 11px;
+  background: #fff8ee;
+  color: #c24928;
+  font-weight: 900;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.printerEditorRow {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+}
+
+.printerEditorRow > span {
+  color: #5f4435;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.printerEditorRow input {
+  min-height: 40px;
+}
+
+.printerEditorRow .iconDanger {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ffc7b5;
+  border-radius: 11px;
+  background: #fff3ed;
+  color: #c24928;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.printerEditorRow .iconDanger:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.activePrinterPreview {
+  min-height: 42px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255,248,237,.7);
+  color: #5f4435;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.activePrinterPreview svg {
+  color: #c24928;
+}
+
+.activePrinterPreview strong,
+.activePrinterPreview span {
+  display: block;
+}
+
+.activePrinterPreview strong {
+  color: #2a160e;
+  font-size: 12px;
+}
+
+.activePrinterPreview span {
+  color: #7d6758;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .printerDynamicForm,
+  .printerEditorRow {
+    grid-template-columns: 1fr;
+  }
+
+  .printerListHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .printerEditorRow .iconDanger {
+    width: 100%;
+  }
+}
