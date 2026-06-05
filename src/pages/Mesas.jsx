@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { products } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
-import { ChefHat, Clock, DollarSign, Link2, Minus, Plus, Printer, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
+import { ChefHat, Clock, DollarSign, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 
 const categories = [...new Set(products.map(p => p.category))]
 const productIcons = { Refeições: '🍲', Churrasco: '🥩', Sucos: '🥤', Bebidas: '🍺', Bombons: '🍬', Salgadinhos: '🥨', Sorvetes: '🍨', Sobremesas: '🍮' }
@@ -25,6 +25,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
   const [printJob, setPrintJob] = useState(null)
   const [joinTargetId, setJoinTargetId] = useState('')
   const [joinModalOpen, setJoinModalOpen] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState(new Date())
 
   const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
   const summary = useMemo(() => {
@@ -42,6 +43,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
   useEffect(() => { if (printJob) { const timer = setTimeout(() => window.print(), 150); return () => clearTimeout(timer) } }, [printJob])
 
   function updateTable(id, patch) { setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t)) }
+  function touch() { setLastUpdate(new Date()) }
+
   function openTable(t) {
     if (t.status === 'juntada' && t.mergedTo) {
       const main = tables.find(tableItem => tableItem.id === t.mergedTo)
@@ -52,6 +55,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
       const updated = { ...t, status: 'ocupada', guests: 2, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
       updateTable(t.id, updated)
       setSelected(updated)
+      touch()
       return
     }
     setSelected(t)
@@ -63,12 +67,14 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const items = existing ? current.items.map(i => i.id === product.id && i.observation === observation ? { ...i, qty: i.qty + 1 } : i) : [...current.items, { ...product, qty: 1, observation }]
     updateTable(current.id, { items, status: current.status === 'livre' ? 'ocupada' : current.status })
     setObservation('')
+    touch()
   }
 
   function changeQty(item, delta) {
     const current = tables.find(t => t.id === selected.id)
     const items = current.items.map(i => i.id === item.id && i.observation === item.observation && i.originTable === item.originTable ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
     updateTable(current.id, { items })
+    touch()
   }
 
   function askCancelItem(item) { setCancelRequest(item); setCancelPassword(''); setCancelError('') }
@@ -80,7 +86,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const current = tables.find(t => t.id === selected.id)
     const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation && i.originTable === cancelRequest.originTable))
     updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser?.name || settings?.cancelUpdatedBy || 'Autorizado' })
-    setCancelRequest(null); setCancelPassword(''); setCancelError('')
+    setCancelRequest(null); setCancelPassword(''); setCancelError(''); touch()
   }
 
   function joinTable() {
@@ -97,8 +103,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
       return t
     }))
     setSelected(prev => ({ ...prev, status: nextStatus, guests: (prev.guests || 0) + (target.guests || 0), items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }))
-    setJoinTargetId('')
-    setJoinModalOpen(false)
+    setJoinTargetId(''); setJoinModalOpen(false); touch()
   }
 
   function splitTables() {
@@ -109,6 +114,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
       return t
     }))
     setSelected(prev => ({ ...prev, guests: Math.max(1, prev.guests - prev.mergedTableIds.length), items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }))
+    touch()
   }
 
   function sendKitchen() {
@@ -117,6 +123,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
     updateTable(selected.id, { status: 'enviado', kitchenSent: true, lastKitchenPrinter: kitchenPrinterName })
     setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, total: 0 })
+    touch()
   }
 
   function requestBill() {
@@ -125,6 +132,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
     updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
     setPrintJob({ type: 'bill', title: 'COMANDA PARA CONFERÊNCIA', table: current, items: current.items, printerName: cashierPrinterName, total: billTotal })
+    touch()
   }
 
   function closeTable() {
@@ -133,7 +141,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
       if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
       return t
     }))
-    setSelected(null)
+    setSelected(null); touch()
   }
 
   const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
@@ -142,23 +150,12 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
   const totalItems = table?.items.reduce((sum, item) => sum + item.qty, 0) || 0
 
   return <div className="page restaurantTablesPage">
-    <div className="pageHeader restaurantPageHeader"><div><span className="eyebrow restaurantEyebrow">SALÃO</span><h1>Mesas e comandas</h1><p>Acompanhe ocupação, consumo e status das mesas.</p></div><div className="headerActions"><span className="updatedPill"><Clock size={17} /> Atualizado agora há pouco</span><button className="refreshBtn" type="button"><RefreshCw size={20} /></button></div></div>
+    <div className="pageHeader restaurantPageHeader"><div><span className="eyebrow restaurantEyebrow">SALÃO</span><h1>Mesas e comandas</h1><p>Acompanhe ocupação, consumo e status das mesas.</p></div><div className="headerActions"><span className="updatedPill"><Clock size={17} /> Atualizado às {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span><button className="refreshBtn" type="button" onClick={touch}><RefreshCw size={20} /></button></div></div>
     <div className="restaurantSummaryGrid"><div className="restaurantSummaryCard occupied"><div className="summaryIcon"><Users size={26} /></div><div><span>Mesas ocupadas</span><strong>{summary.occupied}</strong><small>{summary.occupiedPercent}% do salão</small></div></div><div className="restaurantSummaryCard free"><div className="summaryIcon">▱</div><div><span>Mesas livres</span><strong>{summary.free}</strong><small>{summary.freePercent}% do salão</small></div></div><div className="restaurantSummaryCard bill"><div className="summaryIcon"><ReceiptText size={26} /></div><div><span>Contas solicitadas</span><strong>{summary.bill}</strong><small>{summary.billPercent}% do salão</small></div></div><div className="restaurantSummaryCard revenue"><div className="summaryIcon"><DollarSign size={28} /></div><div><span>Faturamento do salão</span><strong>{formatMoney(summary.revenue)}</strong><small>Hoje</small></div></div></div>
     <div className="tablesGrid restaurantTablesGrid">{tables.map(table => <TableCard table={table} key={table.id} onOpen={openTable} />)}</div>
-
-    {table && <div className="drawerOverlay commandOverlay"><aside className="drawer commandDrawer">
-      <button className="commandClose" onClick={() => setSelected(null)}><X size={24} /></button>
-      <header className="commandHeader"><div><span className="commandEyebrow">COMANDA ABERTA</span><div className="commandTitleRow"><h2>{tableLabel}</h2><span><Users size={19} /> {table.guests || 0} pessoas</span></div></div><div className="commandActions"><button className="commandBtn" onClick={() => setJoinModalOpen(true)}><Link2 size={18} /> Juntar mesas</button>{table.mergedTableIds?.length > 0 && <button className="commandBtn" onClick={splitTables}><Split size={18} /> Separar mesas</button>}<button className="commandBtn" onClick={sendKitchen}><ChefHat size={18} /> Enviar para cozinha</button><button className="commandBtn" onClick={requestBill}><ReceiptText size={18} /> Solicitar conta</button><button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button></div></header>
-
-      <div className="commandMainGrid"><section className="commandPanel"><h3>Itens da comanda</h3><div className="commandItemsList">{table.items.length === 0 && <p className="empty">Nenhum item lançado ainda.</p>}{table.items.map((item, index) => <div className="commandItem" key={`${item.id}-${index}-${item.observation}-${item.originTable || ''}`}><div className="commandItemInfo"><strong>{item.name}</strong><span>{item.localSaida === 'bar' ? 'Bar' : 'Cozinha / churrasqueiro'}</span><small>• {item.imprimeCozinha ? 'Sai no pedido da cozinha' : 'Sai na comanda do cliente'}</small>{item.originTable && <small>Origem: Mesa {item.originTable}</small>}{item.observation && <small>Obs.: {item.observation}</small>}</div><div className="commandItemControls"><div className="qtyStepper"><button onClick={() => changeQty(item, -1)}><Minus size={14} /></button><b>{item.qty}</b><button onClick={() => changeQty(item, 1)}><Plus size={14} /></button></div><button className="removeItemBtn" onClick={() => askCancelItem(item)}><Trash2 size={16} /></button><strong>{formatMoney(item.price * item.qty)}</strong></div></div>)}</div><div className="commandTotalCard"><div><span>Total da mesa</span><small>{totalItems} itens</small></div><strong>{formatMoney(total)}</strong></div></section>
-
-      <section className="commandPanel commandProductsPanel"><h3>Adicionar pedido</h3><label className="commandObs"><Search size={20} /><input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex.: sem cebola" /></label><div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{cat}</button>)}</div><div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}</div></section></div>
-    </aside></div>}
-
+    {table && <div className="drawerOverlay commandOverlay"><aside className="drawer commandDrawer"><button className="commandClose" onClick={() => setSelected(null)}><X size={24} /></button><header className="commandHeader"><div><span className="commandEyebrow">COMANDA ABERTA</span><div className="commandTitleRow"><h2>{tableLabel}</h2><span><Users size={19} /> {table.guests || 0} pessoas</span></div></div><div className="commandActions"><button className="commandBtn" onClick={() => setJoinModalOpen(true)}><Link2 size={18} /> Juntar mesas</button>{table.mergedTableIds?.length > 0 && <button className="commandBtn" onClick={splitTables}><Split size={18} /> Separar mesas</button>}<button className="commandBtn" onClick={sendKitchen}><ChefHat size={18} /> Enviar para cozinha</button><button className="commandBtn" onClick={requestBill}><ReceiptText size={18} /> Solicitar conta</button><button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button></div></header><div className="commandMainGrid"><section className="commandPanel"><h3>Itens da comanda</h3><div className="commandItemsList">{table.items.length === 0 && <p className="empty">Nenhum item lançado ainda.</p>}{table.items.map((item, index) => <div className="commandItem" key={`${item.id}-${index}-${item.observation}-${item.originTable || ''}`}><div className="commandItemInfo"><strong>{item.name}</strong><span>{item.localSaida === 'bar' ? 'Bar' : 'Cozinha / churrasqueiro'}</span><small>• {item.imprimeCozinha ? 'Sai no pedido da cozinha' : 'Sai na comanda do cliente'}</small>{item.originTable && <small>Origem: Mesa {item.originTable}</small>}{item.observation && <small>Obs.: {item.observation}</small>}</div><div className="commandItemControls"><div className="qtyStepper"><button onClick={() => changeQty(item, -1)}><Minus size={14} /></button><b>{item.qty}</b><button onClick={() => changeQty(item, 1)}><Plus size={14} /></button></div><button className="removeItemBtn" onClick={() => askCancelItem(item)}><Trash2 size={16} /></button><strong>{formatMoney(item.price * item.qty)}</strong></div></div>)}</div><div className="commandTotalCard"><div><span>Total da mesa</span><small>{totalItems} itens</small></div><strong>{formatMoney(total)}</strong></div></section><section className="commandPanel commandProductsPanel"><h3>Adicionar pedido</h3><label className="commandObs"><Search size={20} /><input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex.: sem cebola" /></label><div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{cat}</button>)}</div><div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}</div></section></div></aside></div>}
     {joinModalOpen && table && <div className="authModalOverlay"><form className="authModal joinTableModal" onSubmit={e => { e.preventDefault(); joinTable() }}><div className="drawerHeader"><div><span className="eyebrow">Juntar mesas</span><h2>{tableLabel}</h2></div><button type="button" className="iconBtn" onClick={() => { setJoinModalOpen(false); setJoinTargetId('') }}><X size={22} /></button></div><p>Escolha a mesa que será agrupada na comanda principal.</p><label><span>Mesa para juntar</span><select value={joinTargetId} onChange={e => setJoinTargetId(e.target.value)} autoFocus><option value="">Selecione uma mesa</option>{mergeTargets.map(target => <option key={target.id} value={target.id}>Mesa {target.number} - {target.status === 'livre' ? 'Livre' : 'Ocupada'}</option>)}</select></label>{mergeTargets.length === 0 && <div className="loginError">Não há mesas disponíveis para juntar no momento.</div>}<div className="actionsRow"><button className="secondaryBtn" type="submit" disabled={!joinTargetId}>Confirmar junção</button><button className="secondaryBtn" type="button" onClick={() => { setJoinModalOpen(false); setJoinTargetId('') }}>Cancelar</button></div></form></div>}
-
     {cancelRequest && <div className="authModalOverlay"><form className="authModal" onSubmit={confirmCancelItem}><div className="drawerHeader"><div><span className="eyebrow">Autorização obrigatória</span><h2>Cancelar item</h2></div><button type="button" className="iconBtn" onClick={() => setCancelRequest(null)}><X size={22} /></button></div><p>Para cancelar <strong>{cancelRequest.name}</strong>, informe a senha de autorização.</p><label><span>Senha de autorização</span><input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoFocus /></label>{cancelError && <div className="loginError">{cancelError}</div>}<div className="actionsRow"><button className="dangerBtn" type="submit">Confirmar cancelamento</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button></div></form></div>}
-
     {printJob && <div className="printOnly customerBillPrint"><h1>{printJob.title}</h1><p><strong>Destino:</strong> {printJob.printerName}</p><p><strong>Mesa:</strong> {printJob.table.number}{printJob.table.mergedTableNumbers?.length ? ` + ${printJob.table.mergedTableNumbers.join(' + ')}` : ''}</p><p><strong>Data:</strong> {new Date().toLocaleString('pt-BR')}</p><hr />{printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.originTable ? ` - Mesa ${item.originTable}` : ''}{item.observation ? ` (${item.observation})` : ''}</span>{printJob.type === 'bill' && <strong>{formatMoney(item.price * item.qty)}</strong>}</div>)}{printJob.type === 'bill' && <><hr /><div className="printTotal"><span>Total</span><strong>{formatMoney(printJob.total)}</strong></div><p className="printFooter">Comanda para conferência do cliente.</p></>} {printJob.type === 'kitchen' && <p className="printFooter">Pedido para preparo. Não precisa atualizar status de preparo no sistema.</p>}</div>}
   </div>
 }
