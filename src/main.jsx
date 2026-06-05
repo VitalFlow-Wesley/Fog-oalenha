@@ -11,6 +11,7 @@ import './reports-premium.css'
 import './settings-premium.css'
 import './printer-dynamic.css'
 import './kitchen-orders.css'
+import './kitchen-orders-compact.css'
 import './print.css'
 import './command-premium.css'
 
