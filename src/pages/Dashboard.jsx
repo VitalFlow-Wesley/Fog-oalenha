@@ -117,7 +117,7 @@ export default function Dashboard({ tables, setPage }) {
             ))}
           </div>
 
-          <button className="viewAllOrders" type="button" onClick={() => setPage?.('mesas')}>Ver todos os pedidos ›</button>
+          <button className="viewAllOrders" type="button" onClick={() => setPage?.('pedidos-cozinha')}>Ver todos os pedidos ›</button>
         </section>
 
         <aside className="dashboardPanel operationalPanel">
