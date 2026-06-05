@@ -62,6 +62,41 @@
   width: 100% !important;
 }
 
+.periodSelectWrap {
+  position: relative !important;
+}
+
+.kitchenPeriodMenu {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  right: 0 !important;
+  z-index: 20 !important;
+  min-width: 138px !important;
+  padding: 6px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 12px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 12px 24px rgba(80, 42, 22, .13) !important;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+.kitchenPeriodMenu button {
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 9px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  text-align: left !important;
+  color: #3b2419 !important;
+  cursor: pointer !important;
+}
+
+.kitchenPeriodMenu button:hover {
+  background: #fff0e7 !important;
+  color: #c24928 !important;
+}
+
 .kitchenSearch {
   width: 220px !important;
   min-height: 38px !important;
@@ -196,7 +231,7 @@
 }
 
 .kitchenOperationalCardRefined {
-  padding: 16px !important;
+  padding: 14px !important;
 }
 
 .kitchenSideTitle {
@@ -206,8 +241,112 @@
 }
 
 .kitchenSideTitle h2 {
-  font-size: 23px !important;
+  font-size: 22px !important;
   line-height: 1 !important;
+}
+
+.lastOrderBox {
+  display: grid !important;
+  grid-template-columns: 36px 1fr !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding: 12px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(255, 253, 248, .96), rgba(255, 244, 230, .72)) !important;
+  margin-bottom: 10px !important;
+}
+
+.lastOrderBox svg {
+  color: #c24928 !important;
+}
+
+.lastOrderBox span {
+  display: block !important;
+  color: #7f6250 !important;
+  font-size: 11.5px !important;
+  margin-bottom: 2px !important;
+}
+
+.lastOrderBox strong {
+  color: #2a160e !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 17px !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+}
+
+.sectorMetricGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin-bottom: 10px !important;
+}
+
+.sectorMetricBox {
+  min-height: 82px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 13px !important;
+  background: rgba(255, 253, 248, .9) !important;
+  padding: 9px 7px !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  text-align: center !important;
+  gap: 2px !important;
+}
+
+.sectorMetricBox svg,
+.sectorMetricBox .emojiIcon {
+  color: #c24928 !important;
+  font-size: 18px !important;
+}
+
+.sectorMetricBox.cozinha svg { color: #277848 !important; }
+.sectorMetricBox.churrasco svg { color: #c24928 !important; }
+
+.sectorMetricBox span:not(.emojiIcon) {
+  color: #7f6250 !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+.sectorMetricBox strong {
+  color: #2a160e !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.sectorMetricBox small {
+  color: #7f6250 !important;
+  font-size: 10px !important;
+}
+
+.totalSentBox {
+  display: grid !important;
+  grid-template-columns: 34px 1fr auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding: 11px 12px !important;
+  border-radius: 13px !important;
+  background: #fff0d1 !important;
+  border: 1px solid rgba(216, 149, 32, .24) !important;
+}
+
+.totalSentBox svg {
+  color: #c24928 !important;
+}
+
+.totalSentBox span {
+  color: #7f6250 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.totalSentBox strong {
+  color: #2a160e !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 24px !important;
 }
 
 .kitchenSideListRefined {
@@ -313,5 +452,9 @@
   .kitchenOrderContent,
   .kitchenOrderActions {
     grid-column: 1 / -1 !important;
+  }
+
+  .sectorMetricGrid {
+    grid-template-columns: 1fr !important;
   }
 }
