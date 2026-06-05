@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import Mesas from './pages/Mesas.jsx'
 import Relatorios from './pages/Relatorios.jsx'
 import Usuarios from './pages/Usuarios.jsx'
+import PedidosCozinha from './pages/PedidosCozinha.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 
@@ -40,6 +41,7 @@ export default function App() {
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
+        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
       </main>
