@@ -155,20 +155,24 @@
   font-size: 22px;
 }
 
-.settingsForm {
+.settingsForm,
+.systemSettingsForm {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .settingsForm label,
-.tableSettingsGrid label {
+.tableSettingsGrid label,
+.systemSettingsForm label {
   margin: 0;
 }
 
 .settingsForm input,
 .settingsForm select,
-.tableSettingsGrid input {
+.tableSettingsGrid input,
+.systemSettingsForm input,
+.systemSettingsForm select {
   width: 100%;
   min-height: 42px;
   border: 1px solid #ead7bf;
@@ -179,7 +183,8 @@
   outline: none;
 }
 
-.settingsForm .primaryBtn {
+.settingsForm .primaryBtn,
+.systemSettingsForm .primaryBtn {
   grid-column: 1 / -1;
   min-height: 42px;
   display: inline-flex;
@@ -247,16 +252,86 @@
   font-size: 12px;
 }
 
-.settingsNotice {
+.settingsNotice,
+.settingsSuccess,
+.settingsError {
   margin-top: 12px;
   border-radius: 12px;
-  background: #fff0d1;
-  color: #9a5f18;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
   font-size: 12px;
+}
+
+.settingsNotice {
+  background: #fff0d1;
+  color: #9a5f18;
+}
+
+.settingsSuccess {
+  background: #edf6e8;
+  color: #426b3e;
+}
+
+.settingsError {
+  background: #ffe2d4;
+  color: #b94220;
+}
+
+.systemSettingsStack {
+  display: grid;
+  gap: 12px;
+}
+
+.systemSettingsForm {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.systemSettingsForm label span,
+.settingsForm label span,
+.tableSettingsGrid label span {
+  display: block;
+  color: #5f4435;
+  font-weight: 800;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.printChecks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.printChecks label {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255,248,237,.58);
+  padding: 0 12px;
+  color: #5f4435;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.printChecks input {
+  width: 16px;
+  min-height: auto;
+  accent-color: #c24928;
+}
+
+.cancelPasswordForm {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cancelPasswordForm .primaryBtn {
+  grid-column: auto;
+  align-self: end;
 }
 
 .systemSettingsGrid {
@@ -282,7 +357,9 @@
   .settingsCardsGrid,
   .settingsMainGrid,
   .systemSettingsGrid,
-  .tableSettingsGrid {
+  .tableSettingsGrid,
+  .systemSettingsForm,
+  .cancelPasswordForm {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -293,7 +370,10 @@
   .settingsMainGrid,
   .systemSettingsGrid,
   .tableSettingsGrid,
-  .settingsForm {
+  .settingsForm,
+  .systemSettingsForm,
+  .cancelPasswordForm,
+  .printChecks {
     grid-template-columns: 1fr;
   }
   .settingsTabs { width: 100%; }
