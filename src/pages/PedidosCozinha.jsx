@@ -103,28 +103,32 @@ export default function PedidosCozinha({ tables }) {
 
   return (
     <div className="page kitchenOrdersPage">
-      <header className="kitchenOrdersHeader">
-        <div>
+      <header className="kitchenOrdersHeader kitchenOrdersHeaderRefined">
+        <div className="kitchenTitleBlock">
           <span className="kitchenEyebrow">COZINHA</span>
           <h1>Pedidos enviados para a cozinha</h1>
           <p>Acompanhe todos os pedidos já enviados para os setores de preparo.</p>
         </div>
 
-        <div className="kitchenActions noPrint">
-          <label className="kitchenSearch">
-            <Search size={18} />
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por mesa ou item..." />
-          </label>
-          <div className="periodSelectWrap">
-            <button className="kitchenPeriodBtn" type="button" onClick={() => setShowPeriodMenu(prev => !prev)}>
-              <CalendarDays size={18} /> {period} <span>⌄</span>
-            </button>
-            {showPeriodMenu && <div className="periodMenu">
-              {['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} onClick={() => selectPeriod(item)}>{item}</button>)}
-            </div>}
+        <div className="kitchenActions kitchenActionsRefined noPrint">
+          <div className="kitchenTopActions">
+            <div className="periodSelectWrap">
+              <button className="kitchenPeriodBtn" type="button" onClick={() => setShowPeriodMenu(prev => !prev)}>
+                <CalendarDays size={18} /> {period} <span>⌄</span>
+              </button>
+              {showPeriodMenu && <div className="periodMenu">
+                {['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} onClick={() => selectPeriod(item)}>{item}</button>)}
+              </div>}
+            </div>
+            <button className="kitchenPrimaryBtn" type="button" onClick={handleRefresh}><RefreshCw size={18} /> Atualizar</button>
           </div>
-          <button className="kitchenPrimaryBtn" type="button" onClick={handleRefresh}><RefreshCw size={18} /> Atualizar</button>
-          <button className="kitchenLightBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
+          <div className="kitchenBottomActions">
+            <label className="kitchenSearch">
+              <Search size={18} />
+              <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por mesa ou item..." />
+            </label>
+            <button className="kitchenLightBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
+          </div>
         </div>
       </header>
 
@@ -196,13 +200,13 @@ export default function PedidosCozinha({ tables }) {
           ))}
         </section>
 
-        <aside className="kitchenOperationalCard">
+        <aside className="kitchenOperationalCard kitchenOperationalCardRefined">
           <div className="kitchenSideTitle"><BarChart3 size={24} /><h2>Resumo operacional</h2></div>
-          <div className="kitchenSideList">
-            <div><Clock size={22} /><span>Último pedido enviado</span><strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong></div>
-            <div><Soup size={22} /><span>Pedidos da cozinha</span><strong>{summary.countBySector.cozinha} itens</strong></div>
-            <div><Flame size={22} /><span>Pedidos do churrasco</span><strong>{summary.countBySector.churrasco} itens</strong></div>
-            <div><span className="emojiIcon">🥤</span><span>Pedidos dos sucos</span><strong>{summary.countBySector.sucos} itens</strong></div>
+          <div className="kitchenSideList kitchenSideListRefined">
+            <div className="sideMetric lastOrderMetric"><Clock size={22} /><span>Último pedido enviado</span><strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong></div>
+            <div className="sideMetric"><Soup size={22} /><span>Pedidos da cozinha</span><strong>{summary.countBySector.cozinha} {summary.countBySector.cozinha === 1 ? 'item' : 'itens'}</strong></div>
+            <div className="sideMetric"><Flame size={22} /><span>Pedidos do churrasco</span><strong>{summary.countBySector.churrasco} {summary.countBySector.churrasco === 1 ? 'item' : 'itens'}</strong></div>
+            <div className="sideMetric"><span className="emojiIcon">🥤</span><span>Pedidos dos sucos</span><strong>{summary.countBySector.sucos} {summary.countBySector.sucos === 1 ? 'item' : 'itens'}</strong></div>
             <div className="totalSent"><PackageCheck size={22} /><span>Total de itens enviados</span><strong>{summary.totalItems}</strong></div>
           </div>
           <button className="exportPdfBtn noPrint" type="button" onClick={handlePrint}><FileDown size={18} /> Exportar PDF</button>
