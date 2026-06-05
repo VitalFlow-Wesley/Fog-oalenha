@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Settings, ShieldCheck, Trash2, UserCog, Utensils, ReceiptText, Printer, Store, KeyRound } from 'lucide-react'
+import { Plus, Settings, ShieldCheck, Trash2, UserCog, Utensils, ReceiptText, Printer, Store, KeyRound, Save, CheckCircle2, AlertTriangle } from 'lucide-react'
 
 const roleLabel = {
   admin: 'Administrador',
@@ -7,12 +7,17 @@ const roleLabel = {
   garcom: 'Garçom'
 }
 
-export default function Usuarios({ users, setUsers, tables, setTables, currentUser }) {
+export default function Usuarios({ users, setUsers, tables, setTables, currentUser, settings, setSettings }) {
   const [activeTab, setActiveTab] = useState('colaboradores')
   const [form, setForm] = useState({ name: '', username: '', password: '', role: 'garcom' })
   const [tableQty, setTableQty] = useState(tables?.length || 12)
+  const [systemForm, setSystemForm] = useState(settings)
+  const [cancelForm, setCancelForm] = useState({ managerPassword: '', newPassword: '', confirmPassword: '' })
+  const [systemMessage, setSystemMessage] = useState('')
+  const [cancelMessage, setCancelMessage] = useState('')
 
   const canManage = currentUser?.role === 'admin'
+  const canChangeSensitive = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -59,11 +64,55 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     })
   }
 
+  function saveSystemSettings(event) {
+    event.preventDefault()
+    if (!canChangeSensitive) return
+    setSettings(prev => ({ ...prev, ...systemForm }))
+    setSystemMessage('Configurações do sistema salvas com sucesso.')
+    setTimeout(() => setSystemMessage(''), 3000)
+  }
+
+  function changeCancelPassword(event) {
+    event.preventDefault()
+    setCancelMessage('')
+
+    if (!canChangeSensitive) return
+
+    const authorizedUser = users.find(user =>
+      user.active &&
+      ['admin', 'gerente'].includes(user.role) &&
+      user.password === cancelForm.managerPassword
+    )
+
+    if (!authorizedUser) {
+      setCancelMessage('Senha de administrador ou gerente inválida.')
+      return
+    }
+
+    if (!cancelForm.newPassword.trim() || cancelForm.newPassword.length < 4) {
+      setCancelMessage('A nova senha de cancelamento precisa ter pelo menos 4 caracteres.')
+      return
+    }
+
+    if (cancelForm.newPassword !== cancelForm.confirmPassword) {
+      setCancelMessage('A confirmação da nova senha não confere.')
+      return
+    }
+
+    setSettings(prev => ({
+      ...prev,
+      cancelPassword: cancelForm.newPassword,
+      cancelUpdatedBy: authorizedUser.name
+    }))
+    setCancelForm({ managerPassword: '', newPassword: '', confirmPassword: '' })
+    setCancelMessage(`Senha de cancelamento atualizada por ${authorizedUser.name}.`)
+  }
+
   const settingsCards = [
     { icon: UserCog, title: 'Colaboradores', text: 'Crie login e senha para administrador, gerente e garçom.' },
     { icon: Utensils, title: 'Mesas do salão', text: 'Defina quantas mesas vão aparecer no mapa de atendimento.' },
-    { icon: KeyRound, title: 'Cancelamento', text: 'Cancelamento continua liberado somente com senha de admin ou gerente.' },
-    { icon: Printer, title: 'Impressão cozinha', text: 'Pedidos de cozinha, churrasco e sucos seguem para a impressora da cozinha.' },
+    { icon: KeyRound, title: 'Cancelamento', text: 'Altere a senha de cancelamento com autorização de admin ou gerente.' },
+    { icon: Printer, title: 'Impressão cozinha', text: 'Configure impressoras e escolha a impressora ativa.' },
   ]
 
   return (
@@ -76,12 +125,12 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
         </div>
       </div>
 
-      {!canManage && (
+      {!canChangeSensitive && (
         <section className="settingsBlockedCard">
           <ShieldCheck size={24} />
           <div>
             <strong>Acesso restrito</strong>
-            <span>Somente o administrador pode alterar as configurações do sistema.</span>
+            <span>Somente administrador ou gerente podem alterar as configurações do sistema.</span>
           </div>
         </section>
       )}
@@ -204,30 +253,102 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       )}
 
       {activeTab === 'sistema' && (
-        <section className="settingsPanel wideSettingsPanel">
-          <div className="settingsPanelTitle">
-            <Settings size={22} />
-            <h2>Preferências do sistema</h2>
-          </div>
+        <div className="systemSettingsStack">
+          <section className="settingsPanel wideSettingsPanel">
+            <div className="settingsPanelTitle">
+              <Settings size={22} />
+              <h2>Dados e impressoras</h2>
+            </div>
 
-          <div className="systemSettingsGrid">
-            <div>
-              <Store size={22} />
-              <strong>Nome do estabelecimento</strong>
-              <span>Fogão a Lenha</span>
-            </div>
-            <div>
-              <Printer size={22} />
-              <strong>Impressão</strong>
-              <span>Somente cozinha, churrasco e sucos.</span>
-            </div>
-            <div>
+            <form className="systemSettingsForm" onSubmit={saveSystemSettings}>
+              <label>
+                <span>Nome do estabelecimento</span>
+                <input value={systemForm.establishmentName} onChange={event => setSystemForm({ ...systemForm, establishmentName: event.target.value })} placeholder="Nome do restaurante" />
+              </label>
+
+              <label>
+                <span>Impressora da cozinha</span>
+                <input value={systemForm.printerKitchen} onChange={event => setSystemForm({ ...systemForm, printerKitchen: event.target.value })} placeholder="Ex: Impressora Cozinha" />
+              </label>
+
+              <label>
+                <span>Impressora do bar</span>
+                <input value={systemForm.printerBar} onChange={event => setSystemForm({ ...systemForm, printerBar: event.target.value })} placeholder="Ex: Impressora Bar" />
+              </label>
+
+              <label>
+                <span>Impressora do caixa</span>
+                <input value={systemForm.printerCashier} onChange={event => setSystemForm({ ...systemForm, printerCashier: event.target.value })} placeholder="Ex: Impressora Caixa" />
+              </label>
+
+              <label>
+                <span>Impressora ativa para cozinha</span>
+                <select value={systemForm.activePrinter} onChange={event => setSystemForm({ ...systemForm, activePrinter: event.target.value })}>
+                  <option value="cozinha">{systemForm.printerKitchen || 'Impressora Cozinha'}</option>
+                  <option value="bar">{systemForm.printerBar || 'Impressora Bar'}</option>
+                  <option value="caixa">{systemForm.printerCashier || 'Impressora Caixa'}</option>
+                </select>
+              </label>
+
+              <div className="printChecks">
+                <label>
+                  <input type="checkbox" checked={systemForm.printKitchenItems} onChange={event => setSystemForm({ ...systemForm, printKitchenItems: event.target.checked })} />
+                  Imprimir cozinha/churrasco/sucos
+                </label>
+                <label>
+                  <input type="checkbox" checked={systemForm.printBarItems} onChange={event => setSystemForm({ ...systemForm, printBarItems: event.target.checked })} />
+                  Imprimir itens do bar também
+                </label>
+              </div>
+
+              <button className="primaryBtn fit" type="submit" disabled={!canChangeSensitive}>
+                <Save size={18} /> Salvar configurações
+              </button>
+            </form>
+
+            {systemMessage && <div className="settingsSuccess"><CheckCircle2 size={17} /> {systemMessage}</div>}
+          </section>
+
+          <section className="settingsPanel wideSettingsPanel">
+            <div className="settingsPanelTitle">
               <KeyRound size={22} />
-              <strong>Senha de cancelamento</strong>
-              <span>Administrador ou gerente autorizam pelo próprio login/senha.</span>
+              <h2>Senha de cancelamento</h2>
             </div>
-          </div>
-        </section>
+
+            <form className="systemSettingsForm cancelPasswordForm" onSubmit={changeCancelPassword}>
+              <label>
+                <span>Senha do administrador ou gerente</span>
+                <input type="password" value={cancelForm.managerPassword} onChange={event => setCancelForm({ ...cancelForm, managerPassword: event.target.value })} placeholder="Confirme sua autorização" />
+              </label>
+
+              <label>
+                <span>Nova senha de cancelamento</span>
+                <input type="password" value={cancelForm.newPassword} onChange={event => setCancelForm({ ...cancelForm, newPassword: event.target.value })} placeholder="Nova senha" />
+              </label>
+
+              <label>
+                <span>Confirmar nova senha</span>
+                <input type="password" value={cancelForm.confirmPassword} onChange={event => setCancelForm({ ...cancelForm, confirmPassword: event.target.value })} placeholder="Repita a nova senha" />
+              </label>
+
+              <button className="primaryBtn fit" type="submit" disabled={!canChangeSensitive}>
+                <KeyRound size={18} /> Alterar senha
+              </button>
+            </form>
+
+            {cancelMessage && (
+              <div className={cancelMessage.includes('atualizada') ? 'settingsSuccess' : 'settingsError'}>
+                {cancelMessage.includes('atualizada') ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
+                {cancelMessage}
+              </div>
+            )}
+
+            <div className="settingsNotice">
+              <ShieldCheck size={18} />
+              A senha de cancelamento atual foi definida por: {settings?.cancelUpdatedBy || 'Sistema'}.
+            </div>
+          </section>
+        </div>
       )}
     </div>
   )
