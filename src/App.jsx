@@ -8,11 +8,24 @@ import Usuarios from './pages/Usuarios.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 
+const initialSettings = {
+  establishmentName: 'Fogão a Lenha',
+  printerKitchen: 'Impressora Cozinha',
+  printerBar: 'Impressora Bar',
+  printerCashier: 'Impressora Caixa',
+  activePrinter: 'cozinha',
+  printKitchenItems: true,
+  printBarItems: false,
+  cancelPassword: '1234',
+  cancelUpdatedBy: 'Sistema'
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [page, setPage] = useState('mesas')
   const [tables, setTables] = useState(initialTables)
   const [users, setUsers] = useState(initialUsers)
+  const [settings, setSettings] = useState(initialSettings)
 
   if (!currentUser) return <Login users={users} onLogin={user => {
     setCurrentUser(user)
@@ -29,9 +42,9 @@ export default function App() {
       />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} />}
-        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} />}
+        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
-        {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} />}
+        {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
       </main>
     </div>
   )
