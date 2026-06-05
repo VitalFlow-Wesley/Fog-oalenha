@@ -14,7 +14,8 @@ const initialSettings = {
     { id: 'printer1', label: 'Impressora 1', name: 'Caixa' },
     { id: 'printer2', label: 'Impressora 2', name: 'Cozinha' }
   ],
-  activePrinterId: 'printer2',
+  kitchenPrinterId: 'printer2',
+  cashierPrinterId: 'printer1',
   printKitchenItems: true,
   printBarItems: false,
   cancelPassword: '1234',
