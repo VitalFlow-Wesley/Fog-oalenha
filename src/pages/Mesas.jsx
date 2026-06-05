@@ -5,7 +5,7 @@ import { ClipboardList, Clock, DollarSign, Printer, RefreshCw, ReceiptText, User
 
 const categories = [...new Set(products.map(p => p.category))]
 
-export default function Mesas({ tables, setTables, users, currentUser }) {
+export default function Mesas({ tables, setTables, users, currentUser, settings }) {
   const [selected, setSelected] = useState(null)
   const [activeCategory, setActiveCategory] = useState(categories[0])
   const [observation, setObservation] = useState('')
@@ -76,20 +76,21 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
 
   function confirmCancelItem(event) {
     event.preventDefault()
+    const authorizationPassword = settings?.cancelPassword || ''
     const authorizedUser = users.find(user =>
       user.active &&
       ['admin', 'gerente'].includes(user.role) &&
-      user.password === cancelPassword
+      (user.password === cancelPassword || authorizationPassword === cancelPassword)
     )
 
-    if (!authorizedUser) {
-      setCancelError('Senha inválida. Cancelamento permitido somente com senha de administrador ou gerente.')
+    if (!authorizedUser && cancelPassword !== authorizationPassword) {
+      setCancelError('Senha inválida. Cancelamento permitido somente com senha cadastrada pelo administrador ou gerente.')
       return
     }
 
     const current = tables.find(t => t.id === selected.id)
     const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation))
-    updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser.name })
+    updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser?.name || settings?.cancelUpdatedBy || 'Autorizado' })
     setCancelRequest(null)
     setCancelPassword('')
     setCancelError('')
@@ -212,6 +213,7 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
                 <div className="printPreview">
                   <div className="printTitle"><Printer size={18} /> Pedido enviado para cozinha</div>
                   <strong>Mesa {table.number}</strong>
+                  <span>Impressora ativa: {settings?.printerKitchen || 'Impressora Cozinha'}</span>
                   <span>Sem controle de preparo no sistema. A cozinha recebe o pedido, prepara e entrega normalmente.</span>
                   {kitchenItems.length === 0 ? (
                     <span>Nenhum item de cozinha para enviar.</span>
@@ -265,7 +267,7 @@ export default function Mesas({ tables, setTables, users, currentUser }) {
 
             <label>
               <span>Senha de autorização</span>
-              <input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha do gerente/admin" autoFocus />
+              <input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoFocus />
             </label>
 
             {cancelError && <div className="loginError">{cancelError}</div>}
