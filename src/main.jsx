@@ -9,5 +9,6 @@ import './restaurant-tables.css'
 import './dashboard-premium.css'
 import './reports-premium.css'
 import './settings-premium.css'
+import './printer-dynamic.css'
 
 createRoot(document.getElementById('root')).render(<App />)
