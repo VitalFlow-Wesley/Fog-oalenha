@@ -11,7 +11,7 @@
   height: 100vh;
   margin: 0;
   border-radius: 0;
-  padding: 34px 42px;
+  padding: 24px 34px;
   background: linear-gradient(135deg, #fffaf2 0%, #fff7ec 55%, #fffdf8 100%);
   box-shadow: none;
   overflow: auto;
@@ -20,13 +20,13 @@
 
 .commandClose {
   position: absolute;
-  right: 30px;
-  top: 26px;
-  width: 44px;
-  height: 44px;
+  right: 28px;
+  top: 22px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   border: 1px solid #ead7bf;
-  background: rgba(255, 253, 248, .9);
+  background: rgba(255, 253, 248, .92);
   color: #1f110b;
   display: grid;
   place-items: center;
@@ -35,11 +35,11 @@
 
 .commandHeader {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto;
-  gap: 24px;
+  grid-template-columns: minmax(430px, 1fr) auto;
+  gap: 18px;
   align-items: end;
-  margin-bottom: 24px;
-  padding-right: 62px;
+  margin-bottom: 18px;
+  padding-right: 58px;
 }
 
 .commandEyebrow {
@@ -63,15 +63,17 @@
 .commandTitleRow {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-top: 12px;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: nowrap;
 }
 
 .commandTitleRow h2 {
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: .95;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1;
   color: #1f110b;
   margin: 0;
+  white-space: nowrap;
 }
 
 .commandTitleRow > span {
@@ -81,30 +83,31 @@
   color: #2d1a12;
   border-left: 1px solid #ead7bf;
   padding-left: 16px;
-  font-weight: 700;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .commandActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .commandBtn {
-  min-height: 48px;
+  min-height: 42px;
   border: 1px solid #ead7bf;
   border-radius: 12px;
-  background: rgba(255, 253, 248, .86);
+  background: rgba(255, 253, 248, .88);
   color: #2d1a12;
-  padding: 0 22px;
+  padding: 0 16px;
   font-weight: 900;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(86, 43, 19, .04);
+  box-shadow: 0 8px 16px rgba(86, 43, 19, .04);
 }
 
 .commandBtn:disabled {
@@ -116,43 +119,43 @@
   border-color: transparent;
   background: linear-gradient(135deg, #ba4324, #e96338);
   color: white;
-  box-shadow: 0 14px 28px rgba(202, 75, 37, .24);
+  box-shadow: 0 12px 24px rgba(202, 75, 37, .22);
 }
 
 .commandMainGrid {
   display: grid;
-  grid-template-columns: minmax(360px, .9fr) minmax(460px, 1.35fr);
-  gap: 28px;
+  grid-template-columns: minmax(340px, .82fr) minmax(460px, 1.18fr);
+  gap: 22px;
 }
 
 .commandPanel {
   border: 1px solid #ead7bf;
-  border-radius: 20px;
-  background: rgba(255, 253, 248, .82);
-  box-shadow: 0 14px 34px rgba(86, 43, 19, .055);
-  padding: 26px;
+  border-radius: 18px;
+  background: rgba(255, 253, 248, .84);
+  box-shadow: 0 12px 28px rgba(86, 43, 19, .05);
+  padding: 20px;
 }
 
 .commandPanel h3 {
-  margin: 0 0 22px;
+  margin: 0 0 18px;
   color: #1f110b;
-  font-size: 22px;
+  font-size: 21px;
   line-height: 1;
 }
 
 .commandItemsList {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .commandItem {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
+  gap: 12px;
   border: 1px solid #ead7bf;
-  border-radius: 16px;
+  border-radius: 15px;
   background: linear-gradient(135deg, rgba(255, 252, 246, .96), rgba(255, 247, 235, .74));
-  padding: 18px 16px;
+  padding: 14px 14px;
 }
 
 .commandItemInfo strong,
@@ -163,36 +166,36 @@
 
 .commandItemInfo strong {
   color: #1f110b;
-  font-size: 16px;
-  margin-bottom: 8px;
+  font-size: 15px;
+  margin-bottom: 6px;
 }
 
 .commandItemInfo span,
 .commandItemInfo small {
   color: #5f4435;
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12.5px;
+  line-height: 1.35;
 }
 
 .commandItemControls {
   display: grid;
   justify-items: end;
   align-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .qtyStepper {
   display: inline-flex;
   align-items: center;
   border: 1px solid #ead7bf;
-  border-radius: 12px;
+  border-radius: 11px;
   overflow: hidden;
   background: #fffdf8;
 }
 
 .qtyStepper button {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border: 0;
   background: transparent;
   color: #2d1a12;
@@ -202,14 +205,14 @@
 }
 
 .qtyStepper b {
-  min-width: 28px;
+  min-width: 26px;
   text-align: center;
 }
 
 .removeItemBtn {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
   border: 1px solid #ffd4c7;
   background: #fff2ed;
   color: #ef4d31;
@@ -220,34 +223,24 @@
 
 .commandItemControls > strong {
   color: #c84928;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .commandMergeBox {
-  margin-top: 14px;
-}
-
-.commandMergeBox select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid #ead7bf;
-  border-radius: 13px;
-  background: #fffdf8;
-  color: #4f3425;
-  padding: 0 12px;
+  display: none;
 }
 
 .commandTotalCard {
-  margin-top: 18px;
-  min-height: 92px;
+  margin-top: 14px;
+  min-height: 82px;
   border-radius: 16px;
-  padding: 20px 22px;
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: white;
   background: linear-gradient(135deg, #b73d20, #e45d34);
-  box-shadow: 0 16px 28px rgba(196, 73, 40, .24);
+  box-shadow: 0 14px 24px rgba(196, 73, 40, .22);
 }
 
 .commandTotalCard span,
@@ -256,8 +249,8 @@
 }
 
 .commandTotalCard span {
-  font-size: 15px;
-  margin-bottom: 7px;
+  font-size: 14px;
+  margin-bottom: 6px;
 }
 
 .commandTotalCard small {
@@ -265,21 +258,21 @@
 }
 
 .commandTotalCard strong {
-  font-size: clamp(28px, 3vw, 40px);
+  font-size: clamp(26px, 2.7vw, 36px);
   line-height: 1;
 }
 
 .commandObs {
-  min-height: 58px;
+  min-height: 52px;
   border: 1px solid #ead7bf;
   border-radius: 15px;
   background: #fffdf8;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 16px;
+  padding: 0 15px;
   color: #6d5748;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .commandObs input {
@@ -287,24 +280,24 @@
   outline: 0;
   background: transparent;
   flex: 1;
-  font-size: 15px;
+  font-size: 14.5px;
   color: #2d1a12;
 }
 
 .commandCategoryTabs {
   display: flex;
-  gap: 9px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .commandCategoryTabs button {
-  min-height: 40px;
+  min-height: 36px;
   border: 1px solid #ead7bf;
   border-radius: 999px;
   background: #fff7eb;
   color: #4f3425;
-  padding: 0 16px;
+  padding: 0 14px;
   cursor: pointer;
 }
 
@@ -312,36 +305,36 @@
   background: linear-gradient(135deg, #b73d20, #e45d34);
   border-color: transparent;
   color: white;
-  box-shadow: 0 10px 20px rgba(202, 75, 37, .18);
+  box-shadow: 0 10px 18px rgba(202, 75, 37, .16);
 }
 
 .commandProductGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .commandProductCard {
-  min-height: 126px;
+  min-height: 104px;
   border: 1px solid #ead7bf;
-  border-radius: 16px;
+  border-radius: 15px;
   background: rgba(255, 253, 248, .9);
-  padding: 14px;
+  padding: 12px;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) 36px;
-  gap: 14px;
+  grid-template-columns: 74px minmax(0, 1fr) 34px;
+  gap: 12px;
   align-items: center;
   text-align: left;
   cursor: pointer;
 }
 
 .productThumb {
-  width: 92px;
-  height: 92px;
-  border-radius: 13px;
+  width: 74px;
+  height: 74px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
-  font-size: 38px;
+  font-size: 30px;
   background: radial-gradient(circle at 35% 30%, #fff8e9, #f4d6b4);
   box-shadow: inset 0 0 0 1px rgba(127, 72, 37, .08);
 }
@@ -354,24 +347,25 @@
 
 .commandProductCard strong {
   color: #1f110b;
-  font-size: 16px;
-  margin-bottom: 8px;
+  font-size: 15px;
+  margin-bottom: 7px;
 }
 
 .commandProductCard span {
   color: #c84928;
   font-weight: 900;
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 15px;
+  margin-bottom: 8px;
 }
 
 .commandProductCard small {
   color: #5f4435;
+  font-size: 12.5px;
 }
 
 .commandProductCard em {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border: 1px solid #ead7bf;
   border-radius: 999px;
   display: grid;
@@ -381,18 +375,39 @@
   background: #fffdf8;
 }
 
-@media (max-width: 1180px) {
-  .commandHeader,
-  .commandMainGrid {
+.joinTableModal select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  background: #fffdf8;
+  color: #4f3425;
+  padding: 0 12px;
+  font-size: 15px;
+}
+
+.joinTableModal .secondaryBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1280px) {
+  .commandHeader {
     grid-template-columns: 1fr;
   }
 
   .commandActions {
     justify-content: flex-start;
   }
+}
+
+@media (max-width: 1180px) {
+  .commandMainGrid {
+    grid-template-columns: 1fr;
+  }
 
   .commandDrawer {
-    padding: 28px 22px;
+    padding: 26px 20px;
   }
 }
 
@@ -403,12 +418,12 @@
   }
 
   .commandProductCard {
-    grid-template-columns: 72px 1fr 34px;
+    grid-template-columns: 66px 1fr 32px;
   }
 
   .productThumb {
-    width: 72px;
-    height: 72px;
+    width: 66px;
+    height: 66px;
   }
 
   .commandTitleRow {
