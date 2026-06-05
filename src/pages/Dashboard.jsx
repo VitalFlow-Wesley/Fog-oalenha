@@ -46,8 +46,8 @@ export default function Dashboard({ tables, setPage }) {
     <div className="page operationDashboardPage">
       <div className="dashboardHeader">
         <div>
-          <span className="eyebrow dashboardEyebrow">VISÃO GERAL</span>
-          <h1>Dashboard da operação</h1>
+          <h1>Visão geral</h1>
+          <p className="dashboardUpdatedText">Acompanhamento rápido das mesas, consumo e pedidos enviados.</p>
           <p className="dashboardUpdatedText">Atualizado às {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
 
