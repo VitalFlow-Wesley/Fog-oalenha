@@ -11,12 +11,10 @@ import { initialUsers } from './data/users.js'
 const initialSettings = {
   establishmentName: 'Fogão a Lenha',
   printers: [
-    { id: 'printer1', label: 'Impressora 1', name: 'Impressora 1' },
-    { id: 'printer2', label: 'Impressora 2', name: 'Impressora 2' },
-    { id: 'printer3', label: 'Impressora 3', name: 'Impressora 3' },
-    { id: 'printer4', label: 'Impressora 4', name: 'Impressora 4' }
+    { id: 'printer1', label: 'Impressora 1', name: 'Caixa' },
+    { id: 'printer2', label: 'Impressora 2', name: 'Cozinha' }
   ],
-  activePrinterId: 'printer1',
+  activePrinterId: 'printer2',
   printKitchenItems: true,
   printBarItems: false,
   cancelPassword: '1234',
@@ -37,12 +35,7 @@ export default function App() {
 
   return (
     <div className="appShell">
-      <Sidebar
-        page={page}
-        setPage={setPage}
-        currentUser={currentUser}
-        onLogout={() => setCurrentUser(null)}
-      />
+      <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={() => setCurrentUser(null)} />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
