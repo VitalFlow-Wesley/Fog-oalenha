@@ -11,16 +11,24 @@
   margin-bottom: 12px !important;
 }
 
+.kitchenOrdersHeaderRefined {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 500px !important;
+  align-items: start !important;
+}
+
+.kitchenTitleBlock h1,
 .kitchenOrdersHeader h1 {
-  max-width: 520px !important;
+  max-width: 620px !important;
   font-size: clamp(26px, 2.35vw, 34px) !important;
   line-height: .96 !important;
   letter-spacing: -.035em !important;
   margin: 4px 0 0 !important;
 }
 
+.kitchenTitleBlock p,
 .kitchenOrdersHeader p {
-  max-width: 500px !important;
+  max-width: 560px !important;
   font-size: 14px !important;
   line-height: 1.35 !important;
   margin-top: 6px !important;
@@ -36,10 +44,34 @@
   max-width: 460px !important;
 }
 
+.kitchenActionsRefined {
+  width: 100% !important;
+  max-width: 500px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  justify-items: end !important;
+}
+
+.kitchenTopActions,
+.kitchenBottomActions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
 .kitchenSearch {
   width: 220px !important;
   min-height: 38px !important;
   border-radius: 12px !important;
+}
+
+.kitchenBottomActions .kitchenSearch {
+  flex: 1 !important;
+  width: auto !important;
+  min-width: 260px !important;
 }
 
 .kitchenPeriodBtn,
@@ -49,6 +81,7 @@
   border-radius: 12px !important;
   padding: 0 13px !important;
   font-size: 14px !important;
+  white-space: nowrap !important;
 }
 
 .kitchenSummaryGrid {
@@ -94,7 +127,7 @@
 }
 
 .kitchenOrdersLayout {
-  grid-template-columns: minmax(0, 1.9fr) minmax(260px, .7fr) !important;
+  grid-template-columns: minmax(0, 1.9fr) minmax(300px, .78fr) !important;
   gap: 14px !important;
 }
 
@@ -162,23 +195,50 @@
   border-radius: 16px !important;
 }
 
+.kitchenOperationalCardRefined {
+  padding: 16px !important;
+}
+
 .kitchenSideTitle {
   gap: 8px !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
 }
 
 .kitchenSideTitle h2 {
-  font-size: 22px !important;
+  font-size: 23px !important;
+  line-height: 1 !important;
 }
 
+.kitchenSideListRefined {
+  display: grid !important;
+  gap: 0 !important;
+}
+
+.kitchenSideListRefined > div,
 .kitchenSideList > div {
-  grid-template-columns: 28px 1fr !important;
-  gap: 8px !important;
-  padding: 9px 0 !important;
+  grid-template-columns: 34px 1fr !important;
+  gap: 10px !important;
+  padding: 11px 0 !important;
+  align-items: center !important;
+}
+
+.kitchenSideListRefined .sideMetric strong {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.15 !important;
+  margin-top: 2px !important;
+  word-break: normal !important;
+}
+
+.kitchenSideListRefined .lastOrderMetric strong {
+  font-size: 15px !important;
+  white-space: nowrap !important;
 }
 
 .kitchenSideList span:not(.emojiIcon) {
-  font-size: 11.5px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
 }
 
 .kitchenSideList strong {
@@ -186,31 +246,45 @@
   margin-top: 1px !important;
 }
 
-.kitchenSideList .totalSent {
+.kitchenSideListRefined .totalSent {
   margin-top: 8px !important;
-  padding: 10px !important;
+  padding: 11px 12px !important;
+  border: 1px solid rgba(216, 149, 32, .24) !important;
+  display: grid !important;
+  grid-template-columns: 34px 1fr !important;
+  border-radius: 12px !important;
 }
 
 .exportPdfBtn {
   min-height: 36px !important;
-  margin-top: 10px !important;
+  margin-top: 12px !important;
   font-size: 13px !important;
 }
 
 .kitchenFlowMessage {
-  margin-top: 9px !important;
+  margin-top: 10px !important;
   min-height: 34px !important;
   padding: 8px 10px !important;
   font-size: 11.5px !important;
+  justify-content: center !important;
 }
 
 @media (max-width: 1180px) {
+  .kitchenOrdersHeaderRefined,
   .kitchenOrdersHeader {
+    grid-template-columns: 1fr !important;
     display: grid !important;
   }
 
-  .kitchenActions {
+  .kitchenActions,
+  .kitchenActionsRefined {
     max-width: none !important;
+    justify-items: start !important;
+  }
+
+  .kitchenTopActions,
+  .kitchenBottomActions {
+    justify-content: flex-start !important;
   }
 }
 
@@ -221,6 +295,15 @@
 
   .kitchenOrdersHeader h1 {
     font-size: 28px !important;
+  }
+
+  .kitchenTopActions,
+  .kitchenBottomActions {
+    flex-wrap: wrap !important;
+  }
+
+  .kitchenBottomActions .kitchenSearch {
+    min-width: 100% !important;
   }
 
   .kitchenOrderCard {
