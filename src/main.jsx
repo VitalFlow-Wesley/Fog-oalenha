@@ -11,5 +11,6 @@ import './reports-premium.css'
 import './settings-premium.css'
 import './printer-dynamic.css'
 import './print.css'
+import './command-premium.css'
 
 createRoot(document.getElementById('root')).render(<App />)
