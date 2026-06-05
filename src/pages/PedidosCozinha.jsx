@@ -101,13 +101,19 @@ export default function PedidosCozinha({ tables }) {
     { title: 'Último envio', value: summary.lastOrder ? summary.lastOrder.time : '--:--', icon: Clock, tone: 'orange' },
   ]
 
+  const sectorMetrics = [
+    { key: 'cozinha', label: 'Cozinha', value: summary.countBySector.cozinha, icon: Soup },
+    { key: 'churrasco', label: 'Churrasco', value: summary.countBySector.churrasco, icon: Flame },
+    { key: 'sucos', label: 'Sucos', value: summary.countBySector.sucos, icon: '🥤' },
+  ]
+
   return (
     <div className="page kitchenOrdersPage">
       <header className="kitchenOrdersHeader kitchenOrdersHeaderRefined">
         <div className="kitchenTitleBlock">
           <span className="kitchenEyebrow">COZINHA</span>
-          <h1>Pedidos enviados para a cozinha</h1>
-          <p>Acompanhe todos os pedidos já enviados para os setores de preparo.</p>
+          <h1>Pedidos enviados</h1>
+          <p>Acompanhe os pedidos enviados para preparo.</p>
         </div>
 
         <div className="kitchenActions kitchenActionsRefined noPrint">
@@ -116,7 +122,7 @@ export default function PedidosCozinha({ tables }) {
               <button className="kitchenPeriodBtn" type="button" onClick={() => setShowPeriodMenu(prev => !prev)}>
                 <CalendarDays size={18} /> {period} <span>⌄</span>
               </button>
-              {showPeriodMenu && <div className="periodMenu">
+              {showPeriodMenu && <div className="periodMenu kitchenPeriodMenu">
                 {['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} onClick={() => selectPeriod(item)}>{item}</button>)}
               </div>}
             </div>
@@ -201,14 +207,36 @@ export default function PedidosCozinha({ tables }) {
         </section>
 
         <aside className="kitchenOperationalCard kitchenOperationalCardRefined">
-          <div className="kitchenSideTitle"><BarChart3 size={24} /><h2>Resumo operacional</h2></div>
-          <div className="kitchenSideList kitchenSideListRefined">
-            <div className="sideMetric lastOrderMetric"><Clock size={22} /><span>Último pedido enviado</span><strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong></div>
-            <div className="sideMetric"><Soup size={22} /><span>Pedidos da cozinha</span><strong>{summary.countBySector.cozinha} {summary.countBySector.cozinha === 1 ? 'item' : 'itens'}</strong></div>
-            <div className="sideMetric"><Flame size={22} /><span>Pedidos do churrasco</span><strong>{summary.countBySector.churrasco} {summary.countBySector.churrasco === 1 ? 'item' : 'itens'}</strong></div>
-            <div className="sideMetric"><span className="emojiIcon">🥤</span><span>Pedidos dos sucos</span><strong>{summary.countBySector.sucos} {summary.countBySector.sucos === 1 ? 'item' : 'itens'}</strong></div>
-            <div className="totalSent"><PackageCheck size={22} /><span>Total de itens enviados</span><strong>{summary.totalItems}</strong></div>
+          <div className="kitchenSideTitle"><BarChart3 size={22} /><h2>Resumo operacional</h2></div>
+
+          <div className="lastOrderBox">
+            <Clock size={20} />
+            <div>
+              <span>Último pedido</span>
+              <strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong>
+            </div>
           </div>
+
+          <div className="sectorMetricGrid">
+            {sectorMetrics.map(metric => {
+              const Icon = metric.icon
+              return (
+                <div className={`sectorMetricBox ${metric.key}`} key={metric.key}>
+                  {typeof Icon === 'string' ? <span className="emojiIcon">{Icon}</span> : <Icon size={18} />}
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                  <small>{metric.value === 1 ? 'item' : 'itens'}</small>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="totalSentBox">
+            <PackageCheck size={20} />
+            <span>Total de itens enviados</span>
+            <strong>{summary.totalItems}</strong>
+          </div>
+
           <button className="exportPdfBtn noPrint" type="button" onClick={handlePrint}><FileDown size={18} /> Exportar PDF</button>
           <div className="kitchenFlowMessage"><CheckCircle2 size={18} /> Fluxo da cozinha sob controle!</div>
         </aside>
