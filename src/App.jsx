@@ -38,7 +38,7 @@ export default function App() {
     <div className="appShell">
       <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={() => setCurrentUser(null)} />
       <main className="content">
-        {page === 'dashboard' && <Dashboard tables={tables} />}
+        {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
