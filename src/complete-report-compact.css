@@ -1,0 +1,320 @@
+/* Ajustes compactos do Relatório Completo
+   Mantém o visual premium, mas reduz altura dos cards e melhora a densidade da tela. */
+
+.completeReportMode{
+  gap: 12px !important;
+}
+
+.completeReportsHeader{
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) auto !important;
+  gap: 18px !important;
+  align-items: start !important;
+  margin-bottom: 18px !important;
+}
+
+.completeReportsHeader h1{
+  font-size: clamp(34px, 3vw, 46px) !important;
+  line-height: .98 !important;
+  margin-bottom: 8px !important;
+}
+
+.completeReportsHeader p{
+  max-width: 620px !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+
+.completeReportsHeader .reportsActions{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.completeReportsHeader .reportTabs,
+.completeReportsHeader .reportPeriodSelect,
+.completeReportsHeader .reportActionBtn{
+  min-height: 38px !important;
+}
+
+.completeReportsHeader .reportActionBtn{
+  padding: 0 14px !important;
+  border-radius: 12px !important;
+}
+
+.completeExecutiveGrid{
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.completeExecutiveCard{
+  min-height: 82px !important;
+  grid-template-columns: 36px 1fr !important;
+  gap: 9px !important;
+  padding: 12px !important;
+  border-radius: 14px !important;
+  align-items: center !important;
+}
+
+.completeExecutiveIcon{
+  width: 36px !important;
+  height: 36px !important;
+  box-shadow: 0 8px 16px rgba(200,72,44,.13) !important;
+}
+
+.completeExecutiveIcon svg{
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.completeExecutiveCard span{
+  font-size: 11.5px !important;
+  margin-bottom: 2px !important;
+  line-height: 1.12 !important;
+}
+
+.completeExecutiveCard strong{
+  font-size: clamp(17px, 1.15vw, 22px) !important;
+  line-height: 1.05 !important;
+}
+
+.completeExecutiveCard small{
+  margin-top: 3px !important;
+  font-size: 10.8px !important;
+  line-height: 1.15 !important;
+}
+
+.completeExecutiveCard em{
+  margin-top: 5px !important;
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+
+.completePanel{
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.completePanel h2{
+  margin-bottom: 12px !important;
+  font-size: 18px !important;
+}
+
+.topAnalytics{
+  grid-template-columns: 1.08fr 1.05fr .9fr !important;
+  align-items: stretch !important;
+}
+
+.sectorPerformanceGrid{
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.sectorPerformanceCard{
+  min-height: 104px !important;
+  gap: 4px !important;
+  padding: 10px 8px !important;
+  border-radius: 12px !important;
+}
+
+.sectorPerformanceCard svg{
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.sectorPerformanceCard strong{
+  font-size: 14px !important;
+}
+
+.sectorPerformanceCard span,
+.sectorPerformanceCard small{
+  font-size: 10.8px !important;
+  line-height: 1.15 !important;
+}
+
+.sectorPerformanceCard b{
+  font-size: 15px !important;
+}
+
+.categoryReportList,
+.paymentReportList,
+.indicatorReportList{
+  gap: 7px !important;
+}
+
+.categoryReportItem{
+  gap: 4px !important;
+}
+
+.categoryReportItem > div{
+  grid-template-columns: 1fr 52px 78px !important;
+  font-size: 11.5px !important;
+}
+
+.categoryReportItem progress{
+  height: 7px !important;
+}
+
+.paymentReportList > div,
+.indicatorReportList > div{
+  min-height: 30px !important;
+  padding-bottom: 7px !important;
+  font-size: 12px !important;
+}
+
+.paymentTotal{
+  padding: 8px 10px !important;
+}
+
+.middleAnalytics{
+  grid-template-columns: 1fr 1fr !important;
+}
+
+.completeTableRow{
+  min-height: 34px !important;
+  padding: 7px 10px !important;
+  font-size: 11.5px !important;
+  gap: 8px !important;
+}
+
+.completeTableRow.head{
+  min-height: 32px !important;
+  font-size: 10.5px !important;
+}
+
+.productCompleteTable .completeTableRow{
+  grid-template-columns: 26px 1.2fr .78fr .72fr 40px 82px 82px !important;
+}
+
+.tableCompleteTable .completeTableRow{
+  grid-template-columns: .65fr .82fr 42px 50px 1.15fr .64fr !important;
+}
+
+.completeTableRow i{
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+}
+
+.completeLinkBtn{
+  margin-top: 9px !important;
+  font-size: 12px !important;
+}
+
+.bottomAnalytics{
+  grid-template-columns: 1fr .82fr 1fr !important;
+}
+
+.movementChart{
+  height: 130px !important;
+  gap: 7px !important;
+  padding-top: 6px !important;
+}
+
+.movementColumn span{
+  max-width: 18px !important;
+  box-shadow: 0 6px 12px rgba(200,63,37,.12) !important;
+}
+
+.movementColumn small{
+  font-size: 10px !important;
+}
+
+.completeSuccessBox{
+  margin-top: 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+}
+
+.auditReportSection{
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.auditMetricsGrid{
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.auditMetricsGrid div{
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+}
+
+.auditMetricsGrid span{
+  font-size: 11px !important;
+}
+
+.auditMetricsGrid strong{
+  font-size: 17px !important;
+  margin-top: 3px !important;
+}
+
+.auditReportHeader{
+  margin-bottom: 12px !important;
+}
+
+.auditReportHeader h3{
+  font-size: 18px !important;
+}
+
+.auditReportHeader span{
+  min-height: 28px !important;
+  font-size: 11px !important;
+}
+
+.auditReportRow{
+  min-height: 48px !important;
+  padding: 8px 10px !important;
+  font-size: 11.5px !important;
+}
+
+.auditReportRow.head{
+  min-height: 32px !important;
+  font-size: 10px !important;
+}
+
+.auditReportRow strong{
+  font-size: 12px !important;
+}
+
+.auditReportRow small{
+  font-size: 10px !important;
+}
+
+@media(max-width: 1320px){
+  .completeExecutiveGrid{
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media(max-width: 1100px){
+  .completeReportsHeader{
+    grid-template-columns: 1fr !important;
+  }
+
+  .completeReportsHeader .reportsActions{
+    justify-content: flex-start !important;
+  }
+
+  .topAnalytics,
+  .middleAnalytics,
+  .bottomAnalytics{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media(max-width: 760px){
+  .completeExecutiveGrid,
+  .sectorPerformanceGrid,
+  .auditMetricsGrid{
+    grid-template-columns: 1fr !important;
+  }
+
+  .completeExecutiveCard{
+    min-height: 78px !important;
+  }
+}
