@@ -23,6 +23,7 @@ import './kitchen-orders.css'
 import './kitchen-orders-compact.css'
 import './closing-cash.css'
 import './closing-final-polish.css'
+import './closing-header-fix.css'
 import './print.css'
 import './command-premium.css'
 
