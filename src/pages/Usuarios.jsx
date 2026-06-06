@@ -58,7 +58,7 @@ function PasswordField({ label, value, onChange, visible, onToggle, placeholder 
 }
 
 export default function Usuarios({ users, setUsers, tables, setTables, currentUser, settings, setSettings }) {
-  const [activeTab, setActiveTab] = useState('mesas')
+  const [activeTab, setActiveTab] = useState('colaboradores')
   const [form, setForm] = useState({ name: '', username: '', password: '', role: 'garcom' })
   const [tableQty, setTableQty] = useState(tables?.length || 12)
   const [tablePrefix, setTablePrefix] = useState('Mesa')
@@ -69,7 +69,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [tableConfigs, setTableConfigs] = useState(() => buildTableConfig(tables))
   const [systemForm, setSystemForm] = useState(normalizeSettings(settings))
   const [cancelForm, setCancelForm] = useState({ managerPassword: '', newPassword: '', confirmPassword: '' })
-  const [showPasswords, setShowPasswords] = useState({ manager: false, new: false, confirm: false })
+  const [showPasswords, setShowPasswords] = useState({ manager: false, new: false, confirm: false, form: false })
   const [systemMessage, setSystemMessage] = useState('')
   const [cancelMessage, setCancelMessage] = useState('')
   const canManage = currentUser?.role === 'admin'
@@ -81,18 +81,24 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const visibleTableConfigs = showOnlyActiveTables ? activeTables : tableConfigs
 
   const sectorRows = [
-    { key: 'caixa', sector: 'Caixa', icon: ReceiptText, printerId: systemForm.cashierPrinterId },
-    { key: 'cozinha', sector: 'Cozinha', icon: Printer, printerId: systemForm.kitchenPrinterId },
-    { key: 'churrasco', sector: 'Churrasco', icon: Utensils, printerId: systemForm.grillPrinterId },
-    { key: 'sucos', sector: 'Sucos', icon: Store, printerId: systemForm.juicePrinterId },
+    { key: 'caixa', sector: 'Caixa / comanda do cliente', short: 'Caixa', icon: ReceiptText, printerId: systemForm.cashierPrinterId, field: 'cashierPrinterId', rule: 'Imprime a comanda detalhada para conferência do cliente.' },
+    { key: 'cozinha', sector: 'Cozinha', short: 'Cozinha', icon: Printer, printerId: systemForm.kitchenPrinterId, field: 'kitchenPrinterId', rule: 'Recebe pedidos de refeições e pratos quentes.' },
+    { key: 'churrasco', sector: 'Churrasco', short: 'Churrasco', icon: Utensils, printerId: systemForm.grillPrinterId, field: 'grillPrinterId', rule: 'Recebe pedidos destinados ao churrasqueiro.' },
+    { key: 'sucos', sector: 'Sucos', short: 'Sucos', icon: Store, printerId: systemForm.juicePrinterId, field: 'juicePrinterId', rule: 'Recebe pedidos de sucos e bebidas preparadas.' },
   ]
 
   const authToggles = [
     ['requireCancelPassword', 'Exigir senha para cancelar item'],
     ['requireCloseTablePassword', 'Exigir senha para fechar mesa'],
-    ['requireDiscountPassword', 'Exigir senha para aplicar desconto'],
+    ['requireDiscountPassword', 'Exigir autorização para desconto'],
     ['requireReprintPassword', 'Exigir senha para reimpressão de comanda'],
   ]
+
+  const permissionOptions = ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários']
+
+  const totalUsers = users.length
+  const totalAdmins = users.filter(user => user.role === 'admin').length
+  const totalWaiters = users.filter(user => user.role === 'garcom').length
 
   function addUser(e) {
     e.preventDefault()
@@ -176,6 +182,13 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     })
   }
 
+  function updatePrinterName(id, name) {
+    setSystemForm(prev => ({
+      ...prev,
+      printers: prev.printers.map(printer => printer.id === id ? { ...printer, name } : printer)
+    }))
+  }
+
   function saveSystem(e) {
     e?.preventDefault?.()
     if (!canChangeSensitive) return
@@ -209,13 +222,59 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setCancelMessage(`Senha de cancelamento atualizada por ${authorized.name}.`)
   }
 
-  return <div className="page settingsPremiumPage compactSettingsPage">
-    <div className="settingsHeader"><span className="eyebrow settingsEyebrow">CONTROLE DO SISTEMA</span><h1>Configurações</h1><p>Gerencie acessos, mesas, impressões e preferências do sistema.</p></div>
-    <div className="settingsTabs"><button className={activeTab === 'colaboradores' ? 'active' : ''} onClick={() => setActiveTab('colaboradores')}>Acessos</button><button className={activeTab === 'mesas' ? 'active' : ''} onClick={() => setActiveTab('mesas')}>Mesas</button><button className={activeTab === 'impressao' ? 'active' : ''} onClick={() => setActiveTab('impressao')}>Impressão</button><button className={activeTab === 'sistema' ? 'active' : ''} onClick={() => setActiveTab('sistema')}>Sistema</button></div>
+  return <div className="page settingsPremiumPage compactSettingsPage refinedSettingsPage">
+    <header className="settingsTopHeader">
+      <div>
+        <span className="eyebrow settingsEyebrow">CONTROLE DO SISTEMA</span>
+        <h1>Configurações</h1>
+        <p>Gerencie acessos, mesas, impressões e preferências do sistema.</p>
+      </div>
+      <div className="systemActiveCard"><ShieldCheck size={24} /><div><strong>Sistema ativo</strong><span>Última atualização: agora <b /></span></div></div>
+    </header>
 
-    {activeTab === 'colaboradores' && <div className="settingsMainGrid">
-      {canManage && <section className="settingsPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Adicionar colaborador</h2></div><form className="settingsForm" onSubmit={addUser}><label><span>Nome</span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label><span>Login</span><input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label><label><span>Senha</span><input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label><label><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label><button className="primaryBtn"><Plus size={18} /> Criar acesso</button></form></section>}
-      <section className="settingsPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div><div className="settingsUsersList">{users.map(user => <div className="settingsUserCard" key={user.id}><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><div><strong>{user.name}</strong><span>Login: {user.username}</span><small>{roleLabel[user.role]}</small></div>{canManage && user.id !== currentUser?.id && <button className="iconDanger" onClick={() => setUsers(prev => prev.filter(u => u.id !== user.id))}><Trash2 size={18} /></button>}</div>)}</div></section>
+    <nav className="settingsTabs settingsTabsLarge">
+      <button className={activeTab === 'colaboradores' ? 'active' : ''} onClick={() => setActiveTab('colaboradores')}><UserCog size={18} /> Acessos</button>
+      <button className={activeTab === 'mesas' ? 'active' : ''} onClick={() => setActiveTab('mesas')}><Utensils size={18} /> Mesas</button>
+      <button className={activeTab === 'impressao' ? 'active' : ''} onClick={() => setActiveTab('impressao')}><Printer size={18} /> Impressão</button>
+      <button className={activeTab === 'sistema' ? 'active' : ''} onClick={() => setActiveTab('sistema')}><Settings size={18} /> Sistema</button>
+    </nav>
+
+    {activeTab === 'colaboradores' && <div className="accessSettingsTab">
+      <section className="accessSummaryGrid">
+        <div className="accessSummaryCard"><UserCog size={22} /><div><span>Total de usuários</span><strong>{totalUsers}</strong><small>Usuários cadastrados</small></div></div>
+        <div className="accessSummaryCard"><ShieldCheck size={22} /><div><span>Administradores</span><strong>{totalAdmins}</strong><small>Acesso total ao sistema</small></div></div>
+        <div className="accessSummaryCard"><Utensils size={22} /><div><span>Garçons</span><strong>{totalWaiters}</strong><small>Acessos de atendimento</small></div></div>
+      </section>
+
+      <div className="accessMainGrid">
+        {canManage && <section className="settingsPanel accessCreatePanel">
+          <div className="settingsPanelTitle"><Plus size={22} /><h2>Criar novo acesso</h2></div>
+          <form className="settingsForm accessCreateForm" onSubmit={addUser}>
+            <label><span>Nome completo</span><input placeholder="Ex.: João da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
+            <label><span>Login</span><input placeholder="Ex.: joao.silva" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label>
+            <label className="span2"><span>Senha</span><div className="passwordInputWrap"><input type={showPasswords.form ? 'text' : 'password'} placeholder="Digite uma senha" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, form: !prev.form }))}>{showPasswords.form ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
+            <label className="span2"><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label>
+            <div className="permissionsChecklist"><strong>Permissões</strong>{permissionOptions.map((item, index) => <label key={item}><input type="checkbox" defaultChecked={index < 2 || form.role === 'admin'} /> {item}</label>)}</div>
+            <button className="primaryBtn"><Plus size={18} /> Criar acesso</button>
+          </form>
+        </section>}
+
+        <section className="settingsPanel accessListPanel">
+          <div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div>
+          <div className="accessTable">
+            <div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>
+            {users.map(user => <div className="accessTableRow" key={user.id}>
+              <div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div>
+              <span>{user.username}</span>
+              <b>{roleLabel[user.role]}</b>
+              <em>● Ativo</em>
+              <div className="accessActions"><button type="button"><Pencil size={16} /></button>{canManage && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => setUsers(prev => prev.filter(u => u.id !== user.id))}><Trash2 size={16} /></button>}</div>
+            </div>)}
+          </div>
+          <div className="permissionsInfoBox"><ShieldCheck size={20} /><div><strong>Permissões por função</strong><span>As permissões definem o que cada função pode acessar e executar no sistema.</span></div><button type="button">Gerenciar permissões</button></div>
+        </section>
+      </div>
+      <div className="settingsTipBar"><AlertTriangle size={18} /><strong>Dica</strong><span>Mantenha os acessos organizados e revise as permissões periodicamente para garantir a segurança do sistema.</span></div>
     </div>}
 
     {activeTab === 'mesas' && <div className="tablesSettingsPage">
@@ -239,7 +298,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
               <label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label>
               <label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label>
             </div>
-            <div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configurações</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div>
+            <div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div>
           </section>
 
           <section className="settingsPanel tablePreviewPanel">
@@ -268,13 +327,33 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       {systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
     </div>}
 
-    {activeTab === 'impressao' && <section className="settingsPanel wideSettingsPanel"><div className="settingsPanelTitle"><Printer size={22} /><h2>Impressão</h2></div><p className="settingsHelpText">As impressoras e regras de saída ficam centralizadas na aba Sistema para evitar configuração duplicada.</p><button className="primaryBtn fit" onClick={() => setActiveTab('sistema')}>Abrir configurações do sistema</button></section>}
+    {activeTab === 'impressao' && <div className="printSettingsTab">
+      <section className="settingsPanel printerManagePanel">
+        <div className="cardTitleWithAction"><div className="settingsPanelTitle"><Printer size={22} /><h2>Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div>
+        <div className="printerRegistryGrid">
+          {systemForm.printers.map((printer, index) => <div className="printerRegistryCard" key={printer.id}>
+            <span>{printer.label || `Impressora ${index + 1}`}</span>
+            <input value={printer.name} onChange={e => updatePrinterName(printer.id, e.target.value)} placeholder={`Nome da impressora ${index + 1}`} />
+            <div><em>● Ativa</em><button type="button" onClick={() => testPrinter(printer.name)}><Printer size={15} /> Testar</button><button type="button" className="dangerOutline" disabled={systemForm.printers.length <= 1} onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div>
+          </div>)}
+        </div>
+      </section>
 
-    {activeTab === 'sistema' && <div className="systemSettingsGridV2">
-      <section className="settingsPanel systemCard establishmentSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Building2 size={20} /></div><h2>1. Dados do estabelecimento</h2></div><div className="establishmentGrid"><label><span>Nome do estabelecimento</span><input value={systemForm.establishmentName} onChange={e => setSystemForm({ ...systemForm, establishmentName: e.target.value })} /></label><label><span>CNPJ</span><input value={systemForm.cnpj || ''} placeholder="00.000.000/0000-00" onChange={e => setSystemForm({ ...systemForm, cnpj: e.target.value })} /></label><label><span>Telefone</span><input value={systemForm.phone || ''} placeholder="(00) 00000-0000" onChange={e => setSystemForm({ ...systemForm, phone: e.target.value })} /></label><label className="span2"><span>Endereço</span><textarea value={systemForm.address || ''} placeholder="Rua, número, bairro, cidade" onChange={e => setSystemForm({ ...systemForm, address: e.target.value })} /></label><label className="span2"><span>Mensagem da comanda/cupom</span><textarea maxLength={120} value={systemForm.receiptMessage || ''} onChange={e => setSystemForm({ ...systemForm, receiptMessage: e.target.value })} /></label><small className="receiptCounter">{(systemForm.receiptMessage || '').length}/120</small></div></section>
-      <section className="settingsPanel systemCard printersSystemCard"><div className="cardTitleWithAction"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Printer size={20} /></div><h2>2. Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div><div className="printerTable"><div className="printerTableHead"><span>Setor</span><span>Impressora vinculada</span><span>Status</span><span>Ações</span></div>{sectorRows.map(row => { const Icon = row.icon; return <div className="printerTableRow" key={row.key}><span className="sectorName"><Icon size={17} /> {row.sector}</span><strong>{getPrinterName(row.printerId)}</strong><span className="onlineBadge">● Online</span><div className="printerActions"><button type="button" onClick={() => testPrinter(getPrinterName(row.printerId))}><Printer size={15} /> Testar</button><button type="button" aria-label="Editar impressora"><Pencil size={15} /></button><button type="button" aria-label="Excluir impressora" className="dangerOutline" onClick={() => removePrinter(row.printerId)} disabled={systemForm.printers.length <= 1}><Trash2 size={15} /></button></div></div> })}</div></section>
-      <section className="settingsPanel systemCard printRulesSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Printer size={20} /></div><h2>3. Regras de impressão</h2></div><div className="printRulesGrid"><label><span>Pedidos da cozinha saem em</span><select value={systemForm.kitchenPrinterId} onChange={e => setSystemForm({ ...systemForm, kitchenPrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label><span>Comanda do cliente sai em</span><select value={systemForm.cashierPrinterId} onChange={e => setSystemForm({ ...systemForm, cashierPrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label><span>Pedidos do churrasco saem em</span><select value={systemForm.grillPrinterId} onChange={e => setSystemForm({ ...systemForm, grillPrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label><span>Pedidos dos sucos saem em</span><select value={systemForm.juicePrinterId} onChange={e => setSystemForm({ ...systemForm, juicePrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="toggleList"><label><input type="checkbox" checked={systemForm.printKitchenItems} onChange={e => setSystemForm({ ...systemForm, printKitchenItems: e.target.checked })} /><span>Enviar itens de cozinha/churrasco/sucos para preparo</span></label><label><input type="checkbox" checked={systemForm.printBarItems} onChange={e => setSystemForm({ ...systemForm, printBarItems: e.target.checked })} /><span>Enviar itens do bar também para preparo</span></label><label><input type="checkbox" checked={systemForm.printFullReceipt} onChange={e => setSystemForm({ ...systemForm, printFullReceipt: e.target.checked })} /><span>Imprimir comanda completa no caixa</span></label></div><div className="rulesBox"><CheckCircle2 size={18} /><div><strong>Regras atuais</strong><p>Pedidos de preparo são enviados para os setores configurados.</p><p>Comanda do cliente é impressa no caixa para conferência.</p><p>Itens do bar permanecem apenas na comanda do cliente.</p></div></div></section>
-      <section className="settingsPanel systemCard securitySystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><ShieldCheck size={20} /></div><h2>4. Segurança e autorizações</h2></div><div className="securityGrid"><form className="securityPasswordBox" onSubmit={changeCancelPassword}><h3>Senha de cancelamento</h3><PasswordField label="Senha atual do administrador ou gerente" value={cancelForm.managerPassword} visible={showPasswords.manager} onToggle={() => setShowPasswords(prev => ({ ...prev, manager: !prev.manager }))} onChange={e => setCancelForm({ ...cancelForm, managerPassword: e.target.value })} /><PasswordField label="Nova senha de cancelamento" value={cancelForm.newPassword} visible={showPasswords.new} onToggle={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} onChange={e => setCancelForm({ ...cancelForm, newPassword: e.target.value })} /><PasswordField label="Confirmar nova senha" value={cancelForm.confirmPassword} visible={showPasswords.confirm} onToggle={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} onChange={e => setCancelForm({ ...cancelForm, confirmPassword: e.target.value })} /><button className="primaryBtn"><KeyRound size={18} /> Salvar nova senha</button><p>Essa senha será exigida ao cancelar itens ou executar ações protegidas.</p></form><div className="authorizationBox"><h3>Autorizações que exigem senha</h3>{authToggles.map(([key, label]) => <label className="switchRow" key={key}><button type="button" className={`fakeSwitch ${systemForm[key] ? 'active' : ''}`} onClick={() => setSystemForm(prev => ({ ...prev, [key]: !prev[key] }))}><span /></button><strong>{label}</strong></label>)}</div></div>{cancelMessage && <div className={cancelMessage.includes('atualizada') ? 'settingsSuccess' : 'settingsError'}>{cancelMessage.includes('atualizada') ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}{cancelMessage}</div>}</section>
+      <section className="settingsPanel printerRoutesPanel">
+        <div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Rotas de impressão</h2></div>
+        <div className="printerRouteGrid">
+          {sectorRows.map(row => { const Icon = row.icon; return <div className="printerRouteCard" key={row.key}><div><Icon size={20} /><strong>{row.sector}</strong><span>{row.rule}</span></div><select value={systemForm[row.field]} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select><button type="button" onClick={() => testPrinter(getPrinterName(row.printerId))}><Printer size={15} /> Teste de impressão</button></div> })}
+        </div>
+        <div className="rulesBox"><CheckCircle2 size={18} /><div><strong>Regra principal</strong><p>A impressora do caixa imprime a comanda detalhada do cliente.</p><p>A impressora da cozinha/churrasco/sucos imprime somente os pedidos enviados para preparo.</p><p>Itens do bar permanecem na comanda do cliente, se essa regra continuar ativa.</p></div></div>
+        <div className="systemFooterActions"><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar impressão</button></div>
+      </section>
+      {systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
+    </div>}
+
+    {activeTab === 'sistema' && <div className="systemSettingsGridV2 refinedSystemGrid">
+      <section className="settingsPanel systemCard establishmentSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Building2 size={20} /></div><h2>Dados da empresa</h2></div><div className="establishmentGrid"><label><span>Nome do estabelecimento</span><input value={systemForm.establishmentName} onChange={e => setSystemForm({ ...systemForm, establishmentName: e.target.value })} /></label><label><span>Telefone</span><input value={systemForm.phone || ''} placeholder="(00) 00000-0000" onChange={e => setSystemForm({ ...systemForm, phone: e.target.value })} /></label><label><span>CNPJ</span><input value={systemForm.cnpj || ''} placeholder="00.000.000/0000-00" onChange={e => setSystemForm({ ...systemForm, cnpj: e.target.value })} /></label><label><span>Endereço</span><input value={systemForm.address || ''} placeholder="Rua, número, bairro, cidade" onChange={e => setSystemForm({ ...systemForm, address: e.target.value })} /></label></div></section>
+      <section className="settingsPanel systemCard printRulesSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Settings size={20} /></div><h2>Preferências</h2></div><div className="establishmentGrid"><label><span>Nome exibido no sistema</span><input value={systemForm.establishmentName} onChange={e => setSystemForm({ ...systemForm, establishmentName: e.target.value })} /></label><label><span>Horário de funcionamento</span><input placeholder="Ex.: 10h às 23h" /></label><label className="span2"><span>Mensagem da comanda/cupom</span><textarea maxLength={120} value={systemForm.receiptMessage || ''} onChange={e => setSystemForm({ ...systemForm, receiptMessage: e.target.value })} /></label><small className="receiptCounter">{(systemForm.receiptMessage || '').length}/120</small></div></section>
+      <section className="settingsPanel systemCard securitySystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><ShieldCheck size={20} /></div><h2>Cancelamentos e autorizações</h2></div><div className="securityGrid"><form className="securityPasswordBox" onSubmit={changeCancelPassword}><h3>Senha de cancelamento</h3><PasswordField label="Senha atual do administrador ou gerente" value={cancelForm.managerPassword} visible={showPasswords.manager} onToggle={() => setShowPasswords(prev => ({ ...prev, manager: !prev.manager }))} onChange={e => setCancelForm({ ...cancelForm, managerPassword: e.target.value })} placeholder="Confirme sua autorização" /><PasswordField label="Nova senha de cancelamento" value={cancelForm.newPassword} visible={showPasswords.new} onToggle={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} onChange={e => setCancelForm({ ...cancelForm, newPassword: e.target.value })} placeholder="Nova senha" /><PasswordField label="Confirmar nova senha" value={cancelForm.confirmPassword} visible={showPasswords.confirm} onToggle={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} onChange={e => setCancelForm({ ...cancelForm, confirmPassword: e.target.value })} placeholder="Repita a nova senha" /><button className="primaryBtn"><KeyRound size={18} /> Salvar nova senha</button><p>Administrador ou gerente autorizam pelo próprio login/senha.</p></form><div className="authorizationBox"><h3>Ações protegidas</h3>{authToggles.map(([key, label]) => <label className="switchRow" key={key}><button type="button" className={`fakeSwitch ${systemForm[key] ? 'active' : ''}`} onClick={() => setSystemForm(prev => ({ ...prev, [key]: !prev[key] }))}><span /></button><strong>{label}</strong></label>)}</div></div>{cancelMessage && <div className={cancelMessage.includes('atualizada') ? 'settingsSuccess' : 'settingsError'}>{cancelMessage.includes('atualizada') ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}{cancelMessage}</div>}</section>
       <div className="systemFooterActions"><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
     </div>}
   </div>
