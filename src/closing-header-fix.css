@@ -1,0 +1,66 @@
+.closingPage .closingHeader{
+  align-items: flex-start;
+}
+
+.closingPage .closingHeaderActions{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+.closingPage .closingHeaderActions label,
+.closingPage .closingHeaderActions button{
+  box-sizing: border-box;
+  height: 48px;
+  min-height: 48px;
+  margin: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.closingPage .closingHeaderActions label{
+  min-width: 240px;
+  padding: 0 18px;
+}
+
+.closingPage .closingHeaderActions button{
+  min-width: 160px;
+  padding: 0 20px;
+}
+
+.closingPage .closingHeaderActions input{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+.closingPage .closingHeaderActions svg{
+  display: block;
+  flex-shrink: 0;
+}
+
+@media(max-width:900px){
+  .closingPage .closingHeaderActions{
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    padding-top: 0;
+  }
+}
+
+@media(max-width:640px){
+  .closingPage .closingHeaderActions label,
+  .closingPage .closingHeaderActions button{
+    width: 100%;
+    min-width: 0;
+  }
+}
