@@ -14,18 +14,21 @@
   overflow: hidden;
 }
 
-.settingsHeader {
-  margin-bottom: 14px;
+.settingsTopHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
   position: relative;
   z-index: 1;
 }
 
-.settingsEyebrow {
-  color: #c24928;
-  letter-spacing: .16em;
-  font-size: 11px;
-}
+.settingsHeader { margin-bottom: 14px; position: relative; z-index: 1; }
 
+.settingsEyebrow { color: #c24928; letter-spacing: .16em; font-size: 11px; font-weight: 900; }
+
+.settingsTopHeader h1,
 .settingsHeader h1 {
   margin-top: 5px;
   font-family: Georgia, 'Times New Roman', serif;
@@ -34,11 +37,27 @@
   color: #341d13;
 }
 
-.settingsHeader p {
-  margin-top: 6px;
-  color: #7d6758;
-  font-size: 13px;
+.settingsTopHeader p,
+.settingsHeader p { margin-top: 6px; color: #7d6758; font-size: 13px; }
+
+.systemActiveCard {
+  min-width: 230px;
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .92);
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
 }
+
+.systemActiveCard svg { color: #19844b; }
+.systemActiveCard strong { display: block; color: #19844b; font-weight: 900; }
+.systemActiveCard span { color: #7d6758; font-size: 12px; }
+.systemActiveCard b { display: inline-block; width: 7px; height: 7px; margin-left: 5px; border-radius: 999px; background: #19844b; }
 
 .settingsBlockedCard,
 .settingsPanel,
@@ -48,54 +67,8 @@
   box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
 }
 
-.settingsBlockedCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-radius: 15px;
-  padding: 12px;
-  margin-bottom: 12px;
-  color: #7d6758;
-}
-
+.settingsBlockedCard { display: flex; align-items: center; gap: 12px; border-radius: 15px; padding: 12px; margin-bottom: 12px; color: #7d6758; }
 .settingsBlockedCard strong { display: block; color: #341d13; }
-
-.settingsCardsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.settingsMiniCard {
-  min-height: 92px;
-  border-radius: 15px;
-  padding: 12px;
-  display: grid;
-  gap: 5px;
-}
-
-.settingsMiniCard div {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  color: #fffaf0;
-  background: linear-gradient(135deg, #a94925, #ef6336);
-}
-
-.settingsMiniCard strong {
-  color: #2a160e;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 17px;
-}
-
-.settingsMiniCard span {
-  color: #7d6758;
-  font-size: 12px;
-  line-height: 1.35;
-}
 
 .settingsTabs {
   display: flex;
@@ -105,60 +78,37 @@
   border: 1px solid #ead7bf;
   border-radius: 14px;
   background: rgba(255, 249, 239, .9);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+
+.settingsTabsLarge { min-width: 520px; }
 
 .settingsTabs button {
   border: 0;
-  min-height: 34px;
+  min-height: 38px;
   border-radius: 10px;
-  padding: 0 14px;
+  padding: 0 18px;
   background: transparent;
   color: #6f5849;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.settingsTabs button.active {
-  color: #fffaf0;
-  background: linear-gradient(135deg, #a94925, #ef6336);
-}
+.settingsTabs button.active { color: #fffaf0; background: linear-gradient(135deg, #a94925, #ef6336); box-shadow: 0 8px 18px rgba(194,73,40,.16); }
 
-.settingsMainGrid {
-  display: grid;
-  grid-template-columns: minmax(320px, .9fr) minmax(0, 1.1fr);
-  gap: 12px;
-}
-
-.settingsPanel {
-  border-radius: 17px;
-  padding: 14px;
-}
-
+.settingsPanel { border-radius: 17px; padding: 14px; }
 .wideSettingsPanel { max-width: none; }
 
-.settingsPanelTitle {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 12px;
-}
-
+.settingsPanelTitle { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
 .settingsPanelTitle svg { color: #c24928; }
-
-.settingsPanelTitle h2 {
-  margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  color: #2a160e;
-  font-size: 22px;
-}
+.settingsPanelTitle h2 { margin: 0; font-family: Georgia, 'Times New Roman', serif; color: #2a160e; font-size: 22px; line-height: 1; }
 
 .settingsForm,
-.systemSettingsForm {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
+.systemSettingsForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
 .settingsForm label,
 .tableSettingsGrid label,
@@ -172,7 +122,9 @@
 .establishmentGrid input,
 .establishmentGrid textarea,
 .printRulesGrid select,
-.passwordInputWrap input {
+.passwordInputWrap input,
+.printerRegistryCard input,
+.printerRouteCard select {
   width: 100%;
   min-height: 42px;
   border: 1px solid #ead7bf;
@@ -183,492 +135,241 @@
   outline: none;
 }
 
-.establishmentGrid textarea {
-  min-height: 68px;
-  padding: 10px 12px;
-  resize: vertical;
-}
+.establishmentGrid textarea { min-height: 68px; padding: 10px 12px; resize: vertical; }
 
 .settingsForm .primaryBtn,
-.systemSettingsForm .primaryBtn {
-  grid-column: 1 / -1;
-  min-height: 42px;
+.systemSettingsForm .primaryBtn { grid-column: 1 / -1; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+.primaryBtn,
+.secondaryBtn {
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid #ead7bf;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-.settingsUsersList { display: grid; gap: 8px; }
+.primaryBtn { border: 0; color: #fffaf0; background: linear-gradient(135deg, #a94925, #ef6336); box-shadow: 0 10px 20px rgba(194,73,40,.18); }
+.secondaryBtn { color: #7a4d37; background: #fffdf8; }
+.primaryBtn:disabled { opacity: .55; cursor: not-allowed; }
 
-.settingsUserCard {
-  display: grid;
-  grid-template-columns: 42px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  border: 1px solid #ead7bf;
-  border-radius: 13px;
-  background: rgba(255,248,237,.58);
-  padding: 10px;
-}
-
-.settingsUserAvatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 900;
-  color: #fffaf0;
-  background: linear-gradient(135deg, #7b3e1f, #ef6336);
-}
-
-.settingsUserCard strong { display: block; color: #2a160e; }
-.settingsUserCard span { display: block; color: #7d6758; font-size: 12px; }
-.settingsUserCard small { color: #c24928; font-weight: 800; }
-
-.tableSettingsGrid {
-  display: grid;
-  grid-template-columns: minmax(260px, 360px) 180px auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.tableSettingsPreview {
-  min-height: 42px;
-  border: 1px solid #ead7bf;
-  border-radius: 12px;
-  background: rgba(255,248,237,.7);
-  padding: 8px 12px;
-}
-
-.tableSettingsPreview strong { display: block; color: #c24928; font-size: 20px; line-height: 1; }
-.tableSettingsPreview span { color: #7d6758; font-size: 12px; }
-
-.settingsNotice,
-.settingsSuccess,
-.settingsError {
-  margin-top: 12px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  font-size: 12px;
-}
-
-.settingsNotice { background: #fff0d1; color: #9a5f18; }
-.settingsSuccess { background: #edf6e8; color: #426b3e; }
-.settingsError { background: #ffe2d4; color: #b94220; }
-
-.systemSettingsStack { display: grid; gap: 12px; }
-.systemSettingsForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-.systemSettingsForm label span,
 .settingsForm label span,
 .tableSettingsGrid label span,
 .establishmentGrid label span,
 .printRulesGrid label span,
-.passwordSettingField span {
+.passwordSettingField span,
+.printerRegistryCard > span,
+.printerRouteCard label span {
   display: block;
   color: #5f4435;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 12px;
   margin-bottom: 6px;
 }
 
-.printChecks {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
+.accessSummaryGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
 
-.printChecks label {
-  min-height: 42px;
-  display: flex;
+.accessSummaryCard {
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid #ead7bf;
+  border-radius: 16px;
+  background: rgba(255, 253, 248, .92);
+  display: grid;
+  grid-template-columns: 46px 1fr;
   align-items: center;
-  gap: 9px;
-  border: 1px solid #ead7bf;
-  border-radius: 12px;
-  background: rgba(255,248,237,.58);
-  padding: 0 12px;
-  color: #5f4435;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.printChecks input { width: 16px; min-height: auto; accent-color: #c24928; }
-.cancelPasswordForm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.cancelPasswordForm .primaryBtn { grid-column: auto; align-self: end; }
-
-.systemSettingsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.systemSettingsGrid div {
-  border: 1px solid #ead7bf;
-  border-radius: 13px;
-  background: rgba(255,248,237,.58);
-  padding: 12px;
-  display: grid;
-  gap: 5px;
-}
-
-.systemSettingsGrid svg { color: #c24928; }
-.systemSettingsGrid strong { color: #2a160e; }
-.systemSettingsGrid span { color: #7d6758; font-size: 12px; }
-
-/* Sistema reorganizado */
-.systemSettingsGridV2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
 }
 
-.systemCard {
-  min-height: 0;
-}
+.accessSummaryCard svg { width: 44px; height: 44px; padding: 10px; border-radius: 999px; color: #a94925; background: #f9dfcf; }
+.accessSummaryCard span { display: block; color: #6f5849; font-size: 13px; }
+.accessSummaryCard strong { display: block; font-family: Georgia, 'Times New Roman', serif; color: #2a160e; font-size: 28px; line-height: 1; }
+.accessSummaryCard small { color: #7d6758; font-size: 12px; }
 
-.numberedTitle {
-  margin-bottom: 14px;
-}
+.accessMainGrid { display: grid; grid-template-columns: minmax(320px, .78fr) minmax(0, 1.22fr); gap: 14px; }
+.accessCreateForm .span2 { grid-column: 1 / -1; }
 
-.titleBadge {
+.permissionsChecklist { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px 12px; margin-top: 2px; }
+.permissionsChecklist strong { grid-column: 1 / -1; color: #5f4435; font-size: 12px; }
+.permissionsChecklist label { color: #5f4435; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
+.permissionsChecklist input { width: 16px; min-height: auto; accent-color: #c24928; }
+
+.accessTable { border: 1px solid #ead7bf; border-radius: 14px; overflow: hidden; }
+.accessTableHead,
+.accessTableRow { display: grid; grid-template-columns: 1.25fr .75fr .8fr .65fr .55fr; gap: 10px; align-items: center; padding: 10px 12px; }
+.accessTableHead { background: #fff0d8; color: #5f4435; font-size: 12px; font-weight: 900; }
+.accessTableRow { border-top: 1px solid #ead7bf; background: rgba(255,253,248,.78); color: #4d3528; font-size: 13px; }
+.accessNameCell { display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 9px; }
+.settingsUserAvatar { width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; font-size: 12px; font-weight: 900; color: #fffaf0; background: linear-gradient(135deg, #7b3e1f, #ef6336); }
+.accessNameCell strong { color: #2a160e; }
+.accessTableRow b { color: #c24928; font-style: normal; }
+.accessTableRow em { width: fit-content; padding: 5px 10px; border-radius: 999px; background: #e7f4df; color: #267643; font-style: normal; font-size: 11px; font-weight: 900; }
+.accessActions { display: flex; gap: 6px; }
+.accessActions button,
+.iconDanger,
+.printerActions button,
+.tableRowActions button {
   width: 34px;
   height: 34px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #fff0e7;
-  color: #c24928;
-  flex: 0 0 34px;
-}
-
-.titleBadge svg { color: #c24928; }
-
-.cardTitleWithAction {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.cardTitleWithAction .settingsPanelTitle { margin-bottom: 0; }
-
-.establishmentGrid,
-.printRulesGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 12px;
-}
-
-.establishmentGrid .span2 { grid-column: span 1; }
-.establishmentGrid label { position: relative; }
-.receiptCounter {
-  justify-self: end;
-  margin-top: -6px;
-  color: #8c6f5e;
-  font-size: 11px;
-}
-
-.addPrinterBtn {
-  border: 1px solid #ead7bf;
-  background: rgba(255,248,237,.86);
-  color: #c24928;
-  border-radius: 11px;
-  min-height: 34px;
-  padding: 0 12px;
-  font-weight: 900;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  cursor: pointer;
-}
-
-.addPrinterBtn.solid {
-  color: #fffaf0;
-  border: 0;
-  background: linear-gradient(135deg, #a94925, #ef6336);
-  box-shadow: 0 8px 18px rgba(194,73,40,.17);
-}
-
-.printerTable {
-  border: 1px solid #ead7bf;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.printerTableHead,
-.printerTableRow {
-  display: grid;
-  grid-template-columns: 1fr 1.35fr .8fr 1.35fr;
-  gap: 8px;
-  align-items: center;
-  padding: 9px 10px;
-}
-
-.printerTableHead {
-  background: #fff0d8;
-  color: #5f4435;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.printerTableRow {
-  border-top: 1px solid #ead7bf;
-  background: rgba(255,253,248,.78);
-  color: #4d3528;
-  font-size: 12px;
-}
-
-.printerTableRow strong {
-  color: #2a160e;
-}
-
-.sectorName,
-.printerActions,
-.onlineBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sectorName svg { color: #6f5849; }
-
-.onlineBadge {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 4px 9px;
-  background: #e7f4df;
-  color: #3d7b43;
-  font-weight: 900;
-  font-size: 11px;
-}
-
-.printerActions {
-  gap: 5px;
-  justify-content: flex-end;
-}
-
-.printerActions button {
-  min-height: 28px;
-  border-radius: 9px;
+  border-radius: 10px;
   border: 1px solid #ead7bf;
   background: #fffdf8;
   color: #7a4d37;
-  padding: 0 8px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  display: inline-grid;
+  place-items: center;
   cursor: pointer;
 }
+.iconDanger,
+.accessActions .iconDanger { color: #e14b38; border-color: #ffd1c9; background: #fff1ee; }
 
-.printerActions .dangerOutline,
-.dangerOutline {
-  color: #e14b38;
-  border-color: #ffd1c9;
-}
-
-.printerActions button:disabled { opacity: .45; cursor: not-allowed; }
-
-.toggleList {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.toggleList label {
-  min-height: 38px;
+.permissionsInfoBox,
+.settingsTipBar {
+  margin-top: 14px;
   border: 1px solid #ead7bf;
-  border-radius: 12px;
-  background: rgba(255,248,237,.58);
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  color: #5f4435;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.toggleList input {
-  accent-color: #3d7b43;
-}
-
-.rulesBox {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 8px;
-  border: 1px solid #d9e6cf;
   border-radius: 14px;
-  background: #f1f8ea;
+  background: rgba(255,248,237,.7);
   padding: 12px;
-  color: #517448;
+  display: grid;
+  align-items: center;
+  gap: 10px;
 }
+.permissionsInfoBox { grid-template-columns: 30px 1fr auto; }
+.permissionsInfoBox svg { color: #8a5d35; }
+.permissionsInfoBox strong,
+.settingsTipBar strong { color: #2a160e; }
+.permissionsInfoBox span,
+.settingsTipBar span { color: #7d6758; font-size: 12px; }
+.permissionsInfoBox button { min-height: 34px; border-radius: 10px; border: 1px solid #ead7bf; background: #fffdf8; color: #7a4d37; font-weight: 900; padding: 0 12px; cursor: pointer; }
+.settingsTipBar { grid-template-columns: 24px auto 1fr; }
+.settingsTipBar svg { color: #b98534; }
 
+.tableSummaryGrid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+.tableSummaryCard { min-height: 74px; border: 1px solid #ead7bf; border-radius: 15px; background: rgba(255,253,248,.92); padding: 12px; display: grid; grid-template-columns: 36px 1fr; align-items: center; gap: 10px; }
+.tableSummaryCard svg { color: #c24928; }
+.tableSummaryCard span { display: block; color: #7d6758; font-size: 12px; }
+.tableSummaryCard strong { display: block; color: #2a160e; font-size: 20px; }
+.tableSummaryCard.positive svg { color: #267643; }
+.tableSummaryCard.join svg { color: #b98534; }
+.tablesSettingsLayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, .9fr); gap: 14px; }
+.tablesLeftColumn { display: grid; gap: 14px; }
+.tableConfigGrid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.tableToggles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.tableToggles label { border: 1px solid #ead7bf; border-radius: 12px; min-height: 40px; padding: 0 10px; display: flex; align-items: center; gap: 7px; color: #5f4435; font-size: 12px; font-weight: 800; }
+.tableToggles input { accent-color: #c24928; }
+.tableConfigActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tablePreviewGrid { display: flex; flex-wrap: wrap; gap: 7px; }
+.tablePreviewGrid span { min-height: 30px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #ead7bf; border-radius: 999px; background: #fffdf8; color: #5f4435; padding: 0 10px; font-size: 12px; }
+.tablePreviewGrid .inactive { opacity: .5; }
+.registeredTablesTable { border: 1px solid #ead7bf; border-radius: 14px; overflow: hidden; }
+.registeredTablesHead,
+.registeredTablesRow { display: grid; grid-template-columns: .5fr 1.1fr .65fr .65fr .8fr; gap: 8px; align-items: center; padding: 9px 10px; font-size: 12px; }
+.registeredTablesHead { background: #fff0d8; color: #5f4435; font-weight: 900; }
+.registeredTablesRow { border-top: 1px solid #ead7bf; background: rgba(255,253,248,.78); }
+.registeredTablesRow strong { color: #2a160e; }
+.miniStatus { min-height: 28px; border-radius: 999px; border: 0; padding: 0 10px; font-weight: 900; cursor: pointer; }
+.miniStatus.active { background: #e7f4df; color: #267643; }
+.miniStatus.inactive,.miniStatus.blocked { background: #ffe2d4; color: #c24928; }
+.tableRowActions { display: flex; gap: 5px; }
+.tableRowActions button { width: auto; padding: 0 8px; display: inline-flex; gap: 5px; }
+.dangerOutline { color: #e14b38 !important; border-color: #ffd1c9 !important; }
+.tablePaginationHint { margin-top: 8px; color: #7d6758; font-size: 12px; }
+.tableTipBox { margin-top: 12px; border: 1px solid #ead7bf; border-radius: 14px; background: rgba(255,248,237,.7); padding: 12px; display: flex; align-items: center; gap: 8px; color: #7d6758; font-size: 12px; }
+.tableTipBox svg { color: #b98534; }
+
+.printSettingsTab { display: grid; gap: 14px; }
+.printerManagePanel,.printerRoutesPanel { width: 100%; }
+.cardTitleWithAction { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.cardTitleWithAction .settingsPanelTitle { margin-bottom: 0; }
+.addPrinterBtn { border: 1px solid #ead7bf; background: rgba(255,248,237,.86); color: #c24928; border-radius: 11px; min-height: 34px; padding: 0 12px; font-weight: 900; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.addPrinterBtn.solid { color: #fffaf0; border: 0; background: linear-gradient(135deg, #a94925, #ef6336); box-shadow: 0 8px 18px rgba(194,73,40,.17); }
+.printerRegistryGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.printerRegistryCard { border: 1px solid #ead7bf; border-radius: 14px; background: rgba(255,248,237,.58); padding: 12px; display: grid; gap: 8px; }
+.printerRegistryCard > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.printerRegistryCard em { color: #267643; background: #e7f4df; border-radius: 999px; padding: 5px 9px; font-style: normal; font-size: 11px; font-weight: 900; }
+.printerRegistryCard button { min-height: 30px; border: 1px solid #ead7bf; border-radius: 9px; background: #fffdf8; color: #7a4d37; padding: 0 8px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.printerRegistryCard button:disabled { opacity: .45; cursor: not-allowed; }
+.printerRouteGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.printerRouteCard { border: 1px solid #ead7bf; border-radius: 14px; background: rgba(255,248,237,.58); padding: 12px; display: grid; gap: 9px; }
+.printerRouteCard > div { display: grid; grid-template-columns: 26px 1fr; gap: 4px 8px; align-items: center; }
+.printerRouteCard svg { color: #c24928; }
+.printerRouteCard strong { color: #2a160e; }
+.printerRouteCard span { grid-column: 2; color: #7d6758; font-size: 12px; line-height: 1.35; }
+.printerRouteCard button { min-height: 34px; border: 1px solid #ead7bf; border-radius: 10px; background: #fffdf8; color: #7a4d37; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; }
+
+.establishmentGrid,
+.printRulesGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.establishmentGrid .span2 { grid-column: 1 / -1; }
+.establishmentGrid label { position: relative; }
+.receiptCounter { justify-self: end; margin-top: -6px; color: #8c6f5e; font-size: 11px; }
+.systemSettingsGridV2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.refinedSystemGrid .securitySystemCard { grid-column: 1 / -1; }
+.numberedTitle { margin-bottom: 14px; }
+.titleBadge { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; background: #fff0e7; color: #c24928; flex: 0 0 34px; }
+.titleBadge svg { color: #c24928; }
+.rulesBox { margin-top: 12px; display: grid; grid-template-columns: 28px 1fr; gap: 8px; border: 1px solid #d9e6cf; border-radius: 14px; background: #f1f8ea; padding: 12px; color: #517448; }
 .rulesBox strong { color: #426b3e; }
 .rulesBox p { margin: 4px 0 0; font-size: 12px; color: #5d7757; }
-
-.securityGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.securityPasswordBox,
-.authorizationBox {
-  display: grid;
-  gap: 8px;
-}
-
-.securityPasswordBox h3,
-.authorizationBox h3 {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
-  color: #2a160e;
-  margin: 0 0 4px;
-}
-
-.passwordInputWrap {
-  position: relative;
-}
-
-.passwordInputWrap input {
-  padding-right: 40px;
-}
-
-.passwordInputWrap button {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border: 0;
-  background: transparent;
-  color: #8c6f5e;
-  cursor: pointer;
-}
-
-.securityPasswordBox .primaryBtn {
-  min-height: 40px;
-  justify-content: center;
-}
-
-.securityPasswordBox p {
-  color: #7d6758;
-  font-size: 12px;
-  line-height: 1.35;
-  margin: 2px 0 0;
-}
-
-.switchRow {
-  min-height: 40px;
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 10px;
-  align-items: center;
-  color: #5f4435;
-  font-size: 13px;
-}
-
-.fakeSwitch {
-  width: 40px;
-  height: 22px;
-  border: 0;
-  border-radius: 999px;
-  background: #d5c4b4;
-  padding: 3px;
-  cursor: pointer;
-  transition: .18s ease;
-}
-
-.fakeSwitch span {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #fff;
-  transition: .18s ease;
-}
-
-.fakeSwitch.active {
-  background: #4f9154;
-}
-
-.fakeSwitch.active span {
-  transform: translateX(18px);
-}
-
-.systemFooterActions {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #ead7bf;
-  border-radius: 15px;
-  background: rgba(255, 253, 248, .86);
-}
-
-.fullSystemMessage {
-  grid-column: 1 / -1;
-  margin-top: 0;
-}
-
-.settingsHelpText {
-  color: #7d6758;
-  font-size: 13px;
-  margin: 0 0 12px;
-}
+.securityGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.securityPasswordBox,.authorizationBox { display: grid; gap: 8px; }
+.securityPasswordBox h3,.authorizationBox h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 18px; color: #2a160e; margin: 0 0 4px; }
+.passwordInputWrap { position: relative; }
+.passwordInputWrap input { padding-right: 40px; }
+.passwordInputWrap button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: 0; background: transparent; color: #8c6f5e; cursor: pointer; }
+.securityPasswordBox .primaryBtn { min-height: 40px; justify-content: center; }
+.securityPasswordBox p { color: #7d6758; font-size: 12px; line-height: 1.35; margin: 2px 0 0; }
+.switchRow { min-height: 40px; display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; color: #5f4435; font-size: 13px; }
+.fakeSwitch { width: 40px; height: 22px; border: 0; border-radius: 999px; background: #d5c4b4; padding: 3px; cursor: pointer; transition: .18s ease; }
+.fakeSwitch span { display: block; width: 16px; height: 16px; border-radius: 999px; background: #fff; transition: .18s ease; }
+.fakeSwitch.active { background: #4f9154; }
+.fakeSwitch.active span { transform: translateX(18px); }
+.systemFooterActions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; padding: 12px; border: 1px solid #ead7bf; border-radius: 15px; background: rgba(255, 253, 248, .86); }
+.fullSystemMessage { grid-column: 1 / -1; margin-top: 0; }
+.settingsNotice,.settingsSuccess,.settingsError { margin-top: 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; }
+.settingsNotice { background: #fff0d1; color: #9a5f18; }
+.settingsSuccess { background: #edf6e8; color: #426b3e; }
+.settingsError { background: #ffe2d4; color: #b94220; }
 
 @media (max-width: 1100px) {
-  .settingsCardsGrid,
-  .settingsMainGrid,
-  .systemSettingsGrid,
-  .tableSettingsGrid,
-  .systemSettingsForm,
-  .cancelPasswordForm,
+  .settingsTopHeader { flex-direction: column; }
+  .systemActiveCard { min-width: 0; width: 100%; max-width: 360px; }
+  .accessSummaryGrid,
+  .accessMainGrid,
+  .tablesSettingsLayout,
+  .printerRegistryGrid,
+  .printerRouteGrid,
   .systemSettingsGridV2,
-  .securityGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .printerTableHead,
-  .printerTableRow {
-    grid-template-columns: 1fr 1.2fr .7fr 1.2fr;
-  }
+  .securityGrid { grid-template-columns: 1fr 1fr; }
+  .accessMainGrid,.tablesSettingsLayout { grid-template-columns: 1fr; }
+  .settingsTabsLarge { min-width: 0; width: 100%; }
+  .settingsTabsLarge button { flex: 1; }
 }
 
 @media (max-width: 760px) {
   .settingsPremiumPage { padding: 16px; }
-  .settingsCardsGrid,
-  .settingsMainGrid,
-  .systemSettingsGrid,
-  .tableSettingsGrid,
+  .accessSummaryGrid,
+  .accessMainGrid,
   .settingsForm,
-  .systemSettingsForm,
-  .cancelPasswordForm,
-  .printChecks,
-  .systemSettingsGridV2,
+  .permissionsChecklist,
+  .tableSummaryGrid,
+  .tableConfigGrid,
+  .tableToggles,
+  .registeredTablesHead,
+  .registeredTablesRow,
+  .printerRegistryGrid,
+  .printerRouteGrid,
   .establishmentGrid,
-  .printRulesGrid,
-  .securityGrid {
-    grid-template-columns: 1fr;
-  }
-  .settingsTabs { width: 100%; }
-  .settingsTabs button { flex: 1; }
-  .printerTableHead { display: none; }
-  .printerTableRow {
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-  .printerActions { justify-content: flex-start; }
+  .systemSettingsGridV2,
+  .securityGrid { grid-template-columns: 1fr; }
+  .settingsTabs { width: 100%; overflow-x: auto; }
+  .settingsTabs button { min-width: 120px; }
+  .accessTableHead { display: none; }
+  .accessTableRow { grid-template-columns: 1fr; }
+  .permissionsInfoBox,.settingsTipBar { grid-template-columns: 1fr; }
   .systemFooterActions { flex-direction: column; }
 }
