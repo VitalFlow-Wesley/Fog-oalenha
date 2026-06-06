@@ -135,9 +135,7 @@
   padding: 14px;
 }
 
-.wideSettingsPanel {
-  max-width: none;
-}
+.wideSettingsPanel { max-width: none; }
 
 .settingsPanelTitle {
   display: flex;
@@ -164,15 +162,17 @@
 
 .settingsForm label,
 .tableSettingsGrid label,
-.systemSettingsForm label {
-  margin: 0;
-}
+.systemSettingsForm label { margin: 0; }
 
 .settingsForm input,
 .settingsForm select,
 .tableSettingsGrid input,
 .systemSettingsForm input,
-.systemSettingsForm select {
+.systemSettingsForm select,
+.establishmentGrid input,
+.establishmentGrid textarea,
+.printRulesGrid select,
+.passwordInputWrap input {
   width: 100%;
   min-height: 42px;
   border: 1px solid #ead7bf;
@@ -181,6 +181,12 @@
   color: #2a160e;
   padding: 0 12px;
   outline: none;
+}
+
+.establishmentGrid textarea {
+  min-height: 68px;
+  padding: 10px 12px;
+  resize: vertical;
 }
 
 .settingsForm .primaryBtn,
@@ -193,10 +199,7 @@
   gap: 8px;
 }
 
-.settingsUsersList {
-  display: grid;
-  gap: 8px;
-}
+.settingsUsersList { display: grid; gap: 8px; }
 
 .settingsUserCard {
   display: grid;
@@ -240,17 +243,8 @@
   padding: 8px 12px;
 }
 
-.tableSettingsPreview strong {
-  display: block;
-  color: #c24928;
-  font-size: 20px;
-  line-height: 1;
-}
-
-.tableSettingsPreview span {
-  color: #7d6758;
-  font-size: 12px;
-}
+.tableSettingsPreview strong { display: block; color: #c24928; font-size: 20px; line-height: 1; }
+.tableSettingsPreview span { color: #7d6758; font-size: 12px; }
 
 .settingsNotice,
 .settingsSuccess,
@@ -264,33 +258,19 @@
   font-size: 12px;
 }
 
-.settingsNotice {
-  background: #fff0d1;
-  color: #9a5f18;
-}
+.settingsNotice { background: #fff0d1; color: #9a5f18; }
+.settingsSuccess { background: #edf6e8; color: #426b3e; }
+.settingsError { background: #ffe2d4; color: #b94220; }
 
-.settingsSuccess {
-  background: #edf6e8;
-  color: #426b3e;
-}
-
-.settingsError {
-  background: #ffe2d4;
-  color: #b94220;
-}
-
-.systemSettingsStack {
-  display: grid;
-  gap: 12px;
-}
-
-.systemSettingsForm {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+.systemSettingsStack { display: grid; gap: 12px; }
+.systemSettingsForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .systemSettingsForm label span,
 .settingsForm label span,
-.tableSettingsGrid label span {
+.tableSettingsGrid label span,
+.establishmentGrid label span,
+.printRulesGrid label span,
+.passwordSettingField span {
   display: block;
   color: #5f4435;
   font-weight: 800;
@@ -319,20 +299,9 @@
   font-weight: 800;
 }
 
-.printChecks input {
-  width: 16px;
-  min-height: auto;
-  accent-color: #c24928;
-}
-
-.cancelPasswordForm {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.cancelPasswordForm .primaryBtn {
-  grid-column: auto;
-  align-self: end;
-}
+.printChecks input { width: 16px; min-height: auto; accent-color: #c24928; }
+.cancelPasswordForm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cancelPasswordForm .primaryBtn { grid-column: auto; align-self: end; }
 
 .systemSettingsGrid {
   display: grid;
@@ -353,14 +322,327 @@
 .systemSettingsGrid strong { color: #2a160e; }
 .systemSettingsGrid span { color: #7d6758; font-size: 12px; }
 
+/* Sistema reorganizado */
+.systemSettingsGridV2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.systemCard {
+  min-height: 0;
+}
+
+.numberedTitle {
+  margin-bottom: 14px;
+}
+
+.titleBadge {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #fff0e7;
+  color: #c24928;
+  flex: 0 0 34px;
+}
+
+.titleBadge svg { color: #c24928; }
+
+.cardTitleWithAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cardTitleWithAction .settingsPanelTitle { margin-bottom: 0; }
+
+.establishmentGrid,
+.printRulesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.establishmentGrid .span2 { grid-column: span 1; }
+.establishmentGrid label { position: relative; }
+.receiptCounter {
+  justify-self: end;
+  margin-top: -6px;
+  color: #8c6f5e;
+  font-size: 11px;
+}
+
+.addPrinterBtn {
+  border: 1px solid #ead7bf;
+  background: rgba(255,248,237,.86);
+  color: #c24928;
+  border-radius: 11px;
+  min-height: 34px;
+  padding: 0 12px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.addPrinterBtn.solid {
+  color: #fffaf0;
+  border: 0;
+  background: linear-gradient(135deg, #a94925, #ef6336);
+  box-shadow: 0 8px 18px rgba(194,73,40,.17);
+}
+
+.printerTable {
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.printerTableHead,
+.printerTableRow {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr .8fr 1.35fr;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+}
+
+.printerTableHead {
+  background: #fff0d8;
+  color: #5f4435;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.printerTableRow {
+  border-top: 1px solid #ead7bf;
+  background: rgba(255,253,248,.78);
+  color: #4d3528;
+  font-size: 12px;
+}
+
+.printerTableRow strong {
+  color: #2a160e;
+}
+
+.sectorName,
+.printerActions,
+.onlineBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectorName svg { color: #6f5849; }
+
+.onlineBadge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #e7f4df;
+  color: #3d7b43;
+  font-weight: 900;
+  font-size: 11px;
+}
+
+.printerActions {
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.printerActions button {
+  min-height: 28px;
+  border-radius: 9px;
+  border: 1px solid #ead7bf;
+  background: #fffdf8;
+  color: #7a4d37;
+  padding: 0 8px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.printerActions .dangerOutline,
+.dangerOutline {
+  color: #e14b38;
+  border-color: #ffd1c9;
+}
+
+.printerActions button:disabled { opacity: .45; cursor: not-allowed; }
+
+.toggleList {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.toggleList label {
+  min-height: 38px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255,248,237,.58);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  color: #5f4435;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.toggleList input {
+  accent-color: #3d7b43;
+}
+
+.rulesBox {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  border: 1px solid #d9e6cf;
+  border-radius: 14px;
+  background: #f1f8ea;
+  padding: 12px;
+  color: #517448;
+}
+
+.rulesBox strong { color: #426b3e; }
+.rulesBox p { margin: 4px 0 0; font-size: 12px; color: #5d7757; }
+
+.securityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.securityPasswordBox,
+.authorizationBox {
+  display: grid;
+  gap: 8px;
+}
+
+.securityPasswordBox h3,
+.authorizationBox h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  color: #2a160e;
+  margin: 0 0 4px;
+}
+
+.passwordInputWrap {
+  position: relative;
+}
+
+.passwordInputWrap input {
+  padding-right: 40px;
+}
+
+.passwordInputWrap button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: #8c6f5e;
+  cursor: pointer;
+}
+
+.securityPasswordBox .primaryBtn {
+  min-height: 40px;
+  justify-content: center;
+}
+
+.securityPasswordBox p {
+  color: #7d6758;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 2px 0 0;
+}
+
+.switchRow {
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  color: #5f4435;
+  font-size: 13px;
+}
+
+.fakeSwitch {
+  width: 40px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #d5c4b4;
+  padding: 3px;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.fakeSwitch span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  transition: .18s ease;
+}
+
+.fakeSwitch.active {
+  background: #4f9154;
+}
+
+.fakeSwitch.active span {
+  transform: translateX(18px);
+}
+
+.systemFooterActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .86);
+}
+
+.fullSystemMessage {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.settingsHelpText {
+  color: #7d6758;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
 @media (max-width: 1100px) {
   .settingsCardsGrid,
   .settingsMainGrid,
   .systemSettingsGrid,
   .tableSettingsGrid,
   .systemSettingsForm,
-  .cancelPasswordForm {
+  .cancelPasswordForm,
+  .systemSettingsGridV2,
+  .securityGrid {
     grid-template-columns: 1fr 1fr;
+  }
+  .printerTableHead,
+  .printerTableRow {
+    grid-template-columns: 1fr 1.2fr .7fr 1.2fr;
   }
 }
 
@@ -373,9 +655,20 @@
   .settingsForm,
   .systemSettingsForm,
   .cancelPasswordForm,
-  .printChecks {
+  .printChecks,
+  .systemSettingsGridV2,
+  .establishmentGrid,
+  .printRulesGrid,
+  .securityGrid {
     grid-template-columns: 1fr;
   }
   .settingsTabs { width: 100%; }
   .settingsTabs button { flex: 1; }
+  .printerTableHead { display: none; }
+  .printerTableRow {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .printerActions { justify-content: flex-start; }
+  .systemFooterActions { flex-direction: column; }
 }
