@@ -1,13 +1,18 @@
+/* Aba Configurações > Impressão — layout premium e organizado */
 .printSettingsTabV2 {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
   gap: 14px !important;
+  align-items: start !important;
 }
 
 .printSettingsTabV2 .printBlock {
   min-height: 0 !important;
   padding: 14px !important;
   border-radius: 16px !important;
+  background: rgba(255, 253, 248, .94) !important;
+  border: 1px solid #ead7bf !important;
+  box-shadow: 0 10px 22px rgba(90, 45, 20, .055) !important;
 }
 
 .printBlockHeader,
@@ -27,8 +32,9 @@
   height: 34px !important;
   padding: 8px !important;
   border-radius: 999px !important;
-  color: #8a4b2b !important;
+  color: #7c4b2f !important;
   background: #f4e4d2 !important;
+  flex: 0 0 34px !important;
 }
 
 .printNumberTitle h2 {
@@ -39,26 +45,51 @@
   line-height: 1 !important;
 }
 
+.addPrinterBtn.solid,
+.printSettingsTabV2 .primaryBtn {
+  background: linear-gradient(135deg, #a94925, #ef6336) !important;
+  color: #fffaf0 !important;
+  border: 0 !important;
+  box-shadow: 0 9px 18px rgba(194, 73, 40, .17) !important;
+}
+
+.addPrinterBtn,
+.editReceiptBtn,
+.printSettingsTabV2 .secondaryBtn {
+  min-height: 34px !important;
+  border-radius: 10px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+}
+
+/* Card 1 — impressoras cadastradas */
 .printerTableV2 {
   border: 1px solid #ead7bf !important;
   border-radius: 13px !important;
   overflow: hidden !important;
-  background: rgba(255, 253, 248, .75) !important;
+  background: rgba(255, 253, 248, .78) !important;
 }
 
 .printerTableHead,
 .printerTableRow {
   display: grid !important;
-  grid-template-columns: .9fr 1.35fr .65fr 1fr !important;
+  grid-template-columns: .85fr 1.35fr .65fr 1.05fr !important;
   align-items: center !important;
   gap: 8px !important;
   padding: 9px 10px !important;
 }
 
 .printerTableHead {
+  min-height: 34px !important;
   background: #fff0d8 !important;
   color: #5f4435 !important;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   font-weight: 900 !important;
 }
 
@@ -66,7 +97,7 @@
   min-height: 48px !important;
   border-top: 1px solid #ead7bf !important;
   color: #4d3528 !important;
-  font-size: 13px !important;
+  font-size: 12.5px !important;
 }
 
 .printerTableRow strong {
@@ -78,7 +109,8 @@
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
-  font-weight: 800 !important;
+  font-weight: 850 !important;
+  color: #4d3528 !important;
 }
 
 .sectorCell svg {
@@ -127,9 +159,15 @@
   background: #fff1ee !important;
 }
 
+.printerTableActions button:disabled {
+  opacity: .45 !important;
+  cursor: not-allowed !important;
+}
+
+/* Card 2 — regras por setor */
 .printRulesLayout {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.05fr) minmax(230px, .95fr) !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(220px, .95fr) !important;
   gap: 14px !important;
   margin-top: 12px !important;
 }
@@ -152,7 +190,7 @@
   min-height: 36px !important;
   border: 1px solid #ead7bf !important;
   border-radius: 9px !important;
-  background: rgba(255, 255, 255, .75) !important;
+  background: rgba(255, 255, 255, .78) !important;
   color: #2a160e !important;
   padding: 0 10px !important;
   outline: none !important;
@@ -182,11 +220,12 @@
   margin: 0 !important;
   padding-left: 18px !important;
   display: grid !important;
-  gap: 9px !important;
+  gap: 8px !important;
   font-size: 12px !important;
   line-height: 1.35 !important;
 }
 
+/* Card 3 — tipos de impressão */
 .printTypeList {
   display: grid !important;
   gap: 10px !important;
@@ -201,7 +240,7 @@
   gap: 11px !important;
   border: 1px solid #ead7bf !important;
   border-radius: 13px !important;
-  background: rgba(255, 253, 248, .75) !important;
+  background: rgba(255, 253, 248, .78) !important;
   padding: 10px 12px !important;
 }
 
@@ -258,6 +297,7 @@
   transform: translateX(20px) !important;
 }
 
+/* Card 4 — modelo da comanda */
 .receiptPreviewLayout {
   display: grid !important;
   grid-template-columns: minmax(210px, .95fr) minmax(180px, .8fr) !important;
@@ -272,8 +312,8 @@
   margin: 0 auto !important;
   padding: 15px 14px 18px !important;
   background: #fffdf8 !important;
-  border: 1px solid #ead7bf !important;
-  box-shadow: 0 12px 22px rgba(80, 42, 22, .11) !important;
+  border: 1px dashed #d8c2a6 !important;
+  box-shadow: 0 12px 22px rgba(80, 42, 22, .10) !important;
   color: #2a160e !important;
   font-family: 'Courier New', monospace !important;
   text-align: center !important;
@@ -293,6 +333,7 @@
 .receiptPreview h3 {
   margin: 0 !important;
   font-size: 16px !important;
+  letter-spacing: .03em !important;
 }
 
 .receiptPreview p,
@@ -358,12 +399,13 @@
   color: #4c8b4c !important;
 }
 
+/* Rodapé */
 .printFooterBar {
   grid-column: 1 / -1 !important;
   min-height: 58px !important;
   border: 1px solid #ead7bf !important;
   border-radius: 15px !important;
-  background: rgba(255, 253, 248, .88) !important;
+  background: rgba(255, 253, 248, .9) !important;
   padding: 10px 12px !important;
   display: flex !important;
   align-items: center !important;
@@ -388,6 +430,12 @@
 .printFooterBar span {
   color: #7d6758 !important;
   font-size: 12px !important;
+}
+
+.printFooterBar .primaryBtn,
+.printFooterBar .secondaryBtn {
+  min-height: 38px !important;
+  white-space: nowrap !important;
 }
 
 @media (max-width: 1180px) {
