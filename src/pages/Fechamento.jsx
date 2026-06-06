@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertCircle, CalendarDays, CreditCard, DollarSign, FileDown, Flame, LockKeyhole, MoreHorizontal, PackageCheck, Printer, ReceiptText, RefreshCw, Star, Table2, WalletCards } from 'lucide-react'
+import { AlertCircle, CalendarDays, CreditCard, DollarSign, FileDown, Flame, LockKeyhole, MoreHorizontal, Printer, ReceiptText, RefreshCw, Star, Table2, WalletCards } from 'lucide-react'
 
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const parseCurrency = value => Number(String(value || '').replace(/[^0-9,.-]/g, '').replace('.', '').replace(',', '.')) || 0
@@ -30,8 +30,12 @@ const closingMock = {
   ],
 }
 
+function scaleCategories(categories, targetTotal) {
+  const baseTotal = categories.reduce((sum, item) => sum + item.total, 0) || 1
+  return categories.map(item => ({ ...item, total: item.total / baseTotal * targetTotal }))
+}
+
 function buildClosingData(tables = []) {
-  const mockTotal = Object.values(closingMock.payments).reduce((sum, value) => sum + value, 0)
   const tableRevenue = tables.reduce((sum, table) => sum + (table.items || []).reduce((itemSum, item) => itemSum + item.price * item.qty, 0), 0)
   const hasRealSales = tableRevenue > 0
   const openTables = tables.filter(table => table.status === 'ocupada').length || closingMock.openTables
@@ -41,11 +45,15 @@ function buildClosingData(tables = []) {
     ? { dinheiro: tableRevenue * 0.28, pix: tableRevenue * 0.43, cartao: tableRevenue * 0.266, outros: tableRevenue * 0.024 }
     : closingMock.payments
   const total = Object.values(payments).reduce((sum, value) => sum + value, 0)
+  const categories = hasRealSales ? scaleCategories(closingMock.categories, total) : closingMock.categories
+  const categoryTotal = categories.reduce((sum, item) => sum + item.total, 0)
 
   return {
     ...closingMock,
     payments,
     total,
+    categories,
+    categoryTotal,
     openTables,
     sentToKitchen,
     ticketAverage: total / Math.max(closingMock.closedTables + openTables, 1),
@@ -54,7 +62,7 @@ function buildClosingData(tables = []) {
 }
 
 function MiniSummary({ icon: Icon, title, value, tone = 'green' }) {
-  return <div className="closingMiniCard"><div className={`closingMiniIcon ${tone}`}><Icon size={22} /></div><span>{title}</span><strong>{value}</strong></div>
+  return <div className="closingMiniCard"><div className={`closingMiniIcon ${tone}`}><Icon size={20} /></div><span>{title}</span><strong>{value}</strong></div>
 }
 
 function PaymentVisual({ data }) {
@@ -70,7 +78,8 @@ function PaymentVisual({ data }) {
 }
 
 function CategoryBars({ categories, total }) {
-  return <div className="categoryBars">{categories.map(item => { const percent = total ? item.total / total * 100 : 0; return <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent.toFixed(1).replace('.', ',')}%</b></div><div className="progress"><span style={{ width: `${Math.min(percent, 100)}%` }} /></div><small>{money(item.total)}</small></div> })}</div>
+  const base = categories.reduce((sum, item) => sum + item.total, 0) || total || 1
+  return <div className="categoryBars">{categories.map(item => { const percent = item.total / base * 100; return <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent.toFixed(1).replace('.', ',')}%</b></div><div className="progress"><span style={{ width: `${Math.min(percent, 100)}%` }} /></div><small>{money(item.total)}</small></div> })}</div>
 }
 
 export default function Fechamento({ tables = [], currentUser }) {
@@ -98,7 +107,7 @@ export default function Fechamento({ tables = [], currentUser }) {
 
       <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><div className="cashRows"><p><span>Valor esperado no caixa:</span><strong>{money(expectedCash)}</strong></p><label><span>Valor informado pelo operador:</span><input value={reportedCash} onChange={e => setReportedCash(e.target.value)} disabled={closed} /></label><p><span>Diferença:</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>Observação (opcional):</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={19} /> Conferir e fechar caixa</button></div></section>
 
-    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Vendas por forma de pagamento</h3><PaymentVisual data={data} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.total} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>)}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><AlertCircle size={18} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={18} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={18} /><span>Reimpressões</span><strong>{data.reprints}</strong></p><p><Flame size={18} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong></p></div></section>
+    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Vendas por forma de pagamento</h3><PaymentVisual data={data} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>)}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><AlertCircle size={18} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={18} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={18} /><span>Reimpressões</span><strong>{data.reprints}</strong></p><p><Flame size={18} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong></p></div></section>
 
     <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={20} /> Fechar caixa do dia</button></footer>
   </div>
