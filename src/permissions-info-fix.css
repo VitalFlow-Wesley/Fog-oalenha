@@ -1,0 +1,57 @@
+/* Ajuste — Card 'Permissões por função'
+   Deixa o texto embaixo do título e o botão separado, sem ficar espremido. */
+
+.settingsPremiumPage .permissionsInfoBox {
+  grid-template-columns: 32px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+}
+
+.settingsPremiumPage .permissionsInfoBox > div {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
+}
+
+.settingsPremiumPage .permissionsInfoBox strong {
+  display: block !important;
+  margin: 0 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+.settingsPremiumPage .permissionsInfoBox span {
+  display: block !important;
+  width: 100% !important;
+  max-width: 430px !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+}
+
+.settingsPremiumPage .permissionsInfoBox button {
+  flex: 0 0 auto !important;
+  min-width: 190px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 900px) {
+  .settingsPremiumPage .permissionsInfoBox {
+    grid-template-columns: 28px 1fr !important;
+  }
+
+  .settingsPremiumPage .permissionsInfoBox button {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .settingsPremiumPage .permissionsInfoBox span {
+    max-width: none !important;
+  }
+}
