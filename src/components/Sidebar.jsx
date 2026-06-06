@@ -1,4 +1,4 @@
-import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings, ChefHat } from 'lucide-react'
+import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator } from 'lucide-react'
 import fogaoLogo from '../assets/fogao-logo.png'
 
 const waiterMenu = [
@@ -10,6 +10,7 @@ const managerMenu = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'pedidos-cozinha', label: 'Pedidos', icon: ChefHat },
   { key: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+  { key: 'fechamento', label: 'Fechamento', icon: Calculator },
   { key: 'usuarios', label: 'Configurações', icon: Settings },
 ]
 
