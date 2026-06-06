@@ -1,3 +1,351 @@
+.completeReportsHeader{
+  align-items: flex-start;
+}
+
+.completeReportsHeader h1{
+  font-size: clamp(36px, 4.2vw, 58px);
+  line-height: .95;
+}
+
+.reportPeriodSelect{
+  min-height: 44px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  padding: 0 16px;
+  background: rgba(255,253,248,.95);
+  color: #32180f;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(78,43,23,.05);
+}
+
+.completeReportMode{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.completeExecutiveGrid{
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.completeExecutiveCard{
+  min-height: 118px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #ead7bf;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(255,247,236,.94));
+  box-shadow: 0 14px 32px rgba(78,43,23,.06);
+  overflow: hidden;
+}
+
+.completeExecutiveIcon{
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #c8482c, #f05a3d);
+  box-shadow: 0 10px 22px rgba(200,72,44,.18);
+}
+
+.completeExecutiveCard span,
+.completeExecutiveCard small{
+  color: #7b5c4c;
+}
+
+.completeExecutiveCard span{
+  display: block;
+  font-weight: 800;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+
+.completeExecutiveCard strong{
+  display: block;
+  color: #32180f;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(20px, 1.8vw, 28px);
+  line-height: 1.05;
+  word-break: break-word;
+}
+
+.completeExecutiveCard small{
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.completeExecutiveCard em{
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e8f7e8;
+  color: #177640;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 11px;
+}
+
+.completeAnalyticsGrid{
+  display: grid;
+  gap: 14px;
+}
+
+.topAnalytics{
+  grid-template-columns: 1.4fr 1fr .9fr;
+}
+
+.middleAnalytics{
+  grid-template-columns: 1fr 1fr;
+}
+
+.bottomAnalytics{
+  grid-template-columns: 1fr .75fr .95fr;
+}
+
+.completePanel{
+  border: 1px solid #ead7bf;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,253,248,.98), rgba(255,247,236,.94));
+  box-shadow: 0 14px 32px rgba(78,43,23,.06);
+  padding: 18px;
+  overflow: hidden;
+}
+
+.completePanel h2{
+  margin: 0 0 16px;
+  color: #32180f;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.sectorPerformanceGrid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sectorPerformanceCard{
+  min-height: 142px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: rgba(255,250,242,.8);
+  text-align: center;
+}
+
+.sectorPerformanceCard svg{
+  color: #e04a2f;
+}
+
+.sectorPerformanceCard strong{
+  color: #32180f;
+  font-size: 16px;
+}
+
+.sectorPerformanceCard span,
+.sectorPerformanceCard small{
+  color: #7b5c4c;
+  font-size: 12px;
+}
+
+.sectorPerformanceCard b{
+  color: #32180f;
+  font-size: 17px;
+}
+
+.categoryReportList,
+.paymentReportList,
+.indicatorReportList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.categoryReportItem{
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.categoryReportItem > div{
+  display: grid;
+  grid-template-columns: 1fr 58px 86px;
+  gap: 8px;
+  align-items: center;
+  color: #32180f;
+  font-size: 12px;
+}
+
+.categoryReportItem strong,
+.categoryReportItem b{
+  font-weight: 900;
+}
+
+.categoryReportItem progress{
+  width: 100%;
+  height: 9px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #eee4d8;
+}
+
+.categoryReportItem progress::-webkit-progress-bar{ background: #eee4d8; }
+.categoryReportItem progress::-webkit-progress-value{ background: linear-gradient(90deg, #0f8f54, #27b56f); border-radius: 999px; }
+.categoryReportItem progress::-moz-progress-bar{ background: linear-gradient(90deg, #0f8f54, #27b56f); border-radius: 999px; }
+
+.paymentReportList > div,
+.indicatorReportList > div{
+  display: grid;
+  grid-template-columns: 1fr 70px 104px;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #ead7bf;
+  color: #32180f;
+  font-size: 13px;
+}
+
+.indicatorReportList > div{
+  grid-template-columns: 1fr auto;
+}
+
+.paymentReportList b,
+.paymentReportList strong,
+.indicatorReportList strong{
+  font-weight: 950;
+  text-align: right;
+}
+
+.paymentTotal{
+  font-weight: 950;
+  background: #fff2dd;
+  border-radius: 12px;
+  border-bottom: 0 !important;
+  padding: 10px !important;
+}
+
+.completeTable{
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.completeTableRow{
+  display: grid;
+  gap: 10px;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-top: 1px solid #ead7bf;
+  color: #32180f;
+  font-size: 12.5px;
+}
+
+.completeTableRow.head{
+  border-top: 0;
+  background: #fff0d8;
+  font-weight: 950;
+  font-size: 11.5px;
+}
+
+.productCompleteTable .completeTableRow{
+  grid-template-columns: 36px 1.25fr .85fr .8fr 46px 92px 92px;
+}
+
+.tableCompleteTable .completeTableRow{
+  grid-template-columns: .72fr .9fr 48px 58px 1.3fr .72fr;
+}
+
+.completeTableRow i{
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 11px;
+}
+
+.completeTableRow i.closed{ background: #e4f6e4; color: #117242; }
+.completeTableRow i.open{ background: #fff1e6; color: #c9472b; }
+
+.completeLinkBtn{
+  margin: 13px auto 0;
+  display: block;
+  border: 0;
+  background: transparent;
+  color: #d24327;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.movementChart{
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  height: 190px;
+  padding: 12px 4px 0;
+  border-bottom: 1px solid #ead7bf;
+}
+
+.movementColumn{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  height: 100%;
+}
+
+.movementColumn span{
+  width: 100%;
+  max-width: 24px;
+  border-radius: 999px 999px 4px 4px;
+  background: linear-gradient(180deg, #f15a3d, #c83f25);
+  box-shadow: 0 8px 18px rgba(200,63,37,.14);
+}
+
+.movementColumn small{
+  color: #7b5c4c;
+  font-size: 11px;
+}
+
+.completeSuccessBox{
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border-radius: 14px;
+  background: #e8f7e8;
+  color: #177640;
+  font-weight: 950;
+}
+
+.completeSuccessBox small{
+  display: block;
+  font-weight: 600;
+  color: #4f865f;
+  margin-top: 2px;
+}
+
 .auditClosingGrid{
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -9,6 +357,39 @@
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(255,253,248,.98), rgba(255,246,234,.92));
   box-shadow: 0 12px 30px rgba(78,43,23,.06);
+}
+
+.completeAuditPanel{
+  margin-top: 0;
+}
+
+.auditMetricsGrid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.auditMetricsGrid div{
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #ead7bf;
+  background: rgba(255,250,242,.82);
+}
+
+.auditMetricsGrid span{
+  display: block;
+  color: #7b5c4c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.auditMetricsGrid strong{
+  display: block;
+  margin-top: 5px;
+  color: #32180f;
+  font-size: 20px;
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
 .auditReportHeader{
@@ -100,27 +481,79 @@
   background: #fffaf2;
 }
 
+@media(max-width: 1320px){
+  .completeExecutiveGrid{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .topAnalytics,
+  .bottomAnalytics{
+    grid-template-columns: 1fr;
+  }
+  .sectorPerformanceGrid{
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media(max-width: 1100px){
-  .auditClosingGrid{
+  .middleAnalytics{
+    grid-template-columns: 1fr;
+  }
+  .auditClosingGrid,
+  .auditMetricsGrid{
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .auditReportTable{
+  .auditReportTable,
+  .completeTable{
     overflow-x: auto;
   }
 
-  .auditReportRow{
+  .auditReportRow,
+  .productCompleteTable .completeTableRow,
+  .tableCompleteTable .completeTableRow{
     min-width: 980px;
   }
 }
 
-@media(max-width: 700px){
-  .auditClosingGrid{
+@media(max-width: 760px){
+  .completeExecutiveGrid,
+  .sectorPerformanceGrid,
+  .auditClosingGrid,
+  .auditMetricsGrid{
     grid-template-columns: 1fr;
   }
 
   .auditReportHeader{
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .reportsActions{
+    width: 100%;
+  }
+
+  .reportPeriodSelect,
+  .reportActionBtn{
+    width: 100%;
+  }
+}
+
+@media print{
+  .completeReportMode{
+    gap: 10px;
+  }
+  .completeExecutiveGrid{
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .topAnalytics,
+  .middleAnalytics,
+  .bottomAnalytics{
+    grid-template-columns: 1fr;
+  }
+  .completePanel,
+  .completeExecutiveCard,
+  .auditReportSection{
+    box-shadow: none;
+    break-inside: avoid;
   }
 }
