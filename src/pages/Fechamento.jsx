@@ -71,16 +71,61 @@ function MiniSummary({ icon: Icon, title, value, tone = 'green' }) {
   return <div className="closingMiniCard"><div className={`closingMiniIcon ${tone}`}><Icon size={19} /></div><span>{title}</span><strong>{value}</strong></div>
 }
 
+function polarToCartesian(cx, cy, radius, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180
+  return {
+    x: cx + radius * Math.cos(angleInRadians),
+    y: cy + radius * Math.sin(angleInRadians),
+  }
+}
+
+function describeArc(cx, cy, radius, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, radius, endAngle)
+  const end = polarToCartesian(cx, cy, radius, startAngle)
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1'
+  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`
+}
+
 function PaymentVisual({ data }) {
   const total = data.total || 1
   const items = [
-    ['Dinheiro', data.payments.dinheiro, 'cash'],
-    ['PIX', data.payments.pix, 'pix'],
-    ['Cartão', data.payments.cartao, 'card'],
-    ['Outros', data.payments.outros, 'other'],
+    { label: 'Dinheiro', value: data.payments.dinheiro, key: 'cash', color: '#2fa85f' },
+    { label: 'PIX', value: data.payments.pix, key: 'pix', color: '#09aa92' },
+    { label: 'Cartão', value: data.payments.cartao, key: 'card', color: '#4f78bd' },
+    { label: 'Outros', value: data.payments.outros, key: 'other', color: '#a45ac3' },
   ]
-  const gradient = `conic-gradient(#4e9f53 0 ${items[0][1] / total * 100}%, #2aa889 ${items[0][1] / total * 100}% ${(items[0][1] + items[1][1]) / total * 100}%, #4777b8 ${(items[0][1] + items[1][1]) / total * 100}% ${(items[0][1] + items[1][1] + items[2][1]) / total * 100}%, #9164bd 0)`
-  return <div className="paymentVisual"><div className="donut" style={{ background: gradient }}><div><strong>{money(total)}</strong><span>Total</span></div></div><div className="paymentLegend">{items.map(([label, value, key]) => <div key={label}><i className={key} /><span>{label}<small>{(value / total * 100).toFixed(1).replace('.', ',')}%</small></span><b>{money(value)}</b></div>)}</div></div>
+  const [activePayment, setActivePayment] = useState(null)
+  let startAngle = 0
+  const segments = items.map(item => {
+    const percent = item.value / total * 100
+    const endAngle = startAngle + percent / 100 * 360
+    const segment = { ...item, percent, startAngle, endAngle }
+    startAngle = endAngle
+    return segment
+  })
+  const active = activePayment || segments[0]
+
+  return <div className="paymentVisual interactivePaymentVisual">
+    <div className="donut paymentDonutSvg" onMouseLeave={() => setActivePayment(null)}>
+      <svg viewBox="0 0 140 140" role="img" aria-label="Vendas por forma de pagamento">
+        <circle className="paymentTrack" cx="70" cy="70" r="54" />
+        {segments.map(segment => (
+          <path
+            key={segment.key}
+            className={`paymentSegment ${active?.key === segment.key ? 'active' : ''}`}
+            d={describeArc(70, 70, 54, segment.startAngle, segment.endAngle)}
+            stroke={segment.color}
+            onMouseEnter={() => setActivePayment(segment)}
+          >
+            <title>{`${segment.label}: ${money(segment.value)} (${segment.percent.toFixed(1).replace('.', ',')}%)`}</title>
+          </path>
+        ))}
+      </svg>
+      <div className="donutCenter"><strong>{money(total)}</strong><span>Total</span></div>
+      {activePayment && <div className="paymentHoverTooltip"><div><i style={{ background: active.color }} /> <strong>{active.label}</strong></div><p>{money(active.value)}</p><small>{active.percent.toFixed(1).replace('.', ',')}% do total</small></div>}
+    </div>
+    <div className="paymentLegend">{segments.map(item => <div key={item.label} onMouseEnter={() => setActivePayment(item)} onMouseLeave={() => setActivePayment(null)} className={active?.key === item.key ? 'active' : ''}><i className={item.key} /><span>{item.label}<small>{item.percent.toFixed(1).replace('.', ',')}%</small></span><b>{money(item.value)}</b></div>)}</div>
+  </div>
 }
 
 function CategoryBars({ categories, total }) {
