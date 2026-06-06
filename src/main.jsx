@@ -24,6 +24,8 @@ import './kitchen-orders-compact.css'
 import './closing-cash.css'
 import './closing-final-polish.css'
 import './closing-header-fix.css'
+import './tables-settings-view-more.css'
+import './tables-settings-view-more.js'
 import './print.css'
 import './command-premium.css'
 
