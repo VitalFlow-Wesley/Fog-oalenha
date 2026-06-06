@@ -21,6 +21,7 @@ import './permissions-info-fix.css'
 import './products-settings.css'
 import './kitchen-orders.css'
 import './kitchen-orders-compact.css'
+import './closing-cash.css'
 import './print.css'
 import './command-premium.css'
 
