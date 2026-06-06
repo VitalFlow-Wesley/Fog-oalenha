@@ -1,0 +1,428 @@
+.printSettingsTabV2 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 14px !important;
+}
+
+.printSettingsTabV2 .printBlock {
+  min-height: 0 !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.printBlockHeader,
+.printNumberTitle {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.printBlockHeader {
+  justify-content: space-between !important;
+  margin-bottom: 12px !important;
+}
+
+.printNumberTitle svg {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 8px !important;
+  border-radius: 999px !important;
+  color: #8a4b2b !important;
+  background: #f4e4d2 !important;
+}
+
+.printNumberTitle h2 {
+  margin: 0 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  color: #2a160e !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.printerTableV2 {
+  border: 1px solid #ead7bf !important;
+  border-radius: 13px !important;
+  overflow: hidden !important;
+  background: rgba(255, 253, 248, .75) !important;
+}
+
+.printerTableHead,
+.printerTableRow {
+  display: grid !important;
+  grid-template-columns: .9fr 1.35fr .65fr 1fr !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 10px !important;
+}
+
+.printerTableHead {
+  background: #fff0d8 !important;
+  color: #5f4435 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.printerTableRow {
+  min-height: 48px !important;
+  border-top: 1px solid #ead7bf !important;
+  color: #4d3528 !important;
+  font-size: 13px !important;
+}
+
+.printerTableRow strong {
+  font-size: 13px !important;
+  color: #3b2419 !important;
+}
+
+.sectorCell {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 800 !important;
+}
+
+.sectorCell svg {
+  color: #7a4d37 !important;
+}
+
+.printerTableRow em {
+  width: fit-content !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  background: #e7f4df !important;
+  color: #267643 !important;
+  font-style: normal !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+}
+
+.printerTableActions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+}
+
+.printerTableActions button,
+.editReceiptBtn {
+  min-height: 30px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 9px !important;
+  background: #fffdf8 !important;
+  color: #7a4d37 !important;
+  padding: 0 9px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+}
+
+.printerTableActions .iconDanger {
+  width: 30px !important;
+  padding: 0 !important;
+  color: #e14b38 !important;
+  border-color: #ffd1c9 !important;
+  background: #fff1ee !important;
+}
+
+.printRulesLayout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(230px, .95fr) !important;
+  gap: 14px !important;
+  margin-top: 12px !important;
+}
+
+.printRulesSelects {
+  display: grid !important;
+  gap: 9px !important;
+}
+
+.printRulesSelects label span {
+  display: block !important;
+  color: #5f4435 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  margin-bottom: 5px !important;
+}
+
+.printRulesSelects select {
+  width: 100% !important;
+  min-height: 36px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 9px !important;
+  background: rgba(255, 255, 255, .75) !important;
+  color: #2a160e !important;
+  padding: 0 10px !important;
+  outline: none !important;
+}
+
+.currentRulesBox {
+  align-self: stretch !important;
+  border: 1px solid #d9e6cf !important;
+  border-radius: 14px !important;
+  background: #f1f8ea !important;
+  padding: 13px !important;
+  color: #426b3e !important;
+}
+
+.currentRulesBox svg {
+  color: #4c8b4c !important;
+  margin-bottom: 5px !important;
+}
+
+.currentRulesBox strong {
+  display: block !important;
+  color: #426b3e !important;
+  margin-bottom: 8px !important;
+}
+
+.currentRulesBox ul {
+  margin: 0 !important;
+  padding-left: 18px !important;
+  display: grid !important;
+  gap: 9px !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.printTypeList {
+  display: grid !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.printTypeRow {
+  min-height: 64px !important;
+  display: grid !important;
+  grid-template-columns: 42px 1fr 52px !important;
+  align-items: center !important;
+  gap: 11px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 13px !important;
+  background: rgba(255, 253, 248, .75) !important;
+  padding: 10px 12px !important;
+}
+
+.printTypeRow > svg {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 8px !important;
+  border-radius: 10px !important;
+  color: #8a5d35 !important;
+  background: #f4e4d2 !important;
+}
+
+.printTypeRow strong {
+  display: block !important;
+  color: #2a160e !important;
+  font-size: 14px !important;
+  margin-bottom: 3px !important;
+}
+
+.printTypeRow span {
+  display: block !important;
+  color: #7d6758 !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+.printToggle {
+  justify-self: end !important;
+  width: 46px !important;
+  height: 26px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #d7c7b8 !important;
+  padding: 3px !important;
+  cursor: pointer !important;
+  transition: .18s ease !important;
+}
+
+.printToggle span {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  transition: .18s ease !important;
+  box-shadow: 0 2px 5px rgba(60, 30, 10, .2) !important;
+}
+
+.printToggle.active {
+  background: #4b8745 !important;
+}
+
+.printToggle.active span {
+  transform: translateX(20px) !important;
+}
+
+.receiptPreviewLayout {
+  display: grid !important;
+  grid-template-columns: minmax(210px, .95fr) minmax(180px, .8fr) !important;
+  gap: 15px !important;
+  align-items: center !important;
+  margin-top: 12px !important;
+}
+
+.receiptPreview {
+  min-height: 220px !important;
+  max-width: 260px !important;
+  margin: 0 auto !important;
+  padding: 15px 14px 18px !important;
+  background: #fffdf8 !important;
+  border: 1px solid #ead7bf !important;
+  box-shadow: 0 12px 22px rgba(80, 42, 22, .11) !important;
+  color: #2a160e !important;
+  font-family: 'Courier New', monospace !important;
+  text-align: center !important;
+  position: relative !important;
+}
+
+.receiptPreview:after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: -8px !important;
+  height: 8px !important;
+  background: repeating-linear-gradient(135deg, transparent 0 8px, #fffdf8 8px 16px) !important;
+}
+
+.receiptPreview h3 {
+  margin: 0 !important;
+  font-size: 16px !important;
+}
+
+.receiptPreview p,
+.receiptPreview small,
+.receiptPreview span {
+  font-size: 11px !important;
+}
+
+.receiptPreview div {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+.receiptPreview p {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin: 6px 0 !important;
+  text-align: left !important;
+}
+
+.receiptPreview hr {
+  border: 0 !important;
+  border-top: 1px dashed #8c6f5e !important;
+  margin: 9px 0 !important;
+}
+
+.receiptTotal {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-top: 8px !important;
+}
+
+.receiptPreview em {
+  display: block !important;
+  margin-top: 12px !important;
+  white-space: pre-line !important;
+  font-size: 11px !important;
+  font-style: italic !important;
+}
+
+.receiptInfoList {
+  border-left: 1px dashed #ead7bf !important;
+  padding-left: 15px !important;
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.receiptInfoList strong {
+  color: #2a160e !important;
+  margin-bottom: 5px !important;
+}
+
+.receiptInfoList span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  color: #5f4435 !important;
+  font-size: 12px !important;
+}
+
+.receiptInfoList svg {
+  color: #4c8b4c !important;
+}
+
+.printFooterBar {
+  grid-column: 1 / -1 !important;
+  min-height: 58px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 15px !important;
+  background: rgba(255, 253, 248, .88) !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.printFooterBar > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+}
+
+.printFooterBar svg {
+  color: #b98534 !important;
+}
+
+.printFooterBar strong {
+  color: #2a160e !important;
+}
+
+.printFooterBar span {
+  color: #7d6758 !important;
+  font-size: 12px !important;
+}
+
+@media (max-width: 1180px) {
+  .printSettingsTabV2,
+  .printRulesLayout,
+  .receiptPreviewLayout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .printFooterBar {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .printerTableHead {
+    display: none !important;
+  }
+
+  .printerTableRow {
+    grid-template-columns: 1fr !important;
+  }
+
+  .printerTableActions {
+    justify-content: flex-start !important;
+  }
+
+  .printBlockHeader {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .receiptInfoList {
+    border-left: 0 !important;
+    padding-left: 0 !important;
+  }
+}
