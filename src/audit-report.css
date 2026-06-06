@@ -1,0 +1,126 @@
+.auditClosingGrid{
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.auditReportSection{
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #ead7bf;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,253,248,.98), rgba(255,246,234,.92));
+  box-shadow: 0 12px 30px rgba(78,43,23,.06);
+}
+
+.auditReportHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.auditReportHeader > div{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auditReportHeader svg{
+  color: #c9472b;
+}
+
+.auditReportHeader h3{
+  margin: 0;
+  color: #32180f;
+  font-size: 20px;
+}
+
+.auditReportHeader span{
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff1e6;
+  color: #a64425;
+  border: 1px solid #f0c7ad;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.auditReportTable{
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255,253,248,.72);
+}
+
+.auditReportRow{
+  display: grid;
+  grid-template-columns: 1.05fr 1.05fr .9fr .9fr .7fr .82fr;
+  gap: 10px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 12px;
+  border-top: 1px solid #ead7bf;
+  color: #3b2118;
+  font-size: 12.5px;
+}
+
+.auditReportRow.head{
+  min-height: 38px;
+  border-top: 0;
+  background: #fff0d8;
+  font-weight: 950;
+  color: #32180f;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.auditReportRow span{
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.auditReportRow strong{
+  color: #32180f;
+  font-size: 13px;
+}
+
+.auditReportRow small{
+  color: #8a6a58;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.auditReportRow:not(.head):hover{
+  background: #fffaf2;
+}
+
+@media(max-width: 1100px){
+  .auditClosingGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auditReportTable{
+    overflow-x: auto;
+  }
+
+  .auditReportRow{
+    min-width: 980px;
+  }
+}
+
+@media(max-width: 700px){
+  .auditClosingGrid{
+    grid-template-columns: 1fr;
+  }
+
+  .auditReportHeader{
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
