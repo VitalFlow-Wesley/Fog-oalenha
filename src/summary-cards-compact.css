@@ -1,0 +1,235 @@
+/* Ajuste global: cards de resumo mais compactos
+   Estrutura visual: ícone à esquerda, título + valor na mesma linha e descrição abaixo. */
+
+/* Configurações > Acessos */
+.accessSummaryGrid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.accessSummaryCard {
+  min-height: 68px !important;
+  padding: 10px 14px !important;
+  grid-template-columns: 40px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.accessSummaryCard svg {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 9px !important;
+}
+
+.accessSummaryCard div {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.accessSummaryCard span {
+  grid-column: 1 !important;
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+}
+
+.accessSummaryCard strong {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.accessSummaryCard small {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Mesas e comandas */
+.restaurantTablesPage .summaryCard,
+.tablesSummaryGrid .summaryCard,
+.summaryCards .summaryCard {
+  min-height: 70px !important;
+  padding: 10px 14px !important;
+  align-items: center !important;
+}
+
+.restaurantTablesPage .summaryCard .summaryContent,
+.tablesSummaryGrid .summaryCard .summaryContent,
+.summaryCards .summaryCard .summaryContent {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.restaurantTablesPage .summaryCard h3,
+.tablesSummaryGrid .summaryCard h3,
+.summaryCards .summaryCard h3,
+.restaurantTablesPage .summaryCard span,
+.tablesSummaryGrid .summaryCard span,
+.summaryCards .summaryCard span {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+
+.restaurantTablesPage .summaryCard strong,
+.tablesSummaryGrid .summaryCard strong,
+.summaryCards .summaryCard strong {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.restaurantTablesPage .summaryCard p,
+.tablesSummaryGrid .summaryCard p,
+.summaryCards .summaryCard p,
+.restaurantTablesPage .summaryCard small,
+.tablesSummaryGrid .summaryCard small,
+.summaryCards .summaryCard small {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Dashboard */
+.dashboardPage .metricCard,
+.dashboardPremiumPage .metricCard,
+.operationDashboard .metricCard {
+  min-height: 150px !important;
+  padding: 18px 18px !important;
+}
+
+.dashboardPage .metricCard h3,
+.dashboardPremiumPage .metricCard h3,
+.operationDashboard .metricCard h3 {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+  line-height: 1.05 !important;
+}
+
+.dashboardPage .metricCard .metricValue,
+.dashboardPremiumPage .metricCard .metricValue,
+.operationDashboard .metricCard .metricValue,
+.dashboardPage .metricCard strong,
+.dashboardPremiumPage .metricCard strong,
+.operationDashboard .metricCard strong {
+  font-size: 34px !important;
+  line-height: 1 !important;
+}
+
+/* Pedidos enviados */
+.kitchenSummaryGrid {
+  gap: 9px !important;
+  margin-bottom: 10px !important;
+}
+
+.kitchenSummaryCard {
+  min-height: 58px !important;
+  padding: 9px 12px !important;
+  gap: 9px !important;
+}
+
+.kitchenSummaryCard .summaryRoundIcon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.kitchenSummaryCard > div:last-child {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+}
+
+.kitchenSummaryCard span {
+  font-size: 12.5px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+}
+
+.kitchenSummaryCard strong {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+/* Relatórios */
+.reportMetricCard,
+.reportsPage .metricCard,
+.reportsPremiumPage .metricCard {
+  min-height: 72px !important;
+  padding: 10px 14px !important;
+}
+
+.reportMetricCard > div,
+.reportsPage .metricCard > div,
+.reportsPremiumPage .metricCard > div {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.reportMetricCard span,
+.reportsPage .metricCard span,
+.reportsPremiumPage .metricCard span,
+.reportMetricCard h3,
+.reportsPage .metricCard h3,
+.reportsPremiumPage .metricCard h3 {
+  font-size: 12.5px !important;
+  line-height: 1.1 !important;
+}
+
+.reportMetricCard strong,
+.reportsPage .metricCard strong,
+.reportsPremiumPage .metricCard strong {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.reportMetricCard small,
+.reportsPage .metricCard small,
+.reportsPremiumPage .metricCard small,
+.reportMetricCard p,
+.reportsPage .metricCard p,
+.reportsPremiumPage .metricCard p {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+@media (max-width: 760px) {
+  .accessSummaryCard div,
+  .kitchenSummaryCard > div:last-child,
+  .restaurantTablesPage .summaryCard .summaryContent,
+  .tablesSummaryGrid .summaryCard .summaryContent,
+  .summaryCards .summaryCard .summaryContent,
+  .reportMetricCard > div,
+  .reportsPage .metricCard > div,
+  .reportsPremiumPage .metricCard > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  .accessSummaryCard strong,
+  .kitchenSummaryCard strong,
+  .restaurantTablesPage .summaryCard strong,
+  .tablesSummaryGrid .summaryCard strong,
+  .summaryCards .summaryCard strong,
+  .reportMetricCard strong,
+  .reportsPage .metricCard strong,
+  .reportsPremiumPage .metricCard strong {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+}
