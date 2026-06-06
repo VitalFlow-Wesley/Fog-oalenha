@@ -1,4 +1,4 @@
-# Mesa & Brasa — Frontend
+# Fogão a lenha — Frontend
 
 Frontend inicial para sistema de churrascaria familiar/fogão a lenha.
 
