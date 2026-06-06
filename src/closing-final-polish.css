@@ -1,0 +1,133 @@
+.closingPage .closingDetailsGrid{
+  grid-template-columns: 1.12fr 1.12fr 1.08fr 1.08fr;
+  gap: 14px;
+}
+
+.closingPage .paymentPanel,
+.closingPage .categoryPanel,
+.closingPage .topProductsPanel,
+.closingPage .otherDetailsPanel{
+  min-height: 250px;
+}
+
+.closingPage .categoryPanel{
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(255,253,248,.98), rgba(255,247,235,.96));
+  position: relative;
+  overflow: hidden;
+}
+
+.closingPage .categoryPanel:after{
+  content: '';
+  position: absolute;
+  right: -34px;
+  bottom: -42px;
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76,148,74,.10), transparent 62%);
+  pointer-events: none;
+}
+
+.closingPage .categoryPanel h3,
+.closingPage .topProductsPanel h3,
+.closingPage .otherDetailsPanel h3{
+  font-size: 19px;
+  margin-bottom: 15px;
+}
+
+.closingPage .categoryBars{
+  gap: 11px;
+  position: relative;
+  z-index: 1;
+}
+
+.closingPage .categoryLine{
+  grid-template-columns: minmax(92px,.9fr) minmax(124px,1.15fr) 82px;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(226,205,179,.52);
+}
+
+.closingPage .categoryLine:last-child{
+  border-bottom: 0;
+}
+
+.closingPage .categoryLine div:first-child span{
+  font-weight: 800;
+  color: #3b2118;
+}
+
+.closingPage .categoryLine b{
+  font-size: 11px;
+  color: #2f1a12;
+}
+
+.closingPage .progress{
+  height: 10px;
+  background: #eee5d9;
+  box-shadow: inset 0 1px 3px rgba(52,27,18,.08);
+}
+
+.closingPage .progress span{
+  background: linear-gradient(90deg, #2f8b47, #4aa95d);
+}
+
+.closingPage .categoryLine small{
+  font-weight: 800;
+  color: #614438;
+}
+
+.closingPage .topProductsPanel,
+.closingPage .otherDetailsPanel{
+  padding: 18px 20px;
+}
+
+.closingPage .productRank{
+  grid-template-columns: 26px minmax(0,1fr) 34px 86px;
+  padding: 8px 0;
+}
+
+.closingPage .productRank span,
+.closingPage .otherDetailsPanel span{
+  color: #3b2118;
+}
+
+.closingPage .otherDetailsPanel p{
+  grid-template-columns: 22px minmax(118px,1fr) 34px 72px;
+  gap: 9px;
+  padding: 10px 0;
+}
+
+.closingPage .otherDetailsPanel strong{
+  font-size: 19px;
+  color: #2f1a12;
+}
+
+.closingPage .otherDetailsPanel small{
+  color: #7f6456;
+}
+
+.closingPage .closingActions{
+  margin-top: 14px;
+}
+
+@media(max-width:1380px){
+  .closingPage .closingDetailsGrid{
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .closingPage .paymentPanel,
+  .closingPage .categoryPanel,
+  .closingPage .topProductsPanel,
+  .closingPage .otherDetailsPanel{
+    min-height: 0;
+  }
+}
+
+@media(max-width:760px){
+  .closingPage .categoryLine,
+  .closingPage .otherDetailsPanel p{
+    grid-template-columns: 1fr;
+  }
+}
