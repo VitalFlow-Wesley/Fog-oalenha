@@ -3,35 +3,36 @@ import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, 
 
 const roleLabel = { admin: 'Administrador', gerente: 'Gerente', garcom: 'Garçom' }
 const basePrinters = [
-  { id: 'printer1', label: 'Impressora 1', name: 'Caixa' },
-  { id: 'printer2', label: 'Impressora 2', name: 'Cozinha' }
+  { id: 'printer1', label: 'Impressora 1', name: 'Impressora Caixa' },
+  { id: 'printer2', label: 'Impressora 2', name: 'Impressora Cozinha' },
+  { id: 'printer3', label: 'Impressora 3', name: 'Impressora Churrasco' },
+  { id: 'printer4', label: 'Impressora 4', name: 'Impressora Sucos' },
 ]
 
 function normalizeSettings(settings) {
   const printers = settings?.printers?.length ? settings.printers : basePrinters
-  const firstPrinter = printers[0]?.id
-  const secondPrinter = printers[1]?.id || firstPrinter
-  const safePrinterId = value => printers.some(p => p.id === value) ? value : firstPrinter
+  const safePrinterId = (value, fallbackIndex = 0) => printers.some(p => p.id === value) ? value : (printers[fallbackIndex]?.id || printers[0]?.id)
 
   return {
     establishmentName: 'Fogão a Lenha',
-    cnpj: '',
+    cnpj: '12.345.678/0001-90',
     phone: '',
     address: '',
     receiptMessage: 'Obrigado pela preferência!\nVolte sempre.',
     printKitchenItems: true,
-    printBarItems: false,
     printFullReceipt: true,
+    allowReprint: true,
+    printBarItems: false,
     requireCancelPassword: true,
     requireCloseTablePassword: true,
     requireDiscountPassword: true,
     requireReprintPassword: true,
     ...settings,
     printers,
-    kitchenPrinterId: safePrinterId(settings?.kitchenPrinterId || secondPrinter),
-    cashierPrinterId: safePrinterId(settings?.cashierPrinterId || firstPrinter),
-    grillPrinterId: safePrinterId(settings?.grillPrinterId || settings?.kitchenPrinterId || secondPrinter),
-    juicePrinterId: safePrinterId(settings?.juicePrinterId || settings?.kitchenPrinterId || secondPrinter),
+    cashierPrinterId: safePrinterId(settings?.cashierPrinterId, 0),
+    kitchenPrinterId: safePrinterId(settings?.kitchenPrinterId, 1),
+    grillPrinterId: safePrinterId(settings?.grillPrinterId, 2),
+    juicePrinterId: safePrinterId(settings?.juicePrinterId, 3),
   }
 }
 
@@ -57,6 +58,10 @@ function PasswordField({ label, value, onChange, visible, onToggle, placeholder 
   )
 }
 
+function ActiveToggle({ active, onClick }) {
+  return <button type="button" className={`printToggle ${active ? 'active' : ''}`} onClick={onClick}><span /></button>
+}
+
 export default function Usuarios({ users, setUsers, tables, setTables, currentUser, settings, setSettings }) {
   const [activeTab, setActiveTab] = useState('colaboradores')
   const [form, setForm] = useState({ name: '', username: '', password: '', role: 'garcom' })
@@ -72,19 +77,21 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [showPasswords, setShowPasswords] = useState({ manager: false, new: false, confirm: false, form: false })
   const [systemMessage, setSystemMessage] = useState('')
   const [cancelMessage, setCancelMessage] = useState('')
+
   const canManage = currentUser?.role === 'admin'
   const canChangeSensitive = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
-
   const printerOptions = useMemo(() => systemForm.printers || [], [systemForm.printers])
-  const getPrinterName = id => printerOptions.find(p => p.id === id)?.name || 'Não definida'
   const activeTables = tableConfigs.filter(table => table.active)
   const visibleTableConfigs = showOnlyActiveTables ? activeTables : tableConfigs
+  const totalUsers = users.length
+  const totalAdmins = users.filter(user => user.role === 'admin').length
+  const totalWaiters = users.filter(user => user.role === 'garcom').length
 
-  const sectorRows = [
-    { key: 'caixa', sector: 'Caixa / comanda do cliente', short: 'Caixa', icon: ReceiptText, printerId: systemForm.cashierPrinterId, field: 'cashierPrinterId', rule: 'Imprime a comanda detalhada para conferência do cliente.' },
-    { key: 'cozinha', sector: 'Cozinha', short: 'Cozinha', icon: Printer, printerId: systemForm.kitchenPrinterId, field: 'kitchenPrinterId', rule: 'Recebe pedidos de refeições e pratos quentes.' },
-    { key: 'churrasco', sector: 'Churrasco', short: 'Churrasco', icon: Utensils, printerId: systemForm.grillPrinterId, field: 'grillPrinterId', rule: 'Recebe pedidos destinados ao churrasqueiro.' },
-    { key: 'sucos', sector: 'Sucos', short: 'Sucos', icon: Store, printerId: systemForm.juicePrinterId, field: 'juicePrinterId', rule: 'Recebe pedidos de sucos e bebidas preparadas.' },
+  const printerAssignments = [
+    { key: 'caixa', sector: 'Caixa', icon: ReceiptText, field: 'cashierPrinterId', description: 'Comanda do cliente sai em' },
+    { key: 'cozinha', sector: 'Cozinha', icon: Printer, field: 'kitchenPrinterId', description: 'Pedidos da cozinha saem em' },
+    { key: 'churrasco', sector: 'Churrasco', icon: Utensils, field: 'grillPrinterId', description: 'Pedidos do churrasco saem em' },
+    { key: 'sucos', sector: 'Sucos', icon: Store, field: 'juicePrinterId', description: 'Pedidos dos sucos saem em' },
   ]
 
   const authToggles = [
@@ -95,10 +102,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   ]
 
   const permissionOptions = ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários']
-
-  const totalUsers = users.length
-  const totalAdmins = users.filter(user => user.role === 'admin').length
-  const totalWaiters = users.filter(user => user.role === 'garcom').length
 
   function addUser(e) {
     e.preventDefault()
@@ -183,10 +186,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   }
 
   function updatePrinterName(id, name) {
-    setSystemForm(prev => ({
-      ...prev,
-      printers: prev.printers.map(printer => printer.id === id ? { ...printer, name } : printer)
-    }))
+    setSystemForm(prev => ({ ...prev, printers: prev.printers.map(printer => printer.id === id ? { ...printer, name } : printer) }))
   }
 
   function saveSystem(e) {
@@ -265,9 +265,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
             <div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>
             {users.map(user => <div className="accessTableRow" key={user.id}>
               <div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div>
-              <span>{user.username}</span>
-              <b>{roleLabel[user.role]}</b>
-              <em>● Ativo</em>
+              <span>{user.username}</span><b>{roleLabel[user.role]}</b><em>● Ativo</em>
               <div className="accessActions"><button type="button"><Pencil size={16} /></button>{canManage && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => setUsers(prev => prev.filter(u => u.id !== user.id))}><Trash2 size={16} /></button>}</div>
             </div>)}
           </div>
@@ -283,70 +281,38 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
         <div className="tableSummaryCard positive"><CheckCircle2 size={22} /><span>Mesas ativas</span><strong>{activeTables.length}</strong></div>
         <div className="tableSummaryCard join"><KeyRound size={22} /><span>Juntar mesas</span><strong>{allowJoinTables ? 'Permitido' : 'Desativado'}</strong></div>
       </section>
-
       <div className="tablesSettingsLayout">
         <div className="tablesLeftColumn">
-          <section className="settingsPanel tableConfigPanel">
-            <div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Configuração das mesas</h2></div>
-            <div className="tableConfigGrid">
-              <label><span>Quantidade de mesas do salão</span><input type="number" min="1" max="80" value={tableQty} onChange={e => setTableQty(e.target.value)} /></label>
-              <label><span>Prefixo das mesas</span><input value={tablePrefix} onChange={e => setTablePrefix(e.target.value)} /></label>
-              <label><span>Numeração inicial</span><input value={tableStart} onChange={e => setTableStart(e.target.value)} /></label>
-            </div>
-            <div className="tableToggles">
-              <label><input type="checkbox" checked={autoNumberTables} onChange={e => setAutoNumberTables(e.target.checked)} /> Gerar numeração automática</label>
-              <label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label>
-              <label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label>
-            </div>
-            <div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div>
-          </section>
-
-          <section className="settingsPanel tablePreviewPanel">
-            <div className="settingsPanelTitle"><Eye size={22} /><h2>Prévia das mesas cadastradas</h2></div>
-            <div className="tablePreviewGrid">{visibleTableConfigs.slice(0, 24).map(table => <span className={!table.active ? 'inactive' : ''} key={table.id}><Utensils size={14} /> {table.displayName}</span>)}</div>
-          </section>
+          <section className="settingsPanel tableConfigPanel"><div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Configuração das mesas</h2></div><div className="tableConfigGrid"><label><span>Quantidade de mesas do salão</span><input type="number" min="1" max="80" value={tableQty} onChange={e => setTableQty(e.target.value)} /></label><label><span>Prefixo das mesas</span><input value={tablePrefix} onChange={e => setTablePrefix(e.target.value)} /></label><label><span>Numeração inicial</span><input value={tableStart} onChange={e => setTableStart(e.target.value)} /></label></div><div className="tableToggles"><label><input type="checkbox" checked={autoNumberTables} onChange={e => setAutoNumberTables(e.target.checked)} /> Gerar numeração automática</label><label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label><label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label></div><div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div></section>
+          <section className="settingsPanel tablePreviewPanel"><div className="settingsPanelTitle"><Eye size={22} /><h2>Prévia das mesas cadastradas</h2></div><div className="tablePreviewGrid">{visibleTableConfigs.slice(0, 24).map(table => <span className={!table.active ? 'inactive' : ''} key={table.id}><Utensils size={14} /> {table.displayName}</span>)}</div></section>
         </div>
-
-        <section className="settingsPanel registeredTablesPanel">
-          <div className="settingsPanelTitle"><Utensils size={22} /><h2>Mesas cadastradas</h2></div>
-          <div className="registeredTablesTable">
-            <div className="registeredTablesHead"><span>Mesa</span><span>Nome exibido</span><span>Status</span><span>Pode juntar</span><span>Ações</span></div>
-            {visibleTableConfigs.slice(0, 8).map(table => <div className="registeredTablesRow" key={table.id}>
-              <span>{table.number}</span>
-              <strong>{table.displayName}</strong>
-              <button type="button" className={`miniStatus ${table.active ? 'active' : 'inactive'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, active: !item.active } : item))}>{table.active ? 'Ativa' : 'Inativa'}</button>
-              <button type="button" className={`miniStatus ${table.canJoin ? 'active' : 'blocked'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, canJoin: !item.canJoin } : item))}>{table.canJoin ? 'Sim' : 'Não'}</button>
-              <div className="tableRowActions"><button type="button" onClick={() => editTableName(table.id)}><Pencil size={15} /> Editar</button>{tableConfigs.length > 1 && <button type="button" className="dangerOutline" onClick={() => setTableConfigs(prev => prev.filter(item => item.id !== table.id))}><Trash2 size={15} /></button>}</div>
-            </div>)}
-          </div>
-          <div className="tablePaginationHint">Mostrando {Math.min(visibleTableConfigs.length, 8)} de {visibleTableConfigs.length} mesas</div>
-        </section>
+        <section className="settingsPanel registeredTablesPanel"><div className="settingsPanelTitle"><Utensils size={22} /><h2>Mesas cadastradas</h2></div><div className="registeredTablesTable"><div className="registeredTablesHead"><span>Mesa</span><span>Nome exibido</span><span>Status</span><span>Pode juntar</span><span>Ações</span></div>{visibleTableConfigs.slice(0, 8).map(table => <div className="registeredTablesRow" key={table.id}><span>{table.number}</span><strong>{table.displayName}</strong><button type="button" className={`miniStatus ${table.active ? 'active' : 'inactive'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, active: !item.active } : item))}>{table.active ? 'Ativa' : 'Inativa'}</button><button type="button" className={`miniStatus ${table.canJoin ? 'active' : 'blocked'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, canJoin: !item.canJoin } : item))}>{table.canJoin ? 'Sim' : 'Não'}</button><div className="tableRowActions"><button type="button" onClick={() => editTableName(table.id)}><Pencil size={15} /> Editar</button>{tableConfigs.length > 1 && <button type="button" className="dangerOutline" onClick={() => setTableConfigs(prev => prev.filter(item => item.id !== table.id))}><Trash2 size={15} /></button>}</div></div>)}</div><div className="tablePaginationHint">Mostrando {Math.min(visibleTableConfigs.length, 8)} de {visibleTableConfigs.length} mesas</div></section>
       </div>
-
-      <div className="tableTipBox"><AlertTriangle size={18} /><span>Dica: organize nomes personalizados para mesas especiais e revise permissões de junção conforme o fluxo do salão.</span></div>
-      {systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
+      <div className="tableTipBox"><AlertTriangle size={18} /><span>Dica: organize nomes personalizados para mesas especiais e revise permissões de junção conforme o fluxo do salão.</span></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
     </div>}
 
-    {activeTab === 'impressao' && <div className="printSettingsTab">
-      <section className="settingsPanel printerManagePanel">
-        <div className="cardTitleWithAction"><div className="settingsPanelTitle"><Printer size={22} /><h2>Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div>
-        <div className="printerRegistryGrid">
-          {systemForm.printers.map((printer, index) => <div className="printerRegistryCard" key={printer.id}>
-            <span>{printer.label || `Impressora ${index + 1}`}</span>
-            <input value={printer.name} onChange={e => updatePrinterName(printer.id, e.target.value)} placeholder={`Nome da impressora ${index + 1}`} />
-            <div><em>● Ativa</em><button type="button" onClick={() => testPrinter(printer.name)}><Printer size={15} /> Testar</button><button type="button" className="dangerOutline" disabled={systemForm.printers.length <= 1} onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div>
-          </div>)}
-        </div>
+    {activeTab === 'impressao' && <div className="printSettingsTab printSettingsTabV2">
+      <section className="settingsPanel printBlock printPrintersBlock">
+        <div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>1. Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div>
+        <div className="printerTableV2"><div className="printerTableHead"><span>Setor</span><span>Impressora vinculada</span><span>Status</span><span>Ações</span></div>{printerAssignments.map(row => { const Icon = row.icon; const printer = printerOptions.find(p => p.id === systemForm[row.field]); return <div className="printerTableRow" key={row.key}><span className="sectorCell"><Icon size={16} /> {row.sector}</span><strong>{printer?.name || 'Não definida'}</strong><em>● Online</em><div className="printerTableActions"><button type="button" onClick={() => testPrinter(printer?.name || row.sector)}><Printer size={15} /> Testar</button><button type="button" onClick={() => { const name = window.prompt('Nome da impressora:', printer?.name || ''); if (name && printer) updatePrinterName(printer.id, name) }}><Pencil size={15} /></button><button type="button" className="iconDanger" disabled={!printer || printerOptions.length <= 1} onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div></div> })}</div>
       </section>
 
-      <section className="settingsPanel printerRoutesPanel">
-        <div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Rotas de impressão</h2></div>
-        <div className="printerRouteGrid">
-          {sectorRows.map(row => { const Icon = row.icon; return <div className="printerRouteCard" key={row.key}><div><Icon size={20} /><strong>{row.sector}</strong><span>{row.rule}</span></div><select value={systemForm[row.field]} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select><button type="button" onClick={() => testPrinter(getPrinterName(row.printerId))}><Printer size={15} /> Teste de impressão</button></div> })}
-        </div>
-        <div className="rulesBox"><CheckCircle2 size={18} /><div><strong>Regra principal</strong><p>A impressora do caixa imprime a comanda detalhada do cliente.</p><p>A impressora da cozinha/churrasco/sucos imprime somente os pedidos enviados para preparo.</p><p>Itens do bar permanecem na comanda do cliente, se essa regra continuar ativa.</p></div></div>
-        <div className="systemFooterActions"><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar impressão</button></div>
+      <section className="settingsPanel printBlock printRulesBlock">
+        <div className="printNumberTitle"><Printer size={21} /><h2>2. Regras de impressão por setor</h2></div>
+        <div className="printRulesLayout"><div className="printRulesSelects">{printerAssignments.filter(row => row.key !== 'caixa').map(row => <label key={row.key}><span>{row.description}</span><select value={systemForm[row.field]} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>)}<label><span>Comanda do cliente sai em</span><select value={systemForm.cashierPrinterId} onChange={e => setSystemForm({ ...systemForm, cashierPrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="currentRulesBox"><CheckCircle2 size={20} /><strong>Regras atuais</strong><ul><li>Pedidos de preparo são enviados para os setores configurados.</li><li>Comanda do cliente é impressa no caixa para conferência.</li><li>Itens do bar permanecem apenas na comanda do cliente.</li></ul></div></div>
       </section>
+
+      <section className="settingsPanel printBlock printTypesBlock">
+        <div className="printNumberTitle"><Printer size={21} /><h2>3. Tipos de impressão</h2></div>
+        <div className="printTypeList"><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Pedido de preparo</strong><span>Impressão dos itens enviados para cozinha, churrasco ou sucos.</span></div><ActiveToggle active={systemForm.printKitchenItems} onClick={() => setSystemForm(prev => ({ ...prev, printKitchenItems: !prev.printKitchenItems }))} /></div><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Comanda do cliente</strong><span>Impressão da comanda completa do cliente no caixa.</span></div><ActiveToggle active={systemForm.printFullReceipt} onClick={() => setSystemForm(prev => ({ ...prev, printFullReceipt: !prev.printFullReceipt }))} /></div><div className="printTypeRow"><RefreshCw size={20} /><div><strong>Reimpressão</strong><span>Permitir reimpressão de pedidos e comandas.</span></div><ActiveToggle active={systemForm.allowReprint} onClick={() => setSystemForm(prev => ({ ...prev, allowReprint: !prev.allowReprint }))} /></div></div>
+      </section>
+
+      <section className="settingsPanel printBlock receiptModelBlock">
+        <div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>4. Modelo da comanda do cliente</h2></div><button type="button" className="editReceiptBtn"><Pencil size={15} /> Editar modelo</button></div>
+        <div className="receiptPreviewLayout"><div className="receiptPreview"><h3>FOGÃO A LENHA</h3><p>Churrascaria & Restaurante</p><small>CNPJ: {systemForm.cnpj || '12.345.678/0001-90'}</small><hr /><div><span>Mesa: 05</span><span>Data: 25/05/2024 13:45</span></div><p>1x Picanha <b>R$ 85,00</b></p><p>2x Refrigerante <b>R$ 18,00</b></p><p>1x Suco Natural <b>R$ 12,00</b></p><hr /><strong className="receiptTotal">TOTAL <b>R$ 115,00</b></strong><em>{systemForm.receiptMessage || 'Obrigado pela preferência!\nVolte sempre!'}</em></div><div className="receiptInfoList"><strong>Informações exibidas</strong>{['Nome do estabelecimento','CNPJ','Mesa','Data e hora','Itens do pedido','Total','Mensagem final'].map(item => <span key={item}><CheckCircle2 size={15} /> {item}</span>)}</div></div>
+      </section>
+
+      <div className="printFooterBar"><div><AlertTriangle size={18} /><strong>Dica:</strong><span>Configure corretamente as impressoras e regras para garantir que os pedidos sejam enviados para os setores certos.</span></div><div><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div></div>
       {systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}
     </div>}
 
