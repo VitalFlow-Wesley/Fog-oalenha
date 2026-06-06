@@ -1,0 +1,66 @@
+.tablesSettingsPage .tableToggles label:first-child{
+  display: none !important;
+}
+
+.tablesSettingsPage .tableToggles{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.registeredTablesPanel .tableViewMoreWrap{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(226, 205, 179, .72);
+}
+
+.registeredTablesPanel .tableViewMoreInfo{
+  color: #8a6a58;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.registeredTablesPanel .tableViewMoreBtn{
+  min-height: 42px;
+  border: 1px solid #e2cdb3;
+  border-radius: 13px;
+  background: #fffaf3;
+  color: #c9472b;
+  font-weight: 900;
+  padding: 0 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(78,43,23,.06);
+}
+
+.registeredTablesPanel .tableViewMoreBtn:hover{
+  background: #fff2e7;
+  transform: translateY(-1px);
+}
+
+.registeredTablesPanel .registeredTablesRow.generatedMoreRow{
+  animation: tableRowIn .18s ease both;
+}
+
+.registeredTablesPanel .generatedTableActions{
+  color: #9a7a68;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+@keyframes tableRowIn{
+  from{ opacity: 0; transform: translateY(-4px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+@media(max-width: 760px){
+  .tablesSettingsPage .tableToggles{
+    grid-template-columns: 1fr;
+  }
+
+  .registeredTablesPanel .tableViewMoreWrap{
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
