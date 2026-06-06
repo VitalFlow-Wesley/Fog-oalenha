@@ -10,6 +10,18 @@
   min-height: 250px;
 }
 
+.closingPage .paymentPanel,
+.closingPage .categoryPanel{
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+}
+
+.closingPage .paymentPanel .paymentVisual,
+.closingPage .categoryPanel .categoryBars{
+  flex: 1;
+}
+
 .closingPage .categoryPanel{
   padding: 18px 20px;
   background: linear-gradient(135deg, rgba(255,253,248,.98), rgba(255,247,235,.96));
@@ -40,12 +52,15 @@
   gap: 11px;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .closingPage .categoryLine{
   grid-template-columns: minmax(92px,.9fr) minmax(124px,1.15fr) 82px;
   gap: 10px;
-  padding: 6px 0;
+  padding: 7px 0;
   border-bottom: 1px solid rgba(226,205,179,.52);
 }
 
@@ -112,6 +127,109 @@
   margin-top: 14px;
 }
 
+.closingPage .paymentDonutSvg{
+  position: relative;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.closingPage .paymentDonutSvg svg{
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 14px 24px rgba(42, 28, 18, .12));
+}
+
+.closingPage .paymentTrack{
+  fill: none;
+  stroke: rgba(238, 229, 217, .92);
+  stroke-width: 20;
+}
+
+.closingPage .paymentSegment{
+  fill: none;
+  stroke-width: 20;
+  stroke-linecap: butt;
+  cursor: pointer;
+  transition: stroke-width .18s ease, filter .18s ease, opacity .18s ease;
+}
+
+.closingPage .paymentSegment:hover,
+.closingPage .paymentSegment.active{
+  stroke-width: 24;
+  filter: drop-shadow(0 5px 8px rgba(35, 20, 12, .22));
+}
+
+.closingPage .donutCenter{
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: #fffaf4;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  box-shadow: 0 0 0 8px rgba(255,250,244,.72);
+  pointer-events: none;
+}
+
+.closingPage .donutCenter strong{
+  font-size: 12px;
+  font-weight: 950;
+  color: #2b160f;
+}
+
+.closingPage .donutCenter span{
+  font-size: 10.5px;
+  color: #8b6a58;
+}
+
+.closingPage .paymentHoverTooltip{
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  min-width: 150px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  border: 1px solid #ead7bf;
+  background: #fffaf3;
+  box-shadow: 0 14px 30px rgba(52,27,18,.15);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.closingPage .paymentHoverTooltip div{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #32180f;
+}
+
+.closingPage .paymentHoverTooltip i{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.closingPage .paymentHoverTooltip p{
+  margin: 6px 0 1px;
+  font-weight: 950;
+  color: #32180f;
+}
+
+.closingPage .paymentHoverTooltip small{
+  color: #7f6456;
+  font-weight: 700;
+}
+
+.closingPage .paymentLegend div.active{
+  transform: translateX(3px);
+  border-color: rgba(210, 85, 48, .35);
+  box-shadow: 0 10px 20px rgba(70,38,20,.08);
+}
+
 @media(max-width:1380px){
   .closingPage .closingDetailsGrid{
     grid-template-columns: 1fr 1fr;
@@ -122,6 +240,11 @@
   .closingPage .topProductsPanel,
   .closingPage .otherDetailsPanel{
     min-height: 0;
+  }
+
+  .closingPage .paymentPanel,
+  .closingPage .categoryPanel{
+    min-height: 310px;
   }
 }
 
