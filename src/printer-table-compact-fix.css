@@ -67,8 +67,8 @@
 
 .settingsPremiumPage .printSettingsTabV2 .printerTableHead,
 .settingsPremiumPage .printSettingsTabV2 .printerTableRow {
-  grid-template-columns: .88fr 1.22fr .62fr 1.05fr !important;
-  gap: 8px !important;
+  grid-template-columns: minmax(124px, 1.18fr) minmax(96px, .95fr) minmax(82px, .58fr) minmax(160px, .95fr) !important;
+  gap: 10px !important;
   padding: 8px 10px !important;
 }
 
@@ -86,6 +86,15 @@
   gap: 7px !important;
   font-size: 12.5px !important;
   white-space: nowrap !important;
+  overflow: visible !important;
+  min-width: 0 !important;
+}
+
+.settingsPremiumPage .printSettingsTabV2 .sectorCell strong,
+.settingsPremiumPage .printSettingsTabV2 .sectorCell span {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 .settingsPremiumPage .printSettingsTabV2 .sectorCell svg {
