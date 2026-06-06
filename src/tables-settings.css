@@ -1,0 +1,320 @@
+.compactSettingsPage .settingsCardsGrid {
+  display: none !important;
+}
+
+.compactSettingsPage .settingsHeader {
+  margin-bottom: 12px !important;
+}
+
+.compactSettingsPage .settingsHeader h1 {
+  font-size: clamp(34px, 3vw, 46px) !important;
+}
+
+.tablesSettingsPage {
+  display: grid;
+  gap: 12px;
+}
+
+.tableSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tableSummaryCard {
+  min-height: 72px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .92);
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.tableSummaryCard svg {
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff0e7;
+  color: #c24928;
+}
+
+.tableSummaryCard.positive svg {
+  background: #e7f4df;
+  color: #3d7b43;
+}
+
+.tableSummaryCard.join svg {
+  background: #fff0e7;
+  color: #c24928;
+}
+
+.tableSummaryCard span {
+  display: block;
+  color: #7d6758;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+
+.tableSummaryCard strong {
+  display: block;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.tableSummaryCard:first-child strong,
+.tableSummaryCard.join strong {
+  color: #c24928;
+}
+
+.tableSummaryCard.positive strong {
+  color: #2f7d45;
+}
+
+.tablesSettingsLayout {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(420px, 1.05fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.tablesLeftColumn {
+  display: grid;
+  gap: 12px;
+}
+
+.tableConfigPanel,
+.registeredTablesPanel,
+.tablePreviewPanel {
+  padding: 14px !important;
+}
+
+.tableConfigGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tableConfigGrid label span {
+  display: block;
+  color: #5f4435;
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.tableConfigGrid input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255,255,255,.74);
+  color: #2a160e;
+  padding: 0 12px;
+  outline: none;
+}
+
+.tableToggles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.tableToggles label {
+  min-height: 38px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255,248,237,.6);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: #6f5849;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tableToggles input {
+  accent-color: #c24928;
+}
+
+.tableConfigActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tableConfigActions .primaryBtn,
+.tableConfigActions .secondaryBtn {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tablePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tablePreviewGrid span {
+  min-height: 36px;
+  border: 1px solid #ead7bf;
+  border-radius: 10px;
+  background: rgba(255,248,237,.65);
+  color: #5f4435;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tablePreviewGrid span.inactive {
+  opacity: .45;
+  text-decoration: line-through;
+}
+
+.registeredTablesTable {
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.registeredTablesHead,
+.registeredTablesRow {
+  display: grid;
+  grid-template-columns: .6fr 1.35fr .75fr .85fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+}
+
+.registeredTablesHead {
+  background: #fff0d8;
+  color: #5f4435;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.registeredTablesRow {
+  border-top: 1px solid #ead7bf;
+  background: rgba(255,253,248,.78);
+  color: #4d3528;
+  font-size: 12px;
+}
+
+.registeredTablesRow strong {
+  color: #2a160e;
+}
+
+.miniStatus {
+  width: fit-content;
+  min-height: 26px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.miniStatus.active {
+  background: #e7f4df;
+  color: #34733d;
+}
+
+.miniStatus.inactive,
+.miniStatus.blocked {
+  background: #ffe2d4;
+  color: #c24928;
+}
+
+.tableRowActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.tableRowActions button {
+  min-height: 30px;
+  border-radius: 9px;
+  border: 1px solid #ead7bf;
+  background: #fffdf8;
+  color: #c24928;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tableRowActions .dangerOutline {
+  color: #e14b38;
+  border-color: #ffd1c9;
+}
+
+.tablePaginationHint {
+  padding: 8px 2px 0;
+  color: #8c6f5e;
+  font-size: 12px;
+}
+
+.tableTipBox {
+  min-height: 42px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: rgba(255, 244, 230, .78);
+  color: #7d6758;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+
+.tableTipBox svg {
+  color: #c24928;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1180px) {
+  .tablesSettingsLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .tableSummaryGrid,
+  .tableConfigGrid,
+  .tableToggles,
+  .tablePreviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .registeredTablesHead {
+    display: none;
+  }
+
+  .registeredTablesRow {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .tableRowActions {
+    justify-content: flex-start;
+  }
+}
