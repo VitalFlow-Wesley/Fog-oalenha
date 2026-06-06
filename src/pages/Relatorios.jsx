@@ -1,8 +1,18 @@
 import { useMemo, useState } from 'react'
-import { BarChart3, Beef, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, Martini, PackageCheck, Printer, ReceiptText, TrendingUp, Utensils, WalletCards, Zap } from 'lucide-react'
+import { AlertTriangle, BarChart3, Beef, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, Martini, PackageCheck, Printer, ReceiptText, ShieldCheck, TrendingUp, Utensils, WalletCards, Zap } from 'lucide-react'
+import { getLocalAuditLogs } from '../audit-local.js'
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+}
+
+function formatDateTime(value) {
+  if (!value) return 'Agora'
+  try {
+    return new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return value
+  }
 }
 
 const fallbackProducts = [
@@ -13,6 +23,35 @@ const fallbackProducts = [
   { name: 'Água mineral', qty: 2, total: 8 },
 ]
 
+const fallbackAuditLogs = [
+  {
+    id: 'audit-demo-1',
+    type: 'cancelamento_item',
+    action: 'Item cancelado',
+    tableNumber: '03',
+    itemName: 'Galinha caipira',
+    qty: 1,
+    value: 55,
+    requestedBy: { name: 'João', role: 'Garçom' },
+    authorizedBy: { name: 'Maria', role: 'Gerente' },
+    reason: 'Cliente desistiu do item',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'audit-demo-2',
+    type: 'fechamento_mesa',
+    action: 'Fechamento autorizado',
+    tableNumber: '05',
+    itemName: 'Mesa fechada',
+    qty: 0,
+    value: 115,
+    requestedBy: { name: 'Caixa', role: 'Caixa' },
+    authorizedBy: { name: 'Caixa', role: 'Caixa' },
+    reason: 'Pagamento em PIX confirmado',
+    createdAt: new Date().toISOString(),
+  },
+]
+
 export default function Relatorios({ tables }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
@@ -20,18 +59,23 @@ export default function Relatorios({ tables }) {
   const report = useMemo(() => {
     const activeTables = tables.filter(table => table.status !== 'livre')
     const closedTables = tables.filter(table => table.status === 'fechada')
-    const items = tables.flatMap(table => table.items.map(item => ({ ...item, tableNumber: table.number })))
-    const total = items.reduce((sum, item) => sum + item.price * item.qty, 0)
-    const kitchen = items.filter(item => item.imprimeCozinha).reduce((sum, item) => sum + item.price * item.qty, 0)
-    const bar = items.filter(item => !item.imprimeCozinha).reduce((sum, item) => sum + item.price * item.qty, 0)
-    const kitchenQty = items.filter(item => item.imprimeCozinha).reduce((sum, item) => sum + item.qty, 0)
-    const barQty = items.filter(item => !item.imprimeCozinha).reduce((sum, item) => sum + item.qty, 0)
-    const ordersQty = items.reduce((sum, item) => sum + item.qty, 0)
+    const items = tables.flatMap(table => (table.items || []).map(item => ({ ...item, tableNumber: table.number })))
+    const total = items.filter(item => !item.cancelled).reduce((sum, item) => sum + item.price * item.qty, 0)
+    const kitchen = items.filter(item => item.imprimeCozinha && !item.cancelled).reduce((sum, item) => sum + item.price * item.qty, 0)
+    const bar = items.filter(item => !item.imprimeCozinha && !item.cancelled).reduce((sum, item) => sum + item.price * item.qty, 0)
+    const kitchenQty = items.filter(item => item.imprimeCozinha && !item.cancelled).reduce((sum, item) => sum + item.qty, 0)
+    const barQty = items.filter(item => !item.imprimeCozinha && !item.cancelled).reduce((sum, item) => sum + item.qty, 0)
+    const ordersQty = items.filter(item => !item.cancelled).reduce((sum, item) => sum + item.qty, 0)
     const attendedTables = activeTables.length || 1
     const ticket = total / attendedTables
     const sentKitchen = activeTables.filter(table => table.kitchenSent || table.status === 'enviado').length
+    const auditLogs = getLocalAuditLogs()
+    const usableAuditLogs = auditLogs.length ? auditLogs : fallbackAuditLogs
+    const cancelledLogs = usableAuditLogs.filter(log => String(log.type || '').includes('cancel') || String(log.action || '').toLowerCase().includes('cancel') || String(log.action || '').toLowerCase().includes('exclu'))
+    const sensitiveLogs = usableAuditLogs.filter(log => log.authorizedBy?.name || log.type !== 'info')
+    const cancelledValue = cancelledLogs.reduce((sum, log) => sum + Number(log.value || 0), 0)
 
-    const top = Object.values(items.reduce((acc, item) => {
+    const top = Object.values(items.filter(item => !item.cancelled).reduce((acc, item) => {
       acc[item.name] = acc[item.name] || { name: item.name, qty: 0, total: 0 }
       acc[item.name].qty += item.qty
       acc[item.name].total += item.qty * item.price
@@ -41,8 +85,8 @@ export default function Relatorios({ tables }) {
     const salesByTable = activeTables.map(table => ({
       number: table.number,
       status: table.status,
-      items: table.items.length,
-      total: table.items.reduce((sum, item) => sum + item.price * item.qty, 0),
+      items: (table.items || []).filter(item => !item.cancelled).length,
+      total: (table.items || []).filter(item => !item.cancelled).reduce((sum, item) => sum + item.price * item.qty, 0),
     }))
 
     return {
@@ -59,6 +103,10 @@ export default function Relatorios({ tables }) {
       sentKitchen,
       top: top.length ? top : fallbackProducts,
       salesByTable,
+      auditLogs: usableAuditLogs,
+      cancelledLogs,
+      sensitiveLogs,
+      cancelledValue,
     }
   }, [tables])
 
@@ -73,8 +121,8 @@ export default function Relatorios({ tables }) {
   const summaryCards = [
     { title: 'Total nas mesas', value: money(report.total), detail: 'Comandas abertas', icon: Flame, tone: 'fire', watermark: '♨' },
     { title: 'Cozinha / churrasco / sucos', value: money(report.kitchen), detail: 'Itens que imprimem', icon: Beef, tone: 'orange', watermark: '🍢' },
-    { title: 'Bar', value: money(report.bar), detail: 'Itens que não imprimem', icon: Martini, tone: 'green', watermark: '🍾' },
-    { title: 'Ticket médio', value: money(report.ticket), detail: 'Por mesa atendida', icon: ReceiptText, tone: 'gold', watermark: '↗' },
+    { title: 'Itens cancelados', value: report.cancelledLogs.length, detail: money(report.cancelledValue), icon: AlertTriangle, tone: 'gold', watermark: '!' },
+    { title: 'Ticket médio', value: money(report.ticket), detail: 'Por mesa atendida', icon: ReceiptText, tone: 'green', watermark: '↗' },
   ]
 
   return (
@@ -83,7 +131,7 @@ export default function Relatorios({ tables }) {
         <div>
           <span className="eyebrow reportsEyebrow">RESUMO E ANÁLISES</span>
           <h1>Relatórios</h1>
-          <p>Acompanhe resultados, produtos, faturamento e desempenho da operação.</p>
+          <p>Acompanhe resultados, produtos, faturamento, auditoria e desempenho da operação.</p>
         </div>
 
         <div className="reportsActions noPrint">
@@ -159,7 +207,7 @@ export default function Relatorios({ tables }) {
                 <div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div>
                 <div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>
                 <div><span><ChefHat size={18} /> Itens da cozinha</span><strong>{report.kitchenQty}</strong></div>
-                <div><span><Martini size={18} /> Itens do bar</span><strong>{report.barQty}</strong></div>
+                <div><span><ShieldCheck size={18} /> Autorizações</span><strong>{report.sensitiveLogs.length}</strong></div>
               </div>
 
               <div className="quickActions noPrint">
@@ -178,7 +226,7 @@ export default function Relatorios({ tables }) {
             <div>
               <ReceiptText size={23} />
               <strong>Relatório completo</strong>
-              <span>Inclui vendas, mesas, itens, desempenho e fechamento.</span>
+              <span>Inclui vendas, mesas, cancelamentos, autorizações e fechamento.</span>
             </div>
             <button type="button" onClick={() => setMode('completo')}>Visualizar prévia ›</button>
           </section>
@@ -219,12 +267,36 @@ export default function Relatorios({ tables }) {
             </div>
           </div>
 
-          <div className="fullClosingGrid">
+          <div className="fullClosingGrid auditClosingGrid">
             <div><span>Comandas abertas</span><strong>{report.activeTables.length}</strong></div>
             <div><span>Comandas fechadas</span><strong>{report.closedTables.length}</strong></div>
-            <div><span>Pedidos enviados para cozinha</span><strong>{report.sentKitchen}</strong></div>
-            <div><span>Resumo geral do fechamento</span><strong>{money(report.total)}</strong></div>
+            <div><span>Itens cancelados</span><strong>{report.cancelledLogs.length}</strong></div>
+            <div><span>Total cancelado</span><strong>{money(report.cancelledValue)}</strong></div>
           </div>
+
+          <section className="auditReportSection">
+            <div className="auditReportHeader">
+              <div>
+                <ShieldCheck size={22} />
+                <h3>Auditoria e autorizações</h3>
+              </div>
+              <span>{report.sensitiveLogs.length} registros sensíveis</span>
+            </div>
+
+            <div className="auditReportTable">
+              <div className="auditReportRow head"><span>Ação</span><span>Mesa / Item</span><span>Solicitado por</span><span>Autorizado por</span><span>Valor</span><span>Data</span></div>
+              {report.sensitiveLogs.slice(0, 10).map(log => (
+                <div className="auditReportRow" key={log.id || log._id || `${log.action}-${log.createdAt}`}>
+                  <span><strong>{log.action || 'Ação sensível'}</strong><small>{log.reason || 'Sem motivo informado'}</small></span>
+                  <span>Mesa {log.tableNumber || '-'}<small>{log.itemName || 'Registro geral'}</small></span>
+                  <span>{log.requestedBy?.name || '-'}<small>{log.requestedBy?.role || ''}</small></span>
+                  <span>{log.authorizedBy?.name || '-'}<small>{log.authorizedBy?.role || ''}</small></span>
+                  <span>{money(log.value || 0)}<small>{log.qty ? `${log.qty} item(ns)` : ''}</small></span>
+                  <span>{formatDateTime(log.createdAt)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         </section>
       )}
     </div>
