@@ -22,6 +22,7 @@ import './products-settings.css'
 import './kitchen-orders.css'
 import './kitchen-orders-compact.css'
 import './closing-cash.css'
+import './closing-final-polish.css'
 import './print.css'
 import './command-premium.css'
 
