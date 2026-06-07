@@ -9,9 +9,11 @@
     "seed": "node src/seed.js"
   },
   "dependencies": {
+    "bcryptjs": "latest",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
+    "jsonwebtoken": "latest",
     "mongoose": "latest"
   }
 }
