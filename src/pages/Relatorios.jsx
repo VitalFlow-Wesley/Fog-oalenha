@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChefHat,
+  ChevronDown,
   ClipboardList,
   CreditCard,
   DollarSign,
@@ -117,6 +118,8 @@ const fallbackMovement = [
   { hour: '22h', qty: 6 },
 ]
 
+const periodOptions = ['Hoje', 'Semana', 'Mês']
+
 function normalizeSector(item) {
   const raw = String(item.sector || item.setor || item.category || item.categoria || '').toLowerCase()
   if (raw.includes('churrasco') || raw.includes('picanha')) return 'Churrasco'
@@ -132,6 +135,7 @@ function normalizeCategory(item) {
 export default function Relatorios({ tables }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
+  const [periodOpen, setPeriodOpen] = useState(false)
   const [showAllProducts, setShowAllProducts] = useState(false)
   const [showAllTables, setShowAllTables] = useState(false)
 
@@ -251,6 +255,11 @@ export default function Relatorios({ tables }) {
     window.print()
   }
 
+  function selectPeriod(value) {
+    setPeriod(value)
+    setPeriodOpen(false)
+  }
+
   const simpleSummaryCards = [
     { title: 'Total nas mesas', value: money(report.total), detail: 'Comandas abertas', icon: Flame, tone: 'fire', watermark: '♨' },
     { title: 'Cozinha / churrasco / sucos', value: money(report.sectorData.filter(item => item.name !== 'Bar').reduce((sum, item) => sum + item.total, 0)), detail: 'Itens que imprimem', icon: Beef, tone: 'orange', watermark: '🍢' },
@@ -290,11 +299,26 @@ export default function Relatorios({ tables }) {
               <ClipboardList size={18} /> Relatório completo
             </button>
           </div>
-          <select className="reportPeriodSelect" value={period} onChange={event => setPeriod(event.target.value)}>
-            <option>Hoje</option>
-            <option>Semana</option>
-            <option>Mês</option>
-          </select>
+          <div className={`reportPeriodMenu ${periodOpen ? 'open' : ''}`}>
+            <button className="reportPeriodButton" type="button" onClick={() => setPeriodOpen(value => !value)}>
+              <span>{period}</span>
+              <ChevronDown size={17} />
+            </button>
+            {periodOpen ? (
+              <div className="reportPeriodDropdown">
+                {periodOptions.map(option => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={period === option ? 'selected' : ''}
+                    onClick={() => selectPeriod(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <div className="reportActionPair">
             <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
             <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
@@ -329,7 +353,7 @@ export default function Relatorios({ tables }) {
                   <h2>Produtos mais lançados</h2>
                 </div>
                 <div className="periodTabs noPrint">
-                  {['Hoje', 'Semana', 'Mês'].map(item => (
+                  {periodOptions.map(item => (
                     <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>
                   ))}
                 </div>
