@@ -287,7 +287,7 @@ export default function Relatorios({ tables }) {
         <div>
           <span className="eyebrow reportsEyebrow">RESUMO E ANÁLISES</span>
           <h1>{mode === 'completo' ? 'Relatório completo' : 'Relatórios'}</h1>
-          <p>{mode === 'completo' ? 'Análises detalhadas de vendas, pedidos, mesas, produtos e desempenho.' : 'Acompanhe resultados, produtos, faturamento, auditoria e desempenho da operação.'}</p>
+          <p>{mode === 'completo' ? 'Análises detalhadas de vendas, pedidos, mesas, produtos e desempenho.' : 'Acompanhe resultados, produtos, faturamento e auditoria.'}</p>
         </div>
 
         <div className="reportsActions noPrint">
