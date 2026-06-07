@@ -13,7 +13,7 @@
 
 .completeReportsHeader{
   display: grid !important;
-  grid-template-columns: minmax(300px, 1fr) auto !important;
+  grid-template-columns: minmax(430px, 1fr) auto !important;
   gap: 18px !important;
   align-items: start !important;
   margin-bottom: 18px !important;
@@ -23,9 +23,11 @@
 }
 
 .completeReportsHeader h1{
-  font-size: clamp(34px, 3vw, 46px) !important;
+  font-size: clamp(34px, 2.75vw, 44px) !important;
   line-height: .98 !important;
   margin-bottom: 8px !important;
+  white-space: nowrap !important;
+  max-width: none !important;
 }
 
 .completeReportsHeader p{
@@ -376,6 +378,10 @@
 }
 
 @media(max-width: 1320px){
+  .completeReportsHeader{
+    grid-template-columns: minmax(380px, 1fr) auto !important;
+  }
+
   .completeExecutiveGrid{
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
@@ -384,6 +390,10 @@
 @media(max-width: 1100px){
   .completeReportsHeader{
     grid-template-columns: 1fr !important;
+  }
+
+  .completeReportsHeader h1{
+    white-space: normal !important;
   }
 
   .completeReportsHeader .reportsActions{
