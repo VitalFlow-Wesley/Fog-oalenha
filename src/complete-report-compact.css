@@ -1,5 +1,5 @@
 /* Ajustes compactos do Relatório Completo
-   Mantém o visual premium, mas reduz altura dos cards e melhora a densidade da tela. */
+   Cabeçalho organizado em duas linhas: filtros em cima e ações embaixo. */
 
 .reportsPremiumPage{
   overflow: visible !important;
@@ -37,35 +37,51 @@
 }
 
 .completeReportsHeader .reportsActions{
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: auto 128px !important;
+  grid-template-areas:
+    "tabs period"
+    "actions actions" !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  flex-wrap: nowrap !important;
-  gap: 8px !important;
+  gap: 10px 10px !important;
   overflow: visible !important;
+}
+
+.completeReportsHeader .reportTabs{
+  grid-area: tabs !important;
+  flex: 0 0 auto !important;
+}
+
+.completeReportsHeader .reportTabs button{
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
 }
 
 .reportPeriodMenu{
+  grid-area: period !important;
   position: relative !important;
   z-index: 9999 !important;
   overflow: visible !important;
-  flex: 0 0 116px !important;
+  width: 128px !important;
 }
 
 .reportPeriodButton{
-  width: 116px !important;
-  min-height: 36px !important;
+  width: 128px !important;
+  min-height: 38px !important;
   border: 1px solid rgba(119,82,63,.22) !important;
   border-radius: 14px !important;
   background: linear-gradient(180deg, rgba(255,251,244,.96), rgba(253,244,231,.92)) !important;
   color: #3b1f17 !important;
   font-weight: 900 !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
-  padding: 0 12px !important;
+  gap: 10px !important;
+  padding: 0 14px !important;
   cursor: pointer !important;
   box-shadow: 0 10px 22px rgba(85,48,31,.06) !important;
 }
@@ -118,40 +134,26 @@
 }
 
 .reportActionPair{
+  grid-area: actions !important;
+  justify-self: end !important;
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  flex: 0 0 auto !important;
-}
-
-.completeReportsHeader .reportTabs,
-.completeReportsHeader .reportPeriodSelect,
-.completeReportsHeader .reportActionBtn{
-  min-height: 36px !important;
-}
-
-.completeReportsHeader .reportTabs{
-  flex: 0 0 auto !important;
-}
-
-.completeReportsHeader .reportTabs button{
-  min-height: 36px !important;
-  padding: 0 12px !important;
-  font-size: 12px !important;
-  white-space: nowrap !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
 }
 
 .completeReportsHeader .reportActionBtn{
-  padding: 0 12px !important;
-  border-radius: 12px !important;
+  min-height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 14px !important;
   white-space: nowrap !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
 }
 
 .completeReportsHeader .reportActionBtn svg,
 .completeReportsHeader .reportTabs button svg{
-  width: 16px !important;
-  height: 16px !important;
+  width: 17px !important;
+  height: 17px !important;
 }
 
 .completeExecutiveGrid{
@@ -417,19 +419,18 @@
   }
 
   .completeReportsHeader .reportsActions{
-    gap: 7px !important;
+    gap: 8px !important;
   }
 
   .completeReportsHeader .reportTabs button,
   .completeReportsHeader .reportActionBtn{
-    padding: 0 10px !important;
-    font-size: 11.5px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
   }
 
   .reportPeriodMenu,
   .reportPeriodButton{
-    width: 106px !important;
-    flex-basis: 106px !important;
+    width: 118px !important;
   }
 
   .completeExecutiveGrid{
@@ -447,13 +448,8 @@
   }
 
   .completeReportsHeader .reportsActions{
-    flex-wrap: wrap !important;
     justify-content: flex-start !important;
     width: 100% !important;
-  }
-
-  .reportActionPair{
-    display: flex !important;
   }
 
   .topAnalytics,
@@ -464,6 +460,14 @@
 }
 
 @media(max-width: 760px){
+  .completeReportsHeader .reportsActions{
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "tabs"
+      "period"
+      "actions" !important;
+  }
+
   .completeExecutiveGrid,
   .sectorPerformanceGrid,
   .auditMetricsGrid{
@@ -483,6 +487,7 @@
 
   .reportActionPair{
     width: 100% !important;
+    justify-self: stretch !important;
   }
 
   .reportActionPair .reportActionBtn{
