@@ -132,6 +132,8 @@ function normalizeCategory(item) {
 export default function Relatorios({ tables }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
+  const [showAllProducts, setShowAllProducts] = useState(false)
+  const [showAllTables, setShowAllTables] = useState(false)
 
   const report = useMemo(() => {
     const safeTables = Array.isArray(tables) ? tables : []
@@ -267,6 +269,8 @@ export default function Relatorios({ tables }) {
 
   const totalPayments = report.paymentData.reduce((sum, item) => sum + item.total, 0)
   const maxMovement = Math.max(...report.movementData.map(item => item.qty), 1)
+  const displayedProducts = showAllProducts ? report.topProducts : report.topProducts.slice(0, 5)
+  const displayedTables = showAllTables ? report.salesByTable : report.salesByTable.slice(0, 5)
 
   return (
     <div className="page reportsPremiumPage">
@@ -291,8 +295,10 @@ export default function Relatorios({ tables }) {
             <option>Semana</option>
             <option>Mês</option>
           </select>
-          <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
-          <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
+          <div className="reportActionPair">
+            <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
+            <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
+          </div>
         </div>
       </div>
 
@@ -445,7 +451,7 @@ export default function Relatorios({ tables }) {
               <h2>Produtos mais vendidos</h2>
               <div className="completeTable productCompleteTable">
                 <div className="completeTableRow head"><span>#</span><span>Produto</span><span>Categoria</span><span>Setor</span><span>Qtd</span><span>Valor total</span><span>Ticket médio</span></div>
-                {report.topProducts.slice(0, 5).map((item, index) => (
+                {displayedProducts.map((item, index) => (
                   <div className="completeTableRow" key={item.name}>
                     <span>{index + 1}</span>
                     <span>{item.name}</span>
@@ -457,14 +463,16 @@ export default function Relatorios({ tables }) {
                   </div>
                 ))}
               </div>
-              <button type="button" className="completeLinkBtn">Ver todos os produtos ›</button>
+              <button type="button" className="completeLinkBtn" onClick={() => setShowAllProducts(value => !value)}>
+                {showAllProducts ? 'Ver menos produtos ↑' : `Ver todos os produtos (${report.topProducts.length}) ›`}
+              </button>
             </section>
 
             <section className="completePanel tablePerformancePanel">
               <h2>Desempenho das mesas</h2>
               <div className="completeTable tableCompleteTable">
                 <div className="completeTableRow head"><span>Mesa</span><span>Total consumido</span><span>Itens</span><span>Pedidos</span><span>Setores</span><span>Situação</span></div>
-                {report.salesByTable.slice(0, 5).map(table => (
+                {displayedTables.map(table => (
                   <div className="completeTableRow" key={table.number}>
                     <span>Mesa {table.number}</span>
                     <span>{money(table.total)}</span>
@@ -475,7 +483,9 @@ export default function Relatorios({ tables }) {
                   </div>
                 ))}
               </div>
-              <button type="button" className="completeLinkBtn">Ver todas as mesas ›</button>
+              <button type="button" className="completeLinkBtn" onClick={() => setShowAllTables(value => !value)}>
+                {showAllTables ? 'Ver menos mesas ↑' : `Ver todas as mesas (${report.salesByTable.length}) ›`}
+              </button>
             </section>
           </div>
 
