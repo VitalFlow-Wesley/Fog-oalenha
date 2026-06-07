@@ -33,6 +33,13 @@
   gap: 10px !important;
 }
 
+.reportActionPair{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
 .completeReportsHeader .reportTabs,
 .completeReportsHeader .reportPeriodSelect,
 .completeReportsHeader .reportActionBtn{
@@ -42,6 +49,7 @@
 .completeReportsHeader .reportActionBtn{
   padding: 0 14px !important;
   border-radius: 12px !important;
+  white-space: nowrap !important;
 }
 
 .completeExecutiveGrid{
@@ -312,6 +320,14 @@
   .sectorPerformanceGrid,
   .auditMetricsGrid{
     grid-template-columns: 1fr !important;
+  }
+
+  .reportActionPair{
+    width: 100% !important;
+  }
+
+  .reportActionPair .reportActionBtn{
+    flex: 1 !important;
   }
 
   .completeExecutiveCard{
