@@ -1,5 +1,4 @@
 import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator } from 'lucide-react'
-import fogaoLogo from '../assets/fogao-logo.png'
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
@@ -41,7 +40,7 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
         })}
       </nav>
 
-      <button className="logout" onClick={onLogout}>
+      <button className="logoutBtn" onClick={onLogout}>
         <LogOut size={18} />
         Sair
       </button>
