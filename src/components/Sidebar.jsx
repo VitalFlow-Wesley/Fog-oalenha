@@ -21,7 +21,7 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
   return (
     <aside className="sidebar premiumSidebar compactSidebar">
       <div className="brand sidebarLogoBrand">
-        <img src={fogaoLogo} alt="Logo Fogão a Lenha" />
+        <strong>Fogão a Lenha</strong>
         <span>Gestão da churrascaria</span>
       </div>
 
