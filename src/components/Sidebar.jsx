@@ -2,6 +2,7 @@ import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings, ChefHat, Cal
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
+  { key: 'pedidos-cozinha', label: 'Pedidos enviados', icon: ChefHat },
 ]
 
 const managerMenu = [
