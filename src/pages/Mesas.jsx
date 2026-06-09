@@ -4,7 +4,17 @@ import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 
 const categories = [...new Set(products.map(p => p.category))]
-const productIcons = { Refeições: '🍲', Churrasco: '🥩', Sucos: '🥤', Bebidas: '🍺', Bombons: '🍬', Salgadinhos: '🥨', Sorvetes: '🍨', Sobremesas: '🍮' }
+const productIcons = {
+  Refeições: '🍲',
+  Churrascos: '🥩',
+  Petiscos: '🍟',
+  Sucos: '🥤',
+  Bebidas: '🥤',
+  Bombons: '🍬',
+  Salgadinhos: '🥨',
+  Sorvetes: '🍨',
+  Sobremesas: '🍮',
+}
 
 function getPrinterName(settings, role) {
   const printers = settings?.printers || []
@@ -19,6 +29,19 @@ function formatMoney(value) {
 
 function formatUpdateTime(date) {
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function createTable(nextId) {
+  return {
+    id: nextId,
+    number: String(nextId).padStart(2, '0'),
+    status: 'ocupada',
+    guests: 2,
+    openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    items: [],
+    kitchenSent: false,
+    billRequested: false,
+  }
 }
 
 export default function Mesas({ tables, setTables, users, currentUser, settings }) {
@@ -41,7 +64,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const occupied = visibleTables.filter(t => t.status === 'ocupada' || t.status === 'enviado').length
     const free = visibleTables.filter(t => t.status === 'livre').length
     const bill = visibleTables.filter(t => t.status === 'conta').length
-    const revenue = visibleTables.filter(t => t.status !== 'livre').reduce((sum, tableItem) => sum + tableItem.items.reduce((s, item) => s + item.price * item.qty, 0), 0)
+    const revenue = visibleTables
+      .filter(t => t.status !== 'livre')
+      .reduce((sum, tableItem) => sum + tableItem.items.reduce((s, item) => s + item.price * item.qty, 0), 0)
+
     return {
       occupied,
       free,
@@ -53,7 +79,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     }
   }, [tables])
 
-  const mergeTargets = useMemo(() => table ? tables.filter(t => t.id !== table.id && t.status !== 'juntada' && !t.mergedTableIds?.length) : [], [tables, table])
+  const mergeTargets = useMemo(
+    () => table ? tables.filter(t => t.id !== table.id && t.status !== 'juntada' && !t.mergedTableIds?.length) : [],
+    [tables, table]
+  )
 
   useEffect(() => {
     if (!printJob) return undefined
@@ -69,6 +98,14 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     setLastUpdate(new Date())
     setIsRefreshing(true)
     window.setTimeout(() => setIsRefreshing(false), 650)
+  }
+
+  function addTable() {
+    const nextId = tables.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
+    const newTable = createTable(nextId)
+    setTables(prev => [...prev, newTable])
+    setSelected(newTable)
+    touch()
   }
 
   function openTable(t) {
@@ -89,6 +126,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
 
   function addItem(product) {
     const current = tables.find(t => t.id === selected.id)
+    if (!current) return
     const existing = current.items.find(i => i.id === product.id && i.observation === observation)
     const items = existing
       ? current.items.map(i => i.id === product.id && i.observation === observation ? { ...i, qty: i.qty + 1 } : i)
@@ -100,6 +138,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
 
   function changeQty(item, delta) {
     const current = tables.find(t => t.id === selected.id)
+    if (!current) return
     const items = current.items.map(i => i.id === item.id && i.observation === item.observation && i.originTable === item.originTable ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
     updateTable(current.id, { items })
     touch()
@@ -115,8 +154,12 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     event.preventDefault()
     const authorizationPassword = settings?.cancelPassword || ''
     const authorizedUser = users.find(user => user.active && ['admin', 'gerente'].includes(user.role) && (user.password === cancelPassword || authorizationPassword === cancelPassword))
-    if (!authorizedUser && cancelPassword !== authorizationPassword) return setCancelError('Senha inválida. Cancelamento permitido somente com senha cadastrada pelo administrador ou gerente.')
+    if (!authorizedUser && cancelPassword !== authorizationPassword) {
+      setCancelError('Senha inválida. Cancelamento permitido somente com senha cadastrada pelo administrador ou gerente.')
+      return
+    }
     const current = tables.find(t => t.id === selected.id)
+    if (!current) return
     const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation && i.originTable === cancelRequest.originTable))
     updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser?.name || settings?.cancelUpdatedBy || 'Autorizado' })
     setCancelRequest(null)
@@ -160,6 +203,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
 
   function sendKitchen() {
     const current = tables.find(t => t.id === selected.id)
+    if (!current) return
     const kitchenPrinterName = getPrinterName(settings, 'kitchen')
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
     updateTable(selected.id, { status: 'enviado', kitchenSent: true, lastKitchenPrinter: kitchenPrinterName })
@@ -169,6 +213,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
 
   function requestBill() {
     const current = tables.find(t => t.id === selected.id)
+    if (!current) return
     const cashierPrinterName = getPrinterName(settings, 'cashier')
     const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
     updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
@@ -201,6 +246,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
           <p>Acompanhe ocupação, consumo e status das mesas.</p>
         </div>
         <div className="headerActions">
+          <button className="primaryBtn" type="button" onClick={addTable}><Plus size={18} /> Adicionar mesa</button>
           <span className={`updatedPill ${isRefreshing ? 'refreshing' : ''}`}><Clock size={17} /> {updatedLabel}</span>
           <button className={`refreshBtn ${isRefreshing ? 'refreshing' : ''}`} type="button" onClick={touch} title="Atualizar mesas"><RefreshCw size={20} /></button>
         </div>
@@ -213,9 +259,18 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
         <div className="restaurantSummaryCard revenue"><div className="summaryIcon"><DollarSign size={28} /></div><div><span>Faturamento do salão</span><strong>{formatMoney(summary.revenue)}</strong><small>Hoje</small></div></div>
       </div>
 
-      <div className="tablesGrid restaurantTablesGrid">
-        {tables.map(tableItem => <TableCard table={tableItem} key={tableItem.id} onOpen={openTable} />)}
-      </div>
+      {tables.length === 0 ? (
+        <section className="emptyState restaurantEmptyState">
+          <div className="emptyIcon">🍽️</div>
+          <h2>Nenhuma mesa aberta ainda</h2>
+          <p>Comece adicionando as mesas conforme os clientes forem chegando no salão.</p>
+          <button className="primaryBtn" type="button" onClick={addTable}><Plus size={18} /> Adicionar primeira mesa</button>
+        </section>
+      ) : (
+        <div className="tablesGrid restaurantTablesGrid">
+          {tables.map(tableItem => <TableCard table={tableItem} key={tableItem.id} onOpen={openTable} />)}
+        </div>
+      )}
 
       {table && (
         <div className="drawerOverlay commandOverlay">
