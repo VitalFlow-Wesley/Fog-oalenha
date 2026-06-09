@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, DollarSign, FlameKindling, RefreshCw, Utensils, Armchair, ShieldCheck, TrendingUp, ReceiptText, PackageCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, DollarSign, FlameKindling, RefreshCw, Utensils, Armchair, ShieldCheck, TrendingUp, ReceiptText, PackageCheck } from 'lucide-react'
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
@@ -25,6 +25,15 @@ export default function Dashboard({ tables, setPage }) {
     .filter(table => table.kitchenItems.length && (table.kitchenSent || table.status === 'enviado'))
   const kitchenSent = kitchenOrders.length
 
+  useEffect(() => {
+    setLastUpdate(new Date())
+  }, [tables])
+
+  useEffect(() => {
+    const timer = setInterval(() => setLastUpdate(new Date()), 5 * 60 * 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   function refreshDashboard() {
     setLastUpdate(new Date())
   }
@@ -48,7 +57,6 @@ export default function Dashboard({ tables, setPage }) {
         <div>
           <h1>Visão geral</h1>
           <p className="dashboardUpdatedText">Acompanhamento rápido das mesas, consumo e pedidos enviados.</p>
-          <p className="dashboardUpdatedText">Atualizado às {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
 
         <div className="dashboardActions">
@@ -62,7 +70,7 @@ export default function Dashboard({ tables, setPage }) {
               {['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} onClick={() => selectPeriod(item)}>{item}</button>)}
             </div>}
           </div>
-          <button className="dashboardRefresh" type="button" onClick={refreshDashboard}>
+          <button className="dashboardRefresh" type="button" onClick={refreshDashboard} title={`Última atualização: ${lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}>
             <RefreshCw size={18} />
             Atualizar
           </button>
