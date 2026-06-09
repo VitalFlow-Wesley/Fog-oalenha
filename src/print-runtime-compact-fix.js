@@ -157,8 +157,106 @@ compactPrintStyle.textContent = `
     margin: 8px 0 !important;
   }
 
+  .receiptModelCard {
+    padding: 12px 14px !important;
+  }
+
+  .receiptModelCard .printBlockHeader {
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+
+  .receiptModelCard .printNumberTitle h2 {
+    font-size: 20px !important;
+    max-width: 260px !important;
+  }
+
+  .receiptModelCard .editReceiptBtn {
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+    white-space: normal !important;
+    max-width: 162px !important;
+    line-height: 1.1 !important;
+  }
+
+  .receiptModelCard .receiptPreviewLayout {
+    grid-template-columns: minmax(220px, 0.95fr) minmax(150px, 0.7fr) !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+
+  .receiptModelCard .receiptPreviewThermal {
+    width: 225px !important;
+    max-width: 100% !important;
+    padding: 14px 13px 16px !important;
+    font-size: 11px !important;
+  }
+
+  .receiptModelCard .receiptPreviewThermal h3 {
+    font-size: 15px !important;
+  }
+
+  .receiptModelCard .receiptPreviewThermal small,
+  .receiptModelCard .receiptPreviewThermal p,
+  .receiptModelCard .receiptPreviewThermal .receiptMeta,
+  .receiptModelCard .receiptPreviewThermal em {
+    font-size: 10.5px !important;
+  }
+
+  .receiptModelCard .receiptPreviewThermal .receiptTotal {
+    font-size: 14px !important;
+  }
+
+  .receiptModelCard .receiptSideConfig {
+    min-width: 0 !important;
+    gap: 10px !important;
+  }
+
+  .receiptModelCard .receiptInfoList {
+    min-width: 0 !important;
+    gap: 6px !important;
+    padding-left: 10px !important;
+  }
+
+  .receiptModelCard .receiptInfoList strong {
+    font-size: 15px !important;
+  }
+
+  .receiptModelCard .receiptInfoList span {
+    font-size: 11.5px !important;
+    line-height: 1.2 !important;
+  }
+
+  .receiptModelCard .receiptMessageField {
+    padding: 10px !important;
+    border-radius: 14px !important;
+    gap: 6px !important;
+  }
+
+  .receiptModelCard .receiptMessageField span {
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+  }
+
+  .receiptModelCard .receiptMessageField textarea {
+    min-height: 74px !important;
+    font-size: 12px !important;
+    padding: 10px !important;
+  }
+
+  .receiptModelCard .receiptMessageField small {
+    font-size: 12px !important;
+  }
+
   .printFooterBar {
     min-width: 0 !important;
+    padding: 12px 16px !important;
+  }
+
+  .printFooterBar .primaryBtn {
+    max-width: 360px !important;
+    min-height: 42px !important;
   }
 
   @media (max-width: 1260px) {
@@ -170,6 +268,10 @@ compactPrintStyle.textContent = `
       align-items: flex-start !important;
       flex-direction: column !important;
     }
+
+    .receiptModelCard .receiptPreviewLayout {
+      grid-template-columns: minmax(220px, 0.9fr) minmax(180px, 0.8fr) !important;
+    }
   }
 
   @media (max-width: 760px) {
@@ -177,7 +279,8 @@ compactPrintStyle.textContent = `
       display: none !important;
     }
 
-    .prRow {
+    .prRow,
+    .receiptModelCard .receiptPreviewLayout {
       grid-template-columns: 1fr !important;
     }
 
