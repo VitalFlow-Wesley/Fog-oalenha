@@ -41,10 +41,12 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
         })}
       </nav>
 
-      <button className="logoutBtn" onClick={onLogout}>
-        <LogOut size={18} />
-        Sair
-      </button>
+      <div className="sidebarLogoutArea">
+        <button className="logoutBtn" onClick={onLogout}>
+          <LogOut size={18} />
+          Sair
+        </button>
+      </div>
     </aside>
   )
 }
