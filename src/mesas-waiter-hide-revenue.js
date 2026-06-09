@@ -3,36 +3,30 @@ function isWaiterView() {
   return navText.includes('Mesas') && navText.includes('Pedidos enviados') && !navText.includes('Dashboard')
 }
 
-function hideRevenueForWaiter() {
+function hideSummaryForWaiter() {
   const page = document.querySelector('.restaurantTablesPage')
   if (!page) return
 
-  const revenueCard = page.querySelector('.restaurantSummaryCard.revenue')
-  if (!revenueCard) return
+  const summaryGrid = page.querySelector('.restaurantSummaryGrid')
+  if (!summaryGrid) return
 
   if (isWaiterView()) {
-    revenueCard.style.display = 'none'
+    summaryGrid.style.display = 'none'
     page.classList.add('waiterTablesView')
   } else {
-    revenueCard.style.display = ''
+    summaryGrid.style.display = ''
     page.classList.remove('waiterTablesView')
   }
 }
 
-const waiterRevenueStyle = document.createElement('style')
-waiterRevenueStyle.textContent = `
+const waiterSummaryStyle = document.createElement('style')
+waiterSummaryStyle.textContent = `
   .restaurantTablesPage.waiterTablesView .restaurantSummaryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
-  @media (max-width: 980px) {
-    .restaurantTablesPage.waiterTablesView .restaurantSummaryGrid {
-      grid-template-columns: 1fr !important;
-    }
+    display: none !important;
   }
 `
-document.head.appendChild(waiterRevenueStyle)
+document.head.appendChild(waiterSummaryStyle)
 
-new MutationObserver(hideRevenueForWaiter).observe(document.body, { childList: true, subtree: true })
-window.addEventListener('DOMContentLoaded', hideRevenueForWaiter)
-setTimeout(hideRevenueForWaiter, 300)
+new MutationObserver(hideSummaryForWaiter).observe(document.body, { childList: true, subtree: true })
+window.addEventListener('DOMContentLoaded', hideSummaryForWaiter)
+setTimeout(hideSummaryForWaiter, 300)
