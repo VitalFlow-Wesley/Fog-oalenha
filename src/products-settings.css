@@ -194,18 +194,33 @@
 }
 
 .productActions button {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
   border: 1px solid #ead7bf;
-  background: #fffdf8;
-  color: #7a4d37;
+  background: linear-gradient(180deg,#fffdf8,#fff5e9);
+  color: #8a553d;
   cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 0 8px 18px rgba(77,43,26,.06);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.productActions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(77,43,26,.12);
+  border-color: #d9b98f;
+}
+
+.productActions button span {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .productActions button:last-child {
-  color: #ef3f2f;
-  background: #fff1ee;
+  color: #d83d2c;
+  background: linear-gradient(180deg,#fff5f2,#ffe9e4);
   border-color: #ffcfc8;
 }
 
@@ -234,6 +249,12 @@
   background: #fffdf8;
   color: #4d3528;
   font-weight: 700;
+  cursor: pointer;
+}
+
+.productsPagination button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
 }
 
 .productsPagination button.active {
@@ -245,6 +266,117 @@
 .productsEmpty {
   padding: 18px;
   color: #7d6758;
+}
+
+.productsModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(36, 20, 12, .48);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  backdrop-filter: blur(3px);
+}
+
+.productsModal {
+  position: relative;
+  width: min(520px, 96vw);
+  border: 1px solid #ead7bf;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #fffdf8, #fff4e6);
+  color: #32180f;
+  padding: 26px;
+  box-shadow: 0 24px 60px rgba(54, 25, 12, .28);
+}
+
+.productsModalClose {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff3e6;
+  color: #7c422d;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.productsModalIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #ffe6d7;
+  color: #ce4728;
+  margin-bottom: 10px;
+}
+
+.productsModal h3 {
+  margin: 0 0 6px;
+  font-family: Georgia, serif;
+  font-size: 28px;
+}
+
+.productsModal p {
+  margin: 0 0 16px;
+  color: #7a6253;
+  line-height: 1.45;
+}
+
+.productsModal label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #3b2419;
+}
+
+.productsModal input,
+.productsModal select {
+  min-height: 44px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: #fffaf4;
+  color: #2a160e;
+  padding: 0 13px;
+  font-size: 15px;
+}
+
+.productsModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.productsModalActions button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid #ead7bf;
+  background: #fffdf8;
+  color: #5b3929;
+  padding: 0 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.productsModalActions .save {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #a94925, #ef6336);
+  box-shadow: 0 12px 22px rgba(199,65,35,.2);
+}
+
+.productsModalActions .danger {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #b6271f, #f0523f);
+  box-shadow: 0 12px 22px rgba(199,65,35,.2);
 }
 
 @media (max-width: 1100px) {
@@ -266,4 +398,6 @@
 
 @media (max-width: 640px) {
   .productForm { grid-template-columns: 1fr; }
+  .productsModalActions { flex-direction: column; }
+  .productsModalActions button { width: 100%; }
 }
