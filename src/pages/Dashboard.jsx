@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, DollarSign, FlameKindling, RefreshCw, Utensils, Armchair, ShieldCheck, TrendingUp, ReceiptText, PackageCheck } from 'lucide-react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, DollarSign, FlameKindling, Utensils, Armchair, ShieldCheck, TrendingUp, ReceiptText, PackageCheck } from 'lucide-react'
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
@@ -34,10 +34,6 @@ export default function Dashboard({ tables, setPage }) {
     return () => clearInterval(timer)
   }, [])
 
-  function refreshDashboard() {
-    setLastUpdate(new Date())
-  }
-
   function selectPeriod(value) {
     setPeriod(value)
     setShowPeriodMenu(false)
@@ -59,21 +55,17 @@ export default function Dashboard({ tables, setPage }) {
           <p className="dashboardUpdatedText">Acompanhamento rápido das mesas, consumo e pedidos enviados.</p>
         </div>
 
-        <div className="dashboardActions">
-          <div className="periodSelectWrap">
+        <div className="dashboardActions" title={`Atualização automática a cada 5 minutos. Última: ${lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}>
+          <div className="periodSelectWrap dashboardPeriodWrap">
             <button className="dateSelect" type="button" onClick={() => setShowPeriodMenu(prev => !prev)}>
               <CalendarDays size={18} />
               {period}
               <span>⌄</span>
             </button>
-            {showPeriodMenu && <div className="periodMenu">
+            {showPeriodMenu && <div className="periodMenu dashboardPeriodMenu">
               {['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} onClick={() => selectPeriod(item)}>{item}</button>)}
             </div>}
           </div>
-          <button className="dashboardRefresh" type="button" onClick={refreshDashboard} title={`Última atualização: ${lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}>
-            <RefreshCw size={18} />
-            Atualizar
-          </button>
         </div>
       </div>
 
