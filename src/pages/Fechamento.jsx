@@ -9,6 +9,7 @@ const parseCurrency = value => {
   if (raw.includes(',')) return Number(raw.replace(',', '.')) || 0
   return Number(raw) || 0
 }
+const toInputMoney = value => Number(value || 0).toFixed(2).replace('.', ',')
 
 const closingMock = {
   date: '2024-05-24',
@@ -22,7 +23,7 @@ const closingMock = {
   sentToKitchen: 45,
   categories: [
     { name: 'Refeições', total: 2736 },
-    { name: 'Churrasco', total: 2390 },
+    { name: 'Churrascos', total: 2390 },
     { name: 'Bebidas', total: 1396 },
     { name: 'Sucos', total: 653 },
     { name: 'Sobremesas', total: 409.5 },
@@ -44,13 +45,10 @@ function scaleCategories(categories, targetTotal) {
 function buildClosingData(tables = []) {
   const tableRevenue = tables.reduce((sum, table) => sum + (table.items || []).reduce((itemSum, item) => itemSum + item.price * item.qty, 0), 0)
   const hasRealSales = tableRevenue > 0
-  const openTables = tables.filter(table => table.status === 'ocupada').length || closingMock.openTables
-  const sentToKitchen = tables.reduce((sum, table) => sum + (table.items || []).filter(item => item.sentToKitchen || item.printTarget === 'cozinha').reduce((qtySum, item) => qtySum + item.qty, 0), 0) || closingMock.sentToKitchen
-
-  const payments = hasRealSales
-    ? { dinheiro: tableRevenue * 0.28, pix: tableRevenue * 0.43, cartao: tableRevenue * 0.266, outros: tableRevenue * 0.024 }
-    : closingMock.payments
-  const total = Object.values(payments).reduce((sum, value) => sum + value, 0)
+  const openTables = tables.filter(table => ['ocupada', 'enviado', 'conta'].includes(table.status)).length || closingMock.openTables
+  const sentToKitchen = tables.reduce((sum, table) => sum + (table.items || []).filter(item => item.sentToKitchen || item.printTarget === 'cozinha' || item.imprimeCozinha).reduce((qtySum, item) => qtySum + item.qty, 0), 0) || closingMock.sentToKitchen
+  const total = hasRealSales ? tableRevenue : Object.values(closingMock.payments).reduce((sum, value) => sum + value, 0)
+  const payments = closingMock.payments
   const categories = hasRealSales ? scaleCategories(closingMock.categories, total) : closingMock.categories
   const categoryTotal = categories.reduce((sum, item) => sum + item.total, 0)
 
@@ -80,7 +78,7 @@ function PaymentVisual({ data }) {
     ['Outros', data.payments.outros, 'other'],
   ]
   const gradient = `conic-gradient(#4e9f53 0 ${items[0][1] / total * 100}%, #2aa889 ${items[0][1] / total * 100}% ${(items[0][1] + items[1][1]) / total * 100}%, #4777b8 ${(items[0][1] + items[1][1]) / total * 100}% ${(items[0][1] + items[1][1] + items[2][1]) / total * 100}%, #9164bd 0)`
-  return <div className="paymentVisual"><div className="donut" style={{ background: gradient }}><div><strong>{money(total)}</strong><span>Total</span></div></div><div className="paymentLegend">{items.map(([label, value, key]) => <div key={label}><i className={key} /><span>{label}<small>{(value / total * 100).toFixed(1).replace('.', ',')}%</small></span><b>{money(value)}</b></div>)}</div></div>
+  return <div className="paymentVisual"><div className="donut" style={{ background: gradient }}><div><strong>{money(total)}</strong><span>Total informado</span></div></div><div className="paymentLegend">{items.map(([label, value, key]) => <div key={label}><i className={key} /><span>{label}<small>{(value / total * 100).toFixed(1).replace('.', ',')}%</small></span><b>{money(value)}</b></div>)}</div></div>
 }
 
 function CategoryBars({ categories, total }) {
@@ -91,17 +89,33 @@ function CategoryBars({ categories, total }) {
 export default function Fechamento({ tables = [], currentUser }) {
   const data = useMemo(() => buildClosingData(tables), [tables])
   const [date, setDate] = useState(data.date)
-  const [reportedCash, setReportedCash] = useState(String(data.payments.dinheiro.toFixed(2)).replace('.', ','))
+  const [reportedPayments, setReportedPayments] = useState({
+    dinheiro: toInputMoney(data.payments.dinheiro),
+    pix: toInputMoney(data.payments.pix),
+    cartao: toInputMoney(data.payments.cartao),
+    outros: toInputMoney(data.payments.outros),
+  })
   const [note, setNote] = useState('')
   const [closed, setClosed] = useState(false)
 
-  const expectedCash = data.payments.dinheiro
-  const difference = parseCurrency(reportedCash) - expectedCash
+  const received = {
+    dinheiro: parseCurrency(reportedPayments.dinheiro),
+    pix: parseCurrency(reportedPayments.pix),
+    cartao: parseCurrency(reportedPayments.cartao),
+    outros: parseCurrency(reportedPayments.outros),
+  }
+  const informedTotal = Object.values(received).reduce((sum, value) => sum + value, 0)
+  const difference = informedTotal - data.total
   const differenceOk = Math.abs(difference) < 0.01
+  const receivedData = { ...data, payments: received, total: informedTotal || data.total }
 
+  function setPayment(key, value) {
+    setReportedPayments(prev => ({ ...prev, [key]: value }))
+  }
   function handlePrint() { window.print() }
   function handlePdf() { window.print() }
   function closeCash() {
+    if (!differenceOk) return
     if (!window.confirm('Tem certeza que deseja fechar o caixa do dia? Após fechado, os dados não devem ser alterados.')) return
     setClosed(true)
   }
@@ -109,12 +123,12 @@ export default function Fechamento({ tables = [], currentUser }) {
   return <div className={`page closingPage ${closed ? 'cashClosed' : ''}`}>
     <header className="closingHeader"><div><span className="closingEyebrow">FECHAMENTO DO DIA</span><h1>Fechamento de Caixa</h1><p>Acompanhe o resumo do caixa, confira valores e feche o caixa do dia.</p>{closed && <em className="closedBadge">Caixa fechado por {currentUser?.name || 'operador'} agora</em>}</div><div className="closingHeaderActions"><label><CalendarDays size={18} /><input type="date" value={date} onChange={e => setDate(e.target.value)} disabled={closed} /></label><button type="button" onClick={() => window.location.reload()}><RefreshCw size={18} /> Atualizar</button></div></header>
 
-    <section className="closingMainGrid"><div className="closingPanel daySummary"><h2><span><Flame size={20} /></span>Resumo do dia</h2><div className="closingMiniGrid"><MiniSummary icon={DollarSign} title="Faturamento total" value={money(data.total)} /><MiniSummary icon={DollarSign} title="Dinheiro" value={money(data.payments.dinheiro)} /><MiniSummary icon={WalletCards} title="PIX" value={money(data.payments.pix)} /><MiniSummary icon={CreditCard} title="Cartão" value={money(data.payments.cartao)} tone="blue" /><MiniSummary icon={MoreHorizontal} title="Outros" value={money(data.payments.outros)} tone="purple" /><MiniSummary icon={Table2} title="Mesas fechadas" value={data.closedTables} tone="orange" /><MiniSummary icon={Table2} title="Mesas abertas" value={data.openTables} tone="yellow" /><MiniSummary icon={ReceiptText} title="Total de pedidos" value={data.totalOrders} tone="blue" /></div><div className="ticketAverage"><span><Star size={17} /> Ticket médio</span><strong>{money(data.ticketAverage)}</strong></div></div>
+    <section className="closingMainGrid"><div className="closingPanel daySummary"><h2><span><Flame size={20} /></span>Resumo do dia</h2><div className="closingMiniGrid compactClosingSummary"><MiniSummary icon={DollarSign} title="Faturamento total" value={money(data.total)} /><MiniSummary icon={Table2} title="Mesas fechadas" value={data.closedTables} tone="orange" /><MiniSummary icon={Table2} title="Mesas abertas" value={data.openTables} tone="yellow" /><MiniSummary icon={ReceiptText} title="Total de pedidos" value={data.totalOrders} tone="blue" /></div><div className="ticketAverage"><span><Star size={17} /> Ticket médio</span><strong>{money(data.ticketAverage)}</strong></div></div>
 
-      <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><div className="cashRows"><p><span>Valor esperado no caixa:</span><strong>{money(expectedCash)}</strong></p><label><span>Valor informado pelo operador:</span><input value={reportedCash} onChange={e => setReportedCash(e.target.value)} disabled={closed} /></label><p><span>Diferença:</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>Observação (opcional):</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={19} /> Conferir e fechar caixa</button></div></section>
+      <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><p className="conferenceHint">Informe dinheiro, PIX, cartão e outros recebimentos. A soma precisa bater com o faturamento total das mesas.</p><div className="cashRows paymentConferenceGrid"><label><span>Dinheiro recebido</span><input value={reportedPayments.dinheiro} onChange={e => setPayment('dinheiro', e.target.value)} disabled={closed} /></label><label><span>PIX recebido</span><input value={reportedPayments.pix} onChange={e => setPayment('pix', e.target.value)} disabled={closed} /></label><label><span>Cartões recebidos</span><input value={reportedPayments.cartao} onChange={e => setPayment('cartao', e.target.value)} disabled={closed} /></label><label><span>Outros recebimentos</span><input value={reportedPayments.outros} onChange={e => setPayment('outros', e.target.value)} disabled={closed} /></label></div><div className="cashTotalsGrid"><p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p><p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p><p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>Observação (opcional):</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={closeCash} disabled={closed || !differenceOk}><LockKeyhole size={19} /> Conferir e fechar caixa</button></div></section>
 
-    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Vendas por forma de pagamento</h3><PaymentVisual data={data} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>)}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
+    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Recebimentos informados</h3><PaymentVisual data={receivedData} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>)}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
 
-    <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={20} /> Fechar caixa do dia</button></footer>
+    <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={closeCash} disabled={closed || !differenceOk}><LockKeyhole size={20} /> Fechar caixa do dia</button></footer>
   </div>
 }
