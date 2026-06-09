@@ -13,7 +13,7 @@
 
 .kitchenOrdersHeaderRefined {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 500px !important;
+  grid-template-columns: minmax(0, 1fr) 560px !important;
   align-items: start !important;
 }
 
@@ -41,29 +41,47 @@
 
 .kitchenActions {
   gap: 8px !important;
-  max-width: 460px !important;
+  max-width: 560px !important;
 }
 
 .kitchenActionsRefined {
   width: 100% !important;
-  max-width: 500px !important;
+  max-width: 560px !important;
   display: grid !important;
   grid-template-columns: 1fr !important;
-  gap: 10px !important;
-  justify-items: end !important;
+  gap: 9px !important;
+  justify-items: stretch !important;
+  align-self: start !important;
 }
 
 .kitchenTopActions,
 .kitchenBottomActions {
-  display: flex !important;
+  display: grid !important;
   align-items: center !important;
-  justify-content: flex-end !important;
   gap: 10px !important;
   width: 100% !important;
 }
 
+.kitchenTopActions {
+  grid-template-columns: 150px 150px 1fr !important;
+  justify-content: end !important;
+}
+
+.kitchenTopActions .periodSelectWrap {
+  grid-column: 2 !important;
+}
+
+.kitchenTopActions .kitchenPrimaryBtn {
+  grid-column: 3 !important;
+}
+
+.kitchenBottomActions {
+  grid-template-columns: minmax(0, 1fr) 140px !important;
+}
+
 .periodSelectWrap {
   position: relative !important;
+  width: 100% !important;
 }
 
 .kitchenPeriodMenu {
@@ -99,24 +117,34 @@
 
 .kitchenSearch {
   width: 220px !important;
-  min-height: 38px !important;
-  border-radius: 12px !important;
+  min-height: 44px !important;
+  border-radius: 14px !important;
 }
 
 .kitchenBottomActions .kitchenSearch {
-  flex: 1 !important;
-  width: auto !important;
-  min-width: 260px !important;
+  flex: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.kitchenSearch input {
+  font-size: 15px !important;
 }
 
 .kitchenPeriodBtn,
 .kitchenLightBtn,
 .kitchenPrimaryBtn {
-  min-height: 38px !important;
-  border-radius: 12px !important;
-  padding: 0 13px !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  border-radius: 14px !important;
+  padding: 0 14px !important;
   font-size: 14px !important;
   white-space: nowrap !important;
+  justify-content: center !important;
+}
+
+.kitchenLightBtn {
+  background: rgba(255, 253, 248, .94) !important;
 }
 
 .kitchenSummaryGrid {
@@ -395,9 +423,7 @@
 }
 
 .exportPdfBtn {
-  min-height: 36px !important;
-  margin-top: 12px !important;
-  font-size: 13px !important;
+  display: none !important;
 }
 
 .kitchenFlowMessage {
@@ -418,12 +444,15 @@
   .kitchenActions,
   .kitchenActionsRefined {
     max-width: none !important;
-    justify-items: start !important;
+    justify-items: stretch !important;
   }
 
-  .kitchenTopActions,
+  .kitchenTopActions {
+    grid-template-columns: 150px 150px 1fr !important;
+  }
+
   .kitchenBottomActions {
-    justify-content: flex-start !important;
+    grid-template-columns: minmax(0, 1fr) 140px !important;
   }
 }
 
@@ -438,7 +467,12 @@
 
   .kitchenTopActions,
   .kitchenBottomActions {
-    flex-wrap: wrap !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .kitchenTopActions .periodSelectWrap,
+  .kitchenTopActions .kitchenPrimaryBtn {
+    grid-column: auto !important;
   }
 
   .kitchenBottomActions .kitchenSearch {
