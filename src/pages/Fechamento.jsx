@@ -132,6 +132,35 @@ export default function Fechamento({ tables = [], currentUser }) {
 
     <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Recebimentos informados</h3><PaymentVisual data={receivedData} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.length ? data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>) : <div className="productsEmpty">Nenhum produto vendido ainda.</div>}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
 
+    <div className="printOnly closingPrintReport">
+      <h1>FECHAMENTO DE CAIXA</h1>
+      <p><strong>Fogão a Lenha</strong></p>
+      <p><strong>Data:</strong> {date}</p>
+      <p><strong>Operador:</strong> {currentUser?.name || currentUser?.username || 'Operador'}</p>
+      <hr />
+      <div className="printLine"><span>Faturamento total</span><strong>{money(data.total)}</strong></div>
+      <div className="printLine"><span>Total informado</span><strong>{money(informedTotal)}</strong></div>
+      <div className="printLine"><span>Diferença final</span><strong>{money(difference)}</strong></div>
+      <div className="printLine"><span>Mesas abertas</span><strong>{data.openTables}</strong></div>
+      <div className="printLine"><span>Total de itens</span><strong>{data.totalOrders}</strong></div>
+      <div className="printLine"><span>Ticket médio</span><strong>{money(data.ticketAverage)}</strong></div>
+      <hr />
+      <p><strong>Recebimentos informados</strong></p>
+      <div className="printLine"><span>Dinheiro</span><strong>{money(received.dinheiro)}</strong></div>
+      <div className="printLine"><span>PIX</span><strong>{money(received.pix)}</strong></div>
+      <div className="printLine"><span>Cartão</span><strong>{money(received.cartao)}</strong></div>
+      <div className="printLine"><span>Outros</span><strong>{money(received.outros)}</strong></div>
+      <hr />
+      <p><strong>Vendas por categoria</strong></p>
+      {data.categories.length ? data.categories.map(item => <div className="printLine" key={item.name}><span>{item.name}</span><strong>{money(item.total)}</strong></div>) : <p>Nenhuma venda por categoria.</p>}
+      <hr />
+      <p><strong>Produtos mais vendidos</strong></p>
+      {data.topProducts.length ? data.topProducts.map((item, index) => <div className="printLine" key={item.name}><span>{index + 1}. {item.name} ({item.qty}x)</span><strong>{money(item.total)}</strong></div>) : <p>Nenhum produto vendido.</p>}
+      {note && <><hr /><p><strong>Observação:</strong> {note}</p></>}
+      <hr />
+      <p className="printFooter">Relatório gerado pelo sistema Fogão a Lenha.</p>
+    </div>
+
     <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={20} /> Fechar caixa do dia</button></footer>
   </div>
 }
