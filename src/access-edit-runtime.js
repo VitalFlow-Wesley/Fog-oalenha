@@ -1,9 +1,13 @@
-const ACCESS_EDITS_KEY = 'fogao-access-edits-v1'
+const ACCESS_EDITS_KEY = 'fogao-access-edits-v2'
 const roleOptions = [
   { value: 'admin', label: 'Administrador' },
   { value: 'gerente', label: 'Gerente' },
   { value: 'garcom', label: 'Garçom' },
 ]
+
+function accessEscape(value = '') {
+  return String(value).replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]))
+}
 
 function readAccessEdits() {
   try { return JSON.parse(localStorage.getItem(ACCESS_EDITS_KEY) || '{}') || {} } catch { return {} }
@@ -23,19 +27,25 @@ function showAccessToast(message) {
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 220) }, 2600)
 }
 
+function getRowLoginElement(row) {
+  return Array.from(row.children).find(el => el.tagName === 'SPAN')
+}
+
 function getRowData(row) {
   const name = row.querySelector('.accessNameCell strong')?.textContent?.trim() || ''
-  const login = Array.from(row.children).find(el => el.tagName === 'SPAN')?.textContent?.trim() || ''
+  const login = getRowLoginElement(row)?.textContent?.trim() || ''
   const roleText = row.querySelector('b')?.textContent?.trim() || 'Garçom'
   const role = roleOptions.find(item => item.label === roleText)?.value || 'garcom'
-  return { name, login, role }
+  const key = row.dataset.accessKey || login
+  row.dataset.accessKey = key
+  return { key, name, login, role }
 }
 
 function applyRowData(row, data) {
   const nameEl = row.querySelector('.accessNameCell strong')
   const avatar = row.querySelector('.settingsUserAvatar')
   const roleEl = row.querySelector('b')
-  const loginEl = Array.from(row.children).find(el => el.tagName === 'SPAN')
+  const loginEl = getRowLoginElement(row)
   if (nameEl) nameEl.textContent = data.name
   if (loginEl) loginEl.textContent = data.login
   if (roleEl) roleEl.textContent = roleOptions.find(item => item.value === data.role)?.label || 'Garçom'
@@ -43,12 +53,21 @@ function applyRowData(row, data) {
 }
 
 function applySavedAccessEdits() {
+  if (document.querySelector('.accessEditOverlay')) return
   const edits = readAccessEdits()
   document.querySelectorAll('.accessTableRow').forEach(row => {
     const data = getRowData(row)
-    const saved = edits[data.login]
+    const saved = edits[data.key]
     if (saved) applyRowData(row, saved)
   })
+}
+
+function closeAccessModal(value) {
+  const overlay = document.querySelector('.accessEditOverlay')
+  if (!overlay) return
+  const callback = overlay._resolveAccessEdit
+  overlay.remove()
+  if (callback) callback(value)
 }
 
 function openAccessEditModal(data) {
@@ -56,6 +75,7 @@ function openAccessEditModal(data) {
     document.querySelector('.accessEditOverlay')?.remove()
     const overlay = document.createElement('div')
     overlay.className = 'accessEditOverlay'
+    overlay._resolveAccessEdit = resolve
     overlay.innerHTML = `
       <div class="accessEditModal" role="dialog" aria-modal="true">
         <div class="accessEditHeader">
@@ -65,31 +85,42 @@ function openAccessEditModal(data) {
             <p>Atualize os dados exibidos para esse usuário.</p>
           </div>
         </div>
-        <label>Nome completo<input data-field="name" value="${data.name.replace(/"/g, '&quot;')}" /></label>
-        <label>Login<input data-field="login" value="${data.login.replace(/"/g, '&quot;')}" /></label>
-        <label>Função<select data-field="role">${roleOptions.map(item => `<option value="${item.value}" ${item.value === data.role ? 'selected' : ''}>${item.label}</option>`).join('')}</select></label>
-        <div class="accessEditActions">
-          <button type="button" class="accessEditCancel">Cancelar</button>
-          <button type="button" class="accessEditSave">Salvar alterações</button>
-        </div>
+        <form class="accessEditForm">
+          <label>Nome completo<input data-field="name" value="${accessEscape(data.name)}" /></label>
+          <label>Login<input data-field="login" value="${accessEscape(data.login)}" /></label>
+          <label>Função<select data-field="role">${roleOptions.map(item => `<option value="${item.value}" ${item.value === data.role ? 'selected' : ''}>${item.label}</option>`).join('')}</select></label>
+          <div class="accessEditActions">
+            <button type="button" class="accessEditCancel">Cancelar</button>
+            <button type="submit" class="accessEditSave">Salvar alterações</button>
+          </div>
+        </form>
       </div>`
     document.body.appendChild(overlay)
-    const close = value => { overlay.remove(); resolve(value) }
-    overlay.querySelector('.accessEditCancel').addEventListener('click', () => close(null))
-    overlay.querySelector('.accessEditSave').addEventListener('click', () => {
+
+    overlay.querySelector('.accessEditModal').addEventListener('click', event => event.stopPropagation())
+    overlay.addEventListener('click', () => closeAccessModal(null))
+    overlay.querySelector('.accessEditCancel').addEventListener('click', event => {
+      event.preventDefault()
+      event.stopPropagation()
+      closeAccessModal(null)
+    })
+    overlay.querySelector('.accessEditForm').addEventListener('submit', event => {
+      event.preventDefault()
+      event.stopPropagation()
       const next = {
+        key: data.key,
         name: overlay.querySelector('[data-field="name"]').value.trim() || data.name,
         login: overlay.querySelector('[data-field="login"]').value.trim() || data.login,
         role: overlay.querySelector('[data-field="role"]').value,
       }
-      close(next)
+      closeAccessModal(next)
     })
-    overlay.addEventListener('click', event => { if (event.target === overlay) close(null) })
-    setTimeout(() => overlay.querySelector('[data-field="name"]')?.focus(), 40)
+    setTimeout(() => overlay.querySelector('[data-field="name"]')?.focus(), 80)
   })
 }
 
 function enhanceAccessEditButtons() {
+  if (document.querySelector('.accessEditOverlay')) return
   applySavedAccessEdits()
   document.querySelectorAll('.accessTableRow').forEach(row => {
     const editButton = row.querySelector('.accessActions button:not(.iconDanger)')
@@ -97,16 +128,16 @@ function enhanceAccessEditButtons() {
     editButton.dataset.accessEditRuntime = '1'
     editButton.addEventListener('click', async event => {
       event.preventDefault()
+      event.stopPropagation()
       const current = getRowData(row)
       const next = await openAccessEditModal(current)
       if (!next) return
       const edits = readAccessEdits()
-      delete edits[current.login]
-      edits[next.login] = next
+      edits[current.key] = next
       writeAccessEdits(edits)
       applyRowData(row, next)
       showAccessToast('Acesso atualizado com sucesso.')
-    })
+    }, true)
   })
 }
 
@@ -160,10 +191,17 @@ accessEditStyle.textContent = `
     color: #7a5b47;
   }
 
+  .accessEditForm,
   .accessEditModal label {
     display: grid;
+  }
+
+  .accessEditForm {
+    gap: 12px;
+  }
+
+  .accessEditModal label {
     gap: 7px;
-    margin-top: 12px;
     font-weight: 900;
     color: #5f4435;
   }
@@ -179,13 +217,14 @@ accessEditStyle.textContent = `
     font: 700 15px/1.4 inherit;
     color: #2d140e;
     outline: none;
+    box-sizing: border-box;
   }
 
   .accessEditActions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 18px;
+    margin-top: 6px;
   }
 
   .accessEditActions button {
