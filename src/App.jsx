@@ -11,6 +11,9 @@ import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
+const USERS_KEY = 'fogao-users-v1'
+const TABLES_KEY = 'fogao-tables-v1'
+const SETTINGS_KEY = 'fogao-settings-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 
 const initialSettings = {
@@ -25,6 +28,25 @@ const initialSettings = {
   printBarItems: false,
   cancelPassword: '1234',
   cancelUpdatedBy: 'Sistema'
+}
+
+function readStored(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw)
+    return parsed || fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeStored(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Mantém o app funcionando mesmo se o navegador bloquear armazenamento.
+  }
 }
 
 function getSavedSession(users) {
@@ -67,10 +89,14 @@ function clearSession() {
 
 export default function App() {
   const [page, setPage] = useState('mesas')
-  const [tables, setTables] = useState(initialTables)
-  const [users, setUsers] = useState(initialUsers)
-  const [settings, setSettings] = useState(initialSettings)
-  const [currentUser, setCurrentUser] = useState(() => getSavedSession(initialUsers))
+  const [tables, setTables] = useState(() => readStored(TABLES_KEY, initialTables))
+  const [users, setUsers] = useState(() => readStored(USERS_KEY, initialUsers))
+  const [settings, setSettings] = useState(() => ({ ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }))
+  const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
+
+  useEffect(() => writeStored(TABLES_KEY, tables), [tables])
+  useEffect(() => writeStored(USERS_KEY, users), [users])
+  useEffect(() => writeStored(SETTINGS_KEY, settings), [settings])
 
   useEffect(() => {
     if (!currentUser) return
