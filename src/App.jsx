@@ -47,7 +47,7 @@ function writeStored(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch {
-    // Mantém o app funcionando mesmo se o navegador bloquear armazenamento.
+    // Mantem o app funcionando mesmo se o navegador bloquear armazenamento.
   }
 }
 
@@ -106,26 +106,47 @@ export default function App() {
         const remote = await loadRemoteState()
         if (cancelled) return
 
+        const localUsers = readStored(USERS_KEY, initialUsers)
+        const localTables = readStored(TABLES_KEY, initialTables)
+        const localSettings = { ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }
+        const localProducts = readStored(PRODUCTS_KEY, [])
+        const missingRemoteState = {}
+
         if (Array.isArray(remote.users) && remote.users.length) {
           setUsers(remote.users)
           writeStored(USERS_KEY, remote.users)
+        } else if (Array.isArray(localUsers) && localUsers.length) {
+          missingRemoteState.users = localUsers
         }
-        if (Array.isArray(remote.tables)) {
+
+        if (Array.isArray(remote.tables) && remote.tables.length) {
           setTables(remote.tables)
           writeStored(TABLES_KEY, remote.tables)
+        } else if (Array.isArray(localTables) && localTables.length) {
+          missingRemoteState.tables = localTables
         }
-        if (remote.settings) {
+
+        if (remote.settings && Object.keys(remote.settings).length) {
           const nextSettings = { ...initialSettings, ...remote.settings }
           setSettings(nextSettings)
           writeStored(SETTINGS_KEY, nextSettings)
+        } else {
+          missingRemoteState.settings = localSettings
         }
-        if (Array.isArray(remote.products)) {
+
+        if (Array.isArray(remote.products) && remote.products.length) {
           writeStored(PRODUCTS_KEY, remote.products)
           writeStored('fogao-a-lenha-products-settings', remote.products)
           window.dispatchEvent(new Event('fogao-products-updated'))
+        } else if (Array.isArray(localProducts) && localProducts.length) {
+          missingRemoteState.products = localProducts
+        }
+
+        if (Object.keys(missingRemoteState).length) {
+          await saveRemoteState(missingRemoteState)
         }
       } catch (error) {
-        console.warn('MongoDB indisponível, usando dados locais:', error.message)
+        console.warn('MongoDB indisponivel, usando dados locais:', error.message)
       } finally {
         if (!cancelled) remoteLoadedRef.current = true
       }
@@ -145,7 +166,7 @@ export default function App() {
     saveTimerRef.current = setTimeout(() => {
       const products = readStored(PRODUCTS_KEY, [])
       saveRemoteState({ users, tables, settings, products }).catch(error => {
-        console.warn('Não foi possível salvar no MongoDB:', error.message)
+        console.warn('Nao foi possivel salvar no MongoDB:', error.message)
       })
     }, 650)
 
@@ -157,7 +178,7 @@ export default function App() {
     const syncProducts = () => {
       const products = readStored(PRODUCTS_KEY, [])
       saveRemoteState({ users, tables, settings, products }).catch(error => {
-        console.warn('Não foi possível salvar produtos no MongoDB:', error.message)
+        console.warn('Nao foi possivel salvar produtos no MongoDB:', error.message)
       })
     }
 
