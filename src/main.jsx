@@ -33,6 +33,7 @@ import './closing-cash.css'
 import './closing-cash-refine.js'
 import './closing-cash-bottom-fix.js'
 import './closing-confirm-modal.js'
+import './closing-divergence-enable.js'
 import './print.css'
 import './command-premium.css'
 
