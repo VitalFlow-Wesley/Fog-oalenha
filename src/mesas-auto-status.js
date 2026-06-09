@@ -8,8 +8,7 @@ function formatMesasStatusTime(date = new Date()) {
 function updateMesasStatusCard() {
   const card = document.querySelector('[data-mesas-status-card]')
   if (!card) return
-  const time = formatMesasStatusTime()
-  card.querySelector('[data-mesas-status-time]').textContent = `Última atualização: ${time}`
+  card.querySelector('[data-mesas-status-time]').textContent = formatMesasStatusTime()
 }
 
 function enhanceMesasStatus() {
@@ -27,10 +26,12 @@ function enhanceMesasStatus() {
     card.className = 'mesasSystemStatusCard'
     card.dataset.mesasStatusCard = 'true'
     card.innerHTML = `
-      <div class="mesasSystemStatusIcon">✓</div>
-      <div>
+      <div class="mesasSystemStatusIcon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.1 2.7 7.8 6.5 9.1 3.8-1.3 6.5-5 6.5-9.1V5.7L12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8.8 12 2.1 2.1 4.4-4.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="mesasSystemStatusText">
         <strong>Sistema ativo</strong>
-        <span><span data-mesas-status-time>Última atualização: ${formatMesasStatusTime()}</span> <b></b></span>
+        <small>Última atualização: <span data-mesas-status-time>${formatMesasStatusTime()}</span> <b></b></small>
       </div>`
     actions.appendChild(card)
   }
@@ -45,7 +46,9 @@ mesasStatusStyle.textContent = `
   .restaurantTablesPage .headerActions {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
   }
 
   .restaurantTablesPage .updatedPill,
@@ -53,56 +56,76 @@ mesasStatusStyle.textContent = `
     display: none !important;
   }
 
+  .restaurantTablesPage .headerActions .primaryBtn {
+    width: auto !important;
+    min-width: 230px !important;
+    max-width: 250px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 22px !important;
+    white-space: nowrap !important;
+  }
+
   .mesasSystemStatusCard {
-    min-width: 230px;
-    min-height: 66px;
+    width: 230px;
+    height: 72px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 18px;
+    gap: 12px;
+    padding: 12px 16px;
     border: 1px solid #ead7bf;
     border-radius: 18px;
     background: rgba(255, 253, 248, .94);
-    box-shadow: 0 14px 30px rgba(77, 43, 26, .08);
+    box-shadow: 0 12px 26px rgba(77, 43, 26, .07);
     color: #2d140e;
+    flex: 0 0 auto;
   }
 
   .mesasSystemStatusIcon {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
     display: grid;
     place-items: center;
-    border-radius: 999px;
     color: #168447;
-    border: 2px solid #168447;
-    font-weight: 900;
-    font-size: 20px;
-    line-height: 1;
+    flex: 0 0 38px;
   }
 
-  .mesasSystemStatusCard strong {
+  .mesasSystemStatusIcon svg {
+    width: 31px;
+    height: 31px;
+  }
+
+  .mesasSystemStatusText {
+    min-width: 0;
+  }
+
+  .mesasSystemStatusText strong {
     display: block;
     color: #168447;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 900;
     line-height: 1.05;
+    white-space: nowrap;
   }
 
-  .mesasSystemStatusCard span {
+  .mesasSystemStatusText small {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     margin-top: 6px;
     color: #8a6b58;
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
   }
 
-  .mesasSystemStatusCard b {
+  .mesasSystemStatusText b {
     width: 8px;
     height: 8px;
     display: inline-block;
     border-radius: 999px;
     background: #168447;
+    flex: 0 0 8px;
   }
 
   @media (max-width: 1120px) {
@@ -114,6 +137,7 @@ mesasStatusStyle.textContent = `
     .mesasSystemStatusCard,
     .restaurantTablesPage .headerActions .primaryBtn {
       width: 100% !important;
+      max-width: none !important;
     }
   }
 `
