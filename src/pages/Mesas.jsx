@@ -187,6 +187,15 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     touch()
   }
 
+  function changeGuests(nextValue) {
+    const current = tables.find(t => t.id === selected?.id)
+    if (!current) return
+    const guests = Math.max(1, Math.min(99, Number(nextValue) || 1))
+    updateTable(current.id, { guests })
+    setSelected(prev => prev ? { ...prev, guests } : prev)
+    touch()
+  }
+
   function askCancelItem(item) {
     setCancelRequest(item)
     setCancelPassword('')
@@ -250,7 +259,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const kitchenPrinterName = getPrinterName(settings, 'kitchen')
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
     updateTable(selected.id, { status: 'enviado', kitchenSent: true, lastKitchenPrinter: kitchenPrinterName })
-    setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, total: 0 })
+    setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Garçom', total: 0 })
     touch()
   }
 
@@ -260,7 +269,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const cashierPrinterName = getPrinterName(settings, 'cashier')
     const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
     updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
-    setPrintJob({ type: 'bill', title: 'COMANDA PARA CONFERÊNCIA', table: current, items: current.items, printerName: cashierPrinterName, total: billTotal })
+    setPrintJob({ type: 'bill', title: 'COMANDA PARA CONFERÊNCIA', table: current, items: current.items, printerName: cashierPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Atendente', total: billTotal })
     touch()
   }
 
@@ -322,7 +331,16 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
             <header className="commandHeader">
               <div>
                 <span className="commandEyebrow">COMANDA ABERTA</span>
-                <div className="commandTitleRow"><h2>{tableLabel}</h2><span><Users size={19} /> {table.guests || 0} pessoas</span></div>
+                <div className="commandTitleRow">
+                  <h2>{tableLabel}</h2>
+                  <div className="commandGuestsEditor" aria-label="Quantidade de pessoas na mesa">
+                    <Users size={18} />
+                    <button type="button" onClick={() => changeGuests((table.guests || 1) - 1)}><Minus size={13} /></button>
+                    <input type="number" min="1" max="99" value={table.guests || 1} onChange={event => changeGuests(event.target.value)} />
+                    <button type="button" onClick={() => changeGuests((table.guests || 1) + 1)}><Plus size={13} /></button>
+                    <span>pessoas</span>
+                  </div>
+                </div>
               </div>
               <div className="commandActions">
                 <button className="commandBtn" onClick={() => setJoinModalOpen(true)}><Link2 size={18} /> Juntar mesas</button>
@@ -394,7 +412,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
       {printJob && (
         <div className="printOnly customerBillPrint">
           <h1>{printJob.title}</h1>
-          <p><strong>Destino:</strong> {printJob.printerName}</p>
+          <p><strong>Garçom:</strong> {printJob.waiterName}</p>
           <p><strong>Mesa:</strong> {printJob.table.number}{printJob.table.mergedTableNumbers?.length ? ` + ${printJob.table.mergedTableNumbers.join(' + ')}` : ''}</p>
           <p><strong>Data:</strong> {new Date().toLocaleString('pt-BR')}</p>
           <hr />
