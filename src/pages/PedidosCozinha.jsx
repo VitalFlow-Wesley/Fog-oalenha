@@ -47,6 +47,7 @@ function buildKitchenOrders(tables, orderTimes) {
         id: table.id,
         tableNumber: table.number,
         time: table.kitchenSentAt || orderTimes[table.id] || currentTime(),
+        waiterName: table.kitchenWaiterName || table.waiterName || 'Garçom',
         items,
         sectors,
         observations: [...new Set(items.map(item => item.observation).filter(Boolean))],
@@ -301,6 +302,7 @@ export default function PedidosCozinha({ tables }) {
       {printJob && (
         <div className="printOnly customerBillPrint">
           <h1>PEDIDO PARA COZINHA</h1>
+          <p><strong>Garçom:</strong> {printJob.waiterName || 'Garçom'}</p>
           <p><strong>Mesa:</strong> {printJob.tableNumber}</p>
           <p><strong>Data:</strong> {printJob.printedAt || currentDateTime()}</p>
           <hr />
