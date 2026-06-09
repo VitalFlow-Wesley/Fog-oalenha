@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Sidebar from './components/Sidebar.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -9,11 +9,13 @@ import PedidosCozinha from './pages/PedidosCozinha.jsx'
 import Fechamento from './pages/Fechamento.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
+import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
 const USERS_KEY = 'fogao-users-v1'
 const TABLES_KEY = 'fogao-tables-v1'
 const SETTINGS_KEY = 'fogao-settings-v1'
+const PRODUCTS_KEY = 'fogao-products-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 
 const initialSettings = {
@@ -93,10 +95,75 @@ export default function App() {
   const [users, setUsers] = useState(() => readStored(USERS_KEY, initialUsers))
   const [settings, setSettings] = useState(() => ({ ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }))
   const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
+  const remoteLoadedRef = useRef(false)
+  const saveTimerRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function hydrateFromMongo() {
+      try {
+        const remote = await loadRemoteState()
+        if (cancelled) return
+
+        if (Array.isArray(remote.users) && remote.users.length) {
+          setUsers(remote.users)
+          writeStored(USERS_KEY, remote.users)
+        }
+        if (Array.isArray(remote.tables)) {
+          setTables(remote.tables)
+          writeStored(TABLES_KEY, remote.tables)
+        }
+        if (remote.settings) {
+          const nextSettings = { ...initialSettings, ...remote.settings }
+          setSettings(nextSettings)
+          writeStored(SETTINGS_KEY, nextSettings)
+        }
+        if (Array.isArray(remote.products)) {
+          writeStored(PRODUCTS_KEY, remote.products)
+          writeStored('fogao-a-lenha-products-settings', remote.products)
+          window.dispatchEvent(new Event('fogao-products-updated'))
+        }
+      } catch (error) {
+        console.warn('MongoDB indisponível, usando dados locais:', error.message)
+      } finally {
+        if (!cancelled) remoteLoadedRef.current = true
+      }
+    }
+
+    hydrateFromMongo()
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => writeStored(TABLES_KEY, tables), [tables])
   useEffect(() => writeStored(USERS_KEY, users), [users])
   useEffect(() => writeStored(SETTINGS_KEY, settings), [settings])
+
+  useEffect(() => {
+    if (!remoteLoadedRef.current) return
+    clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      const products = readStored(PRODUCTS_KEY, [])
+      saveRemoteState({ users, tables, settings, products }).catch(error => {
+        console.warn('Não foi possível salvar no MongoDB:', error.message)
+      })
+    }, 650)
+
+    return () => clearTimeout(saveTimerRef.current)
+  }, [users, tables, settings])
+
+  useEffect(() => {
+    if (!remoteLoadedRef.current) return
+    const syncProducts = () => {
+      const products = readStored(PRODUCTS_KEY, [])
+      saveRemoteState({ users, tables, settings, products }).catch(error => {
+        console.warn('Não foi possível salvar produtos no MongoDB:', error.message)
+      })
+    }
+
+    window.addEventListener('fogao-products-updated', syncProducts)
+    return () => window.removeEventListener('fogao-products-updated', syncProducts)
+  }, [users, tables, settings])
 
   useEffect(() => {
     if (!currentUser) return
