@@ -16,8 +16,7 @@ const sectors = ['Cozinha', 'Churrasco', 'Sucos', 'Bar / Caixa']
 const noPrepareCategories = ['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas']
 
 function formatMoney(value) {
-  const number = Number(value || 0)
-  return `R$ ${number.toFixed(2).replace('.', ',')}`
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
 }
 
 function parsePrice(value) {
@@ -25,10 +24,7 @@ function parsePrice(value) {
 }
 
 function normalizeProduct(product) {
-  return {
-    ...product,
-    category: product.category === 'Churrasco' ? 'Churrascos' : product.category,
-  }
+  return { ...product, category: product.category === 'Churrasco' ? 'Churrascos' : product.category }
 }
 
 function loadProducts() {
@@ -109,39 +105,18 @@ function getProductsPanel(products, search = '', status = 'Todos os status', cur
             <button type="submit" class="primaryBtn addProductBtn">＋ Adicionar produto</button>
           </form>
         </section>
-
         <aside class="settingsPanel productTipsPanel">
           <div class="settingsPanelTitle"><span class="tipCheck">✓</span><h2>Dicas rápidas</h2></div>
-          <ul>
-            <li>Produtos que vão para preparo serão enviados para o setor selecionado.</li>
-            <li>Itens do bar normalmente não vão para preparo.</li>
-            <li>Mantenha os preços sempre atualizados.</li>
-          </ul>
+          <ul><li>Produtos que vão para preparo serão enviados para o setor selecionado.</li><li>Itens do bar normalmente não vão para preparo.</li><li>Mantenha os preços sempre atualizados.</li></ul>
         </aside>
       </div>
-
       <section class="settingsPanel productsListPanel">
         <div class="productsListHeader">
           <div class="settingsPanelTitle"><span class="productTitleIcon">▣</span><h2>Lista de produtos cadastrados</h2></div>
-          <div class="productsFilters">
-            <label><input class="productSearchInput" value="${search}" placeholder="Buscar produto..." /></label>
-            <select class="productStatusFilter">
-              <option ${status === 'Todos os status' ? 'selected' : ''}>Todos os status</option>
-              <option ${status === 'Ativo' ? 'selected' : ''}>Ativo</option>
-              <option ${status === 'Inativo' ? 'selected' : ''}>Inativo</option>
-            </select>
-          </div>
+          <div class="productsFilters"><label><input class="productSearchInput" value="${search}" placeholder="Buscar produto..." /></label><select class="productStatusFilter"><option ${status === 'Todos os status' ? 'selected' : ''}>Todos os status</option><option ${status === 'Ativo' ? 'selected' : ''}>Ativo</option><option ${status === 'Inativo' ? 'selected' : ''}>Inativo</option></select></div>
         </div>
-
-        <div class="productsTable">
-          <div class="productsTableHead"><span>Produto</span><span>Categoria</span><span>Setor</span><span>Preço</span><span>Vai para preparo?</span><span>Status</span><span>Ações</span></div>
-          ${rows || '<div class="productsEmpty">Nenhum produto encontrado.</div>'}
-        </div>
-
-        <footer class="productsPagination">
-          <span>Mostrando ${filtered.length ? start + 1 : 0} a ${Math.min(filtered.length, start + PRODUCTS_PER_PAGE)} de ${filtered.length} produtos</span>
-          <div>${getPaginationButtons(totalPages, page)}</div>
-        </footer>
+        <div class="productsTable"><div class="productsTableHead"><span>Produto</span><span>Categoria</span><span>Setor</span><span>Preço</span><span>Vai para preparo?</span><span>Status</span><span>Ações</span></div>${rows || '<div class="productsEmpty">Nenhum produto encontrado.</div>'}</div>
+        <footer class="productsPagination"><span>Mostrando ${filtered.length ? start + 1 : 0} a ${Math.min(filtered.length, start + PRODUCTS_PER_PAGE)} de ${filtered.length} produtos</span><div>${getPaginationButtons(totalPages, page)}</div></footer>
       </section>
     </div>
   `
@@ -158,7 +133,6 @@ function hideSettingsSections(page, nav) {
 function showSettingsSections(page) {
   page.querySelector('[data-products-panel="true"]')?.remove()
   page.querySelector('[data-products-modal="true"]')?.remove()
-  page.querySelector('[data-products-tab="true"]')?.classList.remove('active')
   Array.from(page.children).forEach(child => {
     if (child.dataset.productsPreviousDisplay !== undefined) {
       child.style.display = child.dataset.productsPreviousDisplay
@@ -167,14 +141,12 @@ function showSettingsSections(page) {
   })
 }
 
-function openProductsTab(page, nav) {
-  const buttons = nav.querySelectorAll('button')
-  buttons.forEach(button => button.classList.remove('active'))
-  const productButton = nav.querySelector('[data-products-tab="true"]')
-  productButton?.classList.add('active')
+function openProductsTab(page, nav, pageNumber = 1) {
+  nav.querySelectorAll('button').forEach(button => button.classList.remove('active'))
+  getNativeProductsButton(nav)?.classList.add('active')
   hideSettingsSections(page, nav)
   page.querySelector('[data-products-panel="true"]')?.remove()
-  page.insertAdjacentHTML('beforeend', getProductsPanel(loadProducts()))
+  page.insertAdjacentHTML('beforeend', getProductsPanel(loadProducts(), '', 'Todos os status', pageNumber))
   bindProductsEvents(page)
 }
 
@@ -197,16 +169,8 @@ function openProductModal(page, product, mode) {
         <span class="productsModalIcon">${isDelete ? '🗑' : '✎'}</span>
         <h3>${isDelete ? 'Excluir produto' : 'Editar produto'}</h3>
         <p>${isDelete ? `Tem certeza que deseja excluir <strong>${product.name}</strong>?` : 'Atualize as informações do produto abaixo.'}</p>
-        ${isDelete ? '' : `
-          <label>Nome do produto<input name="modalName" value="${product.name}" /></label>
-          <label>Preço (R$)<input name="modalPrice" value="${String(product.price).replace('.', ',')}" /></label>
-          <label>Categoria<select name="modalCategory">${optionList(categories, product.category)}</select></label>
-          <label>Status<select name="modalStatus"><option ${product.status === 'Ativo' ? 'selected' : ''}>Ativo</option><option ${product.status === 'Inativo' ? 'selected' : ''}>Inativo</option></select></label>
-        `}
-        <div class="productsModalActions">
-          <button type="button" data-modal-cancel>Cancelar</button>
-          <button type="button" class="${isDelete ? 'danger' : 'save'}" data-modal-confirm>${isDelete ? 'Excluir produto' : 'Salvar alterações'}</button>
-        </div>
+        ${isDelete ? '' : `<label>Nome do produto<input name="modalName" value="${product.name}" /></label><label>Preço (R$)<input name="modalPrice" value="${String(product.price).replace('.', ',')}" /></label><label>Categoria<select name="modalCategory">${optionList(categories, product.category)}</select></label><label>Status<select name="modalStatus"><option ${product.status === 'Ativo' ? 'selected' : ''}>Ativo</option><option ${product.status === 'Inativo' ? 'selected' : ''}>Inativo</option></select></label>`}
+        <div class="productsModalActions"><button type="button" data-modal-cancel>Cancelar</button><button type="button" class="${isDelete ? 'danger' : 'save'}" data-modal-confirm>${isDelete ? 'Excluir produto' : 'Salvar alterações'}</button></div>
       </div>
     </div>
   `
@@ -247,65 +211,50 @@ function bindProductsEvents(page) {
   const categorySelect = form?.querySelector('[name="category"]')
   const sectorSelect = form?.querySelector('[name="sector"]')
   const prepareSelect = form?.querySelector('[name="prepare"]')
-
   categorySelect?.addEventListener('change', () => inferProductDefaults(categorySelect.value, sectorSelect, prepareSelect))
-
   form?.addEventListener('submit', event => {
     event.preventDefault()
     const data = new FormData(form)
     const name = String(data.get('name') || '').trim()
     if (!name) return
-    const products = loadProducts()
-    const product = {
-      id: Date.now(),
-      name,
-      category: String(data.get('category') || 'Outros'),
-      sector: String(data.get('sector') || 'Bar / Caixa'),
-      price: parsePrice(data.get('price')),
-      prepare: data.get('prepare') === 'Sim',
-      status: String(data.get('status') || 'Ativo'),
-    }
-    saveProducts([product, ...products])
+    const product = { id: Date.now(), name, category: String(data.get('category') || 'Outros'), sector: String(data.get('sector') || 'Bar / Caixa'), price: parsePrice(data.get('price')), prepare: data.get('prepare') === 'Sim', status: String(data.get('status') || 'Ativo') }
+    saveProducts([product, ...loadProducts()])
     openProductsTab(page, page.querySelector('.settingsTabs'))
   })
-
   panel.querySelector('.productSearchInput')?.addEventListener('input', () => rerenderProductsPanel(page, 1))
   panel.querySelector('.productStatusFilter')?.addEventListener('change', () => rerenderProductsPanel(page, 1))
   panel.querySelectorAll('.productsPagination [data-page]').forEach(button => button.addEventListener('click', () => rerenderProductsPanel(page, Number(button.dataset.page))))
   panel.querySelectorAll('.productActions button').forEach(button => button.addEventListener('click', () => {
     const row = button.closest('[data-product-id]')
-    const id = Number(row?.dataset.productId)
-    const product = loadProducts().find(item => item.id === id)
-    if (!product) return
-    openProductModal(page, product, button.dataset.action)
+    const product = loadProducts().find(item => item.id === Number(row?.dataset.productId))
+    if (product) openProductModal(page, product, button.dataset.action)
   }))
+}
+
+function getNativeProductsButton(nav) {
+  const productButtons = Array.from(nav.querySelectorAll('button')).filter(button => button.textContent.trim() === 'Produtos')
+  productButtons.slice(1).forEach(button => button.remove())
+  return productButtons[0]
 }
 
 function enhanceSettingsProducts() {
   const page = document.querySelector('.settingsPremiumPage')
   const nav = page?.querySelector('.settingsTabs')
   if (!page || !nav) return
-
-  if (!nav.querySelector('[data-products-tab="true"]')) {
-    const systemButton = Array.from(nav.querySelectorAll('button')).find(button => button.textContent.includes('Sistema'))
-    const productButton = document.createElement('button')
-    productButton.type = 'button'
-    productButton.dataset.productsTab = 'true'
-    productButton.innerHTML = '<span class="productsTabIcon">▣</span> Produtos'
-    productButton.addEventListener('click', () => openProductsTab(page, nav))
-    nav.insertBefore(productButton, systemButton || null)
+  const productButton = getNativeProductsButton(nav)
+  if (!productButton) return
+  if (!productButton.dataset.productsListenerAttached) {
+    productButton.dataset.productsListenerAttached = 'true'
+    productButton.addEventListener('click', event => {
+      event.preventDefault()
+      setTimeout(() => openProductsTab(page, nav), 0)
+    })
   }
-
-  nav.querySelectorAll('button:not([data-products-tab="true"])').forEach(button => {
-    if (button.dataset.productsListenerAttached) return
-    button.dataset.productsListenerAttached = 'true'
+  nav.querySelectorAll('button').forEach(button => {
+    if (button === productButton || button.dataset.productsResetListenerAttached) return
+    button.dataset.productsResetListenerAttached = 'true'
     button.addEventListener('click', () => showSettingsSections(page))
   })
-
-  const headerText = page.querySelector('.settingsTopHeader p')
-  if (headerText && !headerText.textContent.includes('produtos')) {
-    headerText.textContent = 'Gerencie acessos, mesas, impressões, produtos e preferências do sistema.'
-  }
 }
 
 const observer = new MutationObserver(enhanceSettingsProducts)
