@@ -418,7 +418,6 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
           <hr />
           {printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.originTable ? ` - Mesa ${item.originTable}` : ''}{item.observation ? ` (${item.observation})` : ''}</span>{printJob.type === 'bill' && <strong>{formatMoney(item.price * item.qty)}</strong>}</div>)}
           {printJob.type === 'bill' && <><hr /><div className="printTotal"><span>Total</span><strong>{formatMoney(printJob.total)}</strong></div><p className="printFooter">Comanda para conferência do cliente.</p></>}
-          {printJob.type === 'kitchen' && <p className="printFooter">Pedido para preparo. Não precisa atualizar status de preparo no sistema.</p>}
         </div>
       )}
     </div>
