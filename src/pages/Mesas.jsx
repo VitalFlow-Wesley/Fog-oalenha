@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { products } from '../data/mockData.js'
+import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 
-const categories = [...new Set(products.map(p => p.category))]
+const PRODUCTS_KEY = 'fogao-products-v1'
 const productIcons = {
   Refeições: '🍲',
+  Churrasco: '🥩',
   Churrascos: '🥩',
   Petiscos: '🍟',
   Sucos: '🥤',
@@ -14,6 +15,29 @@ const productIcons = {
   Salgadinhos: '🥨',
   Sorvetes: '🍨',
   Sobremesas: '🍮',
+  Outros: '🍽️',
+}
+
+function normalizeProduct(product) {
+  const category = product.category || 'Outros'
+  const sector = product.sector || product.localSaida || 'Bar / Caixa'
+  return {
+    ...product,
+    category,
+    sector,
+    localSaida: product.localSaida || sector,
+    imprimeCozinha: product.imprimeCozinha ?? product.prepare ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category),
+    status: product.status || 'Ativo',
+  }
+}
+
+function readProducts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCTS_KEY) || 'null')
+    return Array.isArray(saved) && saved.length ? saved.map(normalizeProduct) : defaultProducts.map(normalizeProduct)
+  } catch {
+    return defaultProducts.map(normalizeProduct)
+  }
 }
 
 function getPrinterName(settings, role) {
@@ -46,7 +70,9 @@ function createTable(nextId) {
 
 export default function Mesas({ tables, setTables, users, currentUser, settings }) {
   const [selected, setSelected] = useState(null)
-  const [activeCategory, setActiveCategory] = useState(categories[0])
+  const [availableProducts, setAvailableProducts] = useState(() => readProducts())
+  const categories = useMemo(() => [...new Set(availableProducts.filter(p => p.status !== 'Inativo').map(p => p.category))], [availableProducts])
+  const [activeCategory, setActiveCategory] = useState(categories[0] || 'Refeições')
   const [observation, setObservation] = useState('')
   const [cancelRequest, setCancelRequest] = useState(null)
   const [cancelPassword, setCancelPassword] = useState('')
@@ -83,6 +109,23 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     () => table ? tables.filter(t => t.id !== table.id && t.status !== 'juntada' && !t.mergedTableIds?.length) : [],
     [tables, table]
   )
+
+  useEffect(() => {
+    if (!categories.length) return
+    if (!categories.includes(activeCategory)) setActiveCategory(categories[0])
+  }, [categories, activeCategory])
+
+  useEffect(() => {
+    function syncProducts() { setAvailableProducts(readProducts()) }
+    window.addEventListener('storage', syncProducts)
+    window.addEventListener('focus', syncProducts)
+    const timer = setInterval(syncProducts, 1500)
+    return () => {
+      window.removeEventListener('storage', syncProducts)
+      window.removeEventListener('focus', syncProducts)
+      clearInterval(timer)
+    }
+  }, [])
 
   useEffect(() => {
     if (!printJob) return undefined
@@ -232,7 +275,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
   }
 
   const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
-  const filteredProducts = products.filter(p => p.category === activeCategory)
+  const filteredProducts = availableProducts.filter(p => p.status !== 'Inativo' && p.category === activeCategory)
   const tableLabel = table ? `Mesa ${table.number}${table.mergedTableNumbers?.length ? ` + ${table.mergedTableNumbers.join(' + ')}` : ''}` : ''
   const totalItems = table?.items.reduce((sum, item) => sum + item.qty, 0) || 0
   const updatedLabel = isRefreshing ? 'Atualizando...' : `Atualizado às ${formatUpdateTime(lastUpdate)}`
