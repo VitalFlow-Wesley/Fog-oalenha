@@ -30,6 +30,7 @@ import './waiter-command-permissions.js'
 import './kitchen-orders.css'
 import './kitchen-orders-compact.css'
 import './closing-cash.css'
+import './closing-cash-refine.js'
 import './print.css'
 import './command-premium.css'
 
