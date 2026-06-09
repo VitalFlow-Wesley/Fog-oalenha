@@ -258,8 +258,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     if (!current) return
     const kitchenPrinterName = getPrinterName(settings, 'kitchen')
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
-    updateTable(selected.id, { status: 'enviado', kitchenSent: true, lastKitchenPrinter: kitchenPrinterName })
-    setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Garçom', total: 0 })
+    const waiterName = currentUser?.name || currentUser?.username || 'Garçom'
+    const kitchenSentAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, lastKitchenPrinter: kitchenPrinterName })
+    setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 })
     touch()
   }
 
