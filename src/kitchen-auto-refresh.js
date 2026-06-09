@@ -28,7 +28,7 @@ kitchenAutoRefreshStyle.textContent = `
 
   .kitchenOrdersHeaderRefined {
     grid-template-columns: minmax(280px, 1fr) minmax(560px, 680px) !important;
-    align-items: center !important;
+    align-items: start !important;
   }
 
   .kitchenOrdersPage .kitchenActionsRefined {
@@ -37,11 +37,21 @@ kitchenAutoRefreshStyle.textContent = `
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 10px !important;
+    margin-top: 24px !important;
   }
 
   .kitchenOrdersPage .kitchenTopActions,
   .kitchenOrdersPage .kitchenBottomActions {
     display: contents !important;
+  }
+
+  .kitchenOrdersPage .kitchenSearch,
+  .kitchenOrdersPage .periodSelectWrap,
+  .kitchenOrdersPage .kitchenLightBtn,
+  .kitchenOrdersPage .kitchenPeriodBtn {
+    height: 56px !important;
+    min-height: 56px !important;
+    box-sizing: border-box !important;
   }
 
   .kitchenOrdersPage .kitchenSearch {
@@ -50,8 +60,7 @@ kitchenAutoRefreshStyle.textContent = `
     width: auto !important;
     min-width: 320px !important;
     max-width: none !important;
-    min-height: 48px !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
   }
 
   .kitchenOrdersPage .periodSelectWrap {
@@ -64,13 +73,11 @@ kitchenAutoRefreshStyle.textContent = `
     order: 3 !important;
     flex: 0 0 138px !important;
     width: 138px !important;
-    min-height: 48px !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
   }
 
   .kitchenOrdersPage .kitchenPeriodBtn {
-    min-height: 48px !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
   }
 
   .kitchenOrdersPage .kitchenPeriodMenu {
@@ -87,6 +94,7 @@ kitchenAutoRefreshStyle.textContent = `
     .kitchenOrdersPage .kitchenActionsRefined {
       max-width: none !important;
       justify-content: stretch !important;
+      margin-top: 4px !important;
     }
   }
 
