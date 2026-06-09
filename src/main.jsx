@@ -41,5 +41,6 @@ import './closing-cash-bottom-fix.js'
 import './closing-confirm-modal.js'
 import './print.css'
 import './command-premium.css'
+import './sidebar-logout-fix.css'
 
 createRoot(document.getElementById('root')).render(<App />)
