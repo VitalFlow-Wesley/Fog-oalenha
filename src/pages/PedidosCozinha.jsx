@@ -8,23 +8,25 @@ const sectorConfig = {
 }
 
 function getItemSector(item) {
-  if (item.category === 'Churrasco') return 'churrasco'
+  if (item.category === 'Churrasco' || item.category === 'Churrascos') return 'churrasco'
   if (item.category === 'Sucos') return 'sucos'
   if (item.localSaida === 'cozinha' || item.imprimeCozinha) return 'cozinha'
   return null
 }
 
-function formatTime(value, fallbackIndex = 0) {
+function currentTime() {
+  return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function formatTime(value) {
   if (value) return value
-  const hour = 19
-  const minute = String(8 + fallbackIndex * 4).padStart(2, '0')
-  return `${hour}:${minute}`
+  return currentTime()
 }
 
 function buildKitchenOrders(tables) {
   return tables
     .filter(table => table.kitchenSent || table.status === 'enviado')
-    .map((table, index) => {
+    .map(table => {
       const items = (table.items || [])
         .map(item => ({ ...item, sector: getItemSector(item) }))
         .filter(item => item.sector)
@@ -33,7 +35,7 @@ function buildKitchenOrders(tables) {
       return {
         id: table.id,
         tableNumber: table.number,
-        time: formatTime(table.kitchenSentAt, index),
+        time: formatTime(table.kitchenSentAt),
         items,
         sectors,
         observations: [...new Set(items.map(item => item.observation).filter(Boolean))],
