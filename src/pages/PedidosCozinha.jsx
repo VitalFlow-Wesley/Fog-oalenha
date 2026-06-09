@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, Eye, FileDown, Flame, PackageCheck, Printer, RefreshCw, Search, Send, Soup, Users, X } from 'lucide-react'
 
 const sectorConfig = {
@@ -15,15 +15,26 @@ function getItemSector(item) {
 }
 
 function currentTime() {
-  return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return new Intl.DateTimeFormat('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Fortaleza',
+  }).format(new Date())
 }
 
-function formatTime(value) {
-  if (value) return value
-  return currentTime()
+function currentDateTime() {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'America/Fortaleza',
+  }).format(new Date())
 }
 
-function buildKitchenOrders(tables) {
+function buildKitchenOrders(tables, orderTimes) {
   return tables
     .filter(table => table.kitchenSent || table.status === 'enviado')
     .map(table => {
@@ -35,7 +46,7 @@ function buildKitchenOrders(tables) {
       return {
         id: table.id,
         tableNumber: table.number,
-        time: formatTime(table.kitchenSentAt),
+        time: table.kitchenSentAt || orderTimes[table.id] || currentTime(),
         items,
         sectors,
         observations: [...new Set(items.map(item => item.observation).filter(Boolean))],
@@ -51,8 +62,30 @@ export default function PedidosCozinha({ tables }) {
   const [showPeriodMenu, setShowPeriodMenu] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [details, setDetails] = useState(null)
+  const [orderTimes, setOrderTimes] = useState({})
+  const [printJob, setPrintJob] = useState(null)
 
-  const orders = useMemo(() => buildKitchenOrders(tables), [tables])
+  useEffect(() => {
+    setOrderTimes(prev => {
+      let changed = false
+      const next = { ...prev }
+      tables.forEach(table => {
+        if ((table.kitchenSent || table.status === 'enviado') && (table.items || []).length && !next[table.id]) {
+          next[table.id] = table.kitchenSentAt || currentTime()
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [tables])
+
+  const orders = useMemo(() => buildKitchenOrders(tables, orderTimes), [tables, orderTimes])
+
+  useEffect(() => {
+    if (!printJob) return undefined
+    const timer = setTimeout(() => window.print(), 120)
+    return () => clearTimeout(timer)
+  }, [printJob])
 
   const summary = useMemo(() => {
     const sentItems = orders.flatMap(order => order.items)
@@ -94,6 +127,10 @@ export default function PedidosCozinha({ tables }) {
     setPeriod(value)
     setShowPeriodMenu(false)
     setLastUpdate(new Date())
+  }
+
+  function reprintOrder(order) {
+    setPrintJob({ ...order, printedAt: currentDateTime() })
   }
 
   const topCards = [
@@ -202,7 +239,7 @@ export default function PedidosCozinha({ tables }) {
               <div className="kitchenOrderActions noPrint">
                 <span className="sentBadge"><CheckCircle2 size={16} /> Enviado</span>
                 <button type="button" onClick={() => setDetails(order)}><Eye size={16} /> Ver detalhes</button>
-                <button type="button" onClick={handlePrint}><Printer size={16} /> Reimprimir</button>
+                <button type="button" onClick={() => reprintOrder(order)}><Printer size={16} /> Reimprimir</button>
               </div>
             </article>
           ))}
@@ -257,9 +294,19 @@ export default function PedidosCozinha({ tables }) {
             return <span className={sector.className} key={sectorKey}>{typeof Icon === 'string' ? Icon : <Icon size={15} />} {sector.label}</span>
           })}</div>
           <ul className="kitchenDetailsList">{details.items.map((item, index) => <li key={`${item.id}-${index}`}><strong>{item.qty}x {item.name}</strong>{item.observation && <small>Obs: {item.observation}</small>}</li>)}</ul>
-          <button className="secondaryBtn" type="button" onClick={handlePrint}><Printer size={17} /> Reimprimir pedido</button>
+          <button className="secondaryBtn" type="button" onClick={() => reprintOrder(details)}><Printer size={17} /> Reimprimir pedido</button>
         </div>
       </div>}
+
+      {printJob && (
+        <div className="printOnly customerBillPrint">
+          <h1>PEDIDO PARA COZINHA</h1>
+          <p><strong>Mesa:</strong> {printJob.tableNumber}</p>
+          <p><strong>Data:</strong> {printJob.printedAt || currentDateTime()}</p>
+          <hr />
+          {printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.observation ? ` (${item.observation})` : ''}</span></div>)}
+        </div>
+      )}
     </div>
   )
 }
