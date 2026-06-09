@@ -1,0 +1,48 @@
+.commandGuestsEditor {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px solid #efd7b9;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, .92);
+  color: #2d140e;
+  font-weight: 900;
+}
+
+.commandGuestsEditor button {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ead7bf;
+  border-radius: 999px;
+  background: #fffaf3;
+  color: #9d4f2e;
+  cursor: pointer;
+}
+
+.commandGuestsEditor input {
+  width: 42px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff4e7;
+  color: #2d140e;
+  text-align: center;
+  font-weight: 900;
+  font-size: 15px;
+  outline: none;
+}
+
+.commandGuestsEditor input::-webkit-outer-spin-button,
+.commandGuestsEditor input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.commandGuestsEditor span {
+  font-size: 13px;
+  white-space: nowrap;
+}
