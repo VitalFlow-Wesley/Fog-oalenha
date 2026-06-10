@@ -37,7 +37,7 @@ function readStored(key, fallback) {
     const raw = localStorage.getItem(key)
     if (!raw) return fallback
     const parsed = JSON.parse(raw)
-    return parsed || fallback
+    return parsed ?? fallback
   } catch {
     return fallback
   }
@@ -107,22 +107,24 @@ export default function App() {
         if (cancelled) return
 
         const localUsers = readStored(USERS_KEY, initialUsers)
-        const localTables = readStored(TABLES_KEY, initialTables)
+        const localTables = readStored(TABLES_KEY, null)
         const localSettings = { ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }
         const localProducts = readStored(PRODUCTS_KEY, [])
         const missingRemoteState = {}
 
-        if (Array.isArray(remote.users) && remote.users.length) {
-          setUsers(remote.users)
-          writeStored(USERS_KEY, remote.users)
+        if (Array.isArray(remote.users)) {
+          setUsers(remote.users.length ? remote.users : localUsers)
+          writeStored(USERS_KEY, remote.users.length ? remote.users : localUsers)
+          if (!remote.users.length && Array.isArray(localUsers) && localUsers.length) missingRemoteState.users = localUsers
         } else if (Array.isArray(localUsers) && localUsers.length) {
           missingRemoteState.users = localUsers
         }
 
-        if (Array.isArray(remote.tables) && remote.tables.length) {
+        if (Array.isArray(remote.tables)) {
           setTables(remote.tables)
           writeStored(TABLES_KEY, remote.tables)
-        } else if (Array.isArray(localTables) && localTables.length) {
+        } else if (Array.isArray(localTables)) {
+          setTables(localTables)
           missingRemoteState.tables = localTables
         }
 
@@ -134,10 +136,12 @@ export default function App() {
           missingRemoteState.settings = localSettings
         }
 
-        if (Array.isArray(remote.products) && remote.products.length) {
-          writeStored(PRODUCTS_KEY, remote.products)
-          writeStored('fogao-a-lenha-products-settings', remote.products)
+        if (Array.isArray(remote.products)) {
+          const products = remote.products.length ? remote.products : localProducts
+          writeStored(PRODUCTS_KEY, products)
+          writeStored('fogao-a-lenha-products-settings', products)
           window.dispatchEvent(new Event('fogao-products-updated'))
+          if (!remote.products.length && Array.isArray(localProducts) && localProducts.length) missingRemoteState.products = localProducts
         } else if (Array.isArray(localProducts) && localProducts.length) {
           missingRemoteState.products = localProducts
         }
