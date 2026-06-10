@@ -51,5 +51,6 @@ import './closing-print-scope-fix.js'
 import './print.css'
 import './command-premium.css'
 import './sidebar-logout-fix.css'
+import './sidebar-logo-brand.css'
 
 createRoot(document.getElementById('root')).render(<App />)
