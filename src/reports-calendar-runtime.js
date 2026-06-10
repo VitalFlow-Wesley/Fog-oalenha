@@ -13,7 +13,68 @@ function getTodayValue() {
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 }
 
+function ensureCalendarStyle() {
+  if (document.getElementById('fogao-reports-calendar-style')) return
+  const style = document.createElement('style')
+  style.id = 'fogao-reports-calendar-style'
+  style.textContent = `
+    .reportCalendarPickerBtn {
+      position: relative !important;
+      overflow: hidden !important;
+      cursor: pointer !important;
+      min-width: 150px !important;
+    }
+
+    .reportCalendarPickerBtn .reportCalendarLabel {
+      position: relative !important;
+      z-index: 1 !important;
+      pointer-events: none !important;
+      white-space: nowrap !important;
+    }
+
+    .reportCalendarPickerBtn .reportCalendarInput {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      opacity: 0 !important;
+      border: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      cursor: pointer !important;
+      z-index: 2 !important;
+      color: transparent !important;
+      background: transparent !important;
+    }
+
+    .reportCalendarPickerBtn .reportCalendarInput::-webkit-calendar-picker-indicator {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      opacity: 0 !important;
+      cursor: pointer !important;
+    }
+
+    .reportsActions .reportCalendarPickerBtn svg {
+      position: relative !important;
+      z-index: 1 !important;
+      pointer-events: none !important;
+      flex: 0 0 auto !important;
+    }
+
+    @media (max-width: 760px) {
+      .reportCalendarPickerBtn {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+    }
+  `
+  document.head.appendChild(style)
+}
+
 function enhanceReportsCalendar() {
+  ensureCalendarStyle()
   const reportsPage = document.querySelector('.reportsPremiumPage')
   if (!reportsPage) return
 
@@ -34,6 +95,7 @@ function enhanceReportsCalendar() {
   input.className = 'reportCalendarInput'
   input.value = localStorage.getItem('fogao-reports-date') || getTodayValue()
   input.setAttribute('aria-label', 'Selecionar data do relatório')
+  input.tabIndex = -1
 
   const icon = calendarButton.querySelector('svg')
   calendarButton.innerHTML = ''
