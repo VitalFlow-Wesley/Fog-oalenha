@@ -2,6 +2,7 @@ const TABLES_KEY = 'fogao-tables-v1'
 const USERS_KEY = 'fogao-users-v1'
 const SETTINGS_KEY = 'fogao-settings-v1'
 const PRODUCTS_KEY = 'fogao-products-v1'
+const SALES_KEY = 'fogao-sales-history-v1'
 
 function readJson(key, fallback) {
   try {
@@ -10,6 +11,75 @@ function readJson(key, fallback) {
   } catch {
     return fallback
   }
+}
+
+function writeJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Fallback silencioso.
+  }
+}
+
+function dateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function tableTotal(table) {
+  return (table.items || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
+}
+
+function getWaiter(table) {
+  return table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom'
+}
+
+function buildRecord(table, type) {
+  const now = new Date()
+  return {
+    id: `${type}-${table.id || table.number}-${Date.now()}`,
+    date: dateKey(now),
+    closedAt: now.toISOString(),
+    closedAtLabel: now.toLocaleString('pt-BR'),
+    type,
+    tableId: table.id,
+    tableNumber: table.number,
+    guests: Number(table.guests || 0),
+    waiterName: getWaiter(table),
+    total: tableTotal(table),
+    items: (table.items || []).map(item => ({
+      id: item.id,
+      name: item.name || 'Produto',
+      qty: Number(item.qty || 0),
+      price: Number(item.price || 0),
+      category: item.category || 'Outros',
+      sector: item.sector || item.localSaida || '',
+      localSaida: item.localSaida || item.sector || '',
+      imprimeCozinha: Boolean(item.imprimeCozinha),
+      observation: item.observation || '',
+    })),
+  }
+}
+
+function getSelectedTable() {
+  const title = document.querySelector('.commandHeader h2')?.textContent || ''
+  const match = title.match(/Mesa\s+(\d+)/i)
+  if (!match) return null
+  const number = match[1].padStart(2, '0')
+  return readJson(TABLES_KEY, []).find(table => String(table.number).padStart(2, '0') === number && table.status !== 'livre') || null
+}
+
+function getOpenTables() {
+  return readJson(TABLES_KEY, []).filter(table => table.status !== 'livre' || tableTotal(table) > 0 || table.items?.length)
+}
+
+function saveSalesHistory(records) {
+  const valid = records.filter(record => record.items.length && record.total > 0)
+  if (!valid.length) return readJson(SALES_KEY, [])
+  const history = readJson(SALES_KEY, [])
+  const nextHistory = [...valid, ...history].slice(0, 2000)
+  writeJson(SALES_KEY, nextHistory)
+  window.dispatchEvent(new Event('fogao-sales-history-updated'))
+  return nextHistory
 }
 
 async function syncCurrentState() {
@@ -22,6 +92,7 @@ async function syncCurrentState() {
         tables: readJson(TABLES_KEY, []),
         settings: readJson(SETTINGS_KEY, {}),
         products: readJson(PRODUCTS_KEY, []),
+        salesHistory: readJson(SALES_KEY, []),
       }),
     })
   } catch (error) {
@@ -37,6 +108,10 @@ function scheduleSync() {
 if (!window.__fogaoTableClosePersistFixInstalled) {
   window.__fogaoTableClosePersistFixInstalled = true
 
+  fetch('/api/state').then(response => response.ok ? response.json() : {}).then(remote => {
+    if (Array.isArray(remote.salesHistory)) writeJson(SALES_KEY, remote.salesHistory)
+  }).catch(() => {})
+
   document.addEventListener('click', event => {
     const button = event.target.closest('button')
     if (!button) return
@@ -44,6 +119,15 @@ if (!window.__fogaoTableClosePersistFixInstalled) {
     const label = button.textContent.trim().toLowerCase()
     const isTableClose = label.includes('fechar mesa')
     const isCashClose = label.includes('sim, fechar caixa') || label.includes('autorizar fechamento')
+
+    if (isTableClose) {
+      const table = getSelectedTable()
+      if (table) saveSalesHistory([buildRecord(table, 'mesa_fechada')])
+    }
+
+    if (isCashClose) {
+      saveSalesHistory(getOpenTables().map(table => buildRecord(table, 'caixa_fechado')))
+    }
 
     if (isTableClose || isCashClose) scheduleSync()
   }, true)
@@ -54,6 +138,7 @@ if (!window.__fogaoTableClosePersistFixInstalled) {
       tables: readJson(TABLES_KEY, []),
       settings: readJson(SETTINGS_KEY, {}),
       products: readJson(PRODUCTS_KEY, []),
+      salesHistory: readJson(SALES_KEY, []),
     })
 
     try {
