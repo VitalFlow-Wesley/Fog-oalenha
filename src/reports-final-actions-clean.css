@@ -64,6 +64,13 @@
 
 .reportsPremiumPage.completeReportPage label.reportActionBtn {
   cursor: default !important;
+  font-size: 0 !important;
+  color: transparent !important;
+}
+
+.reportsPremiumPage.completeReportPage label.reportActionBtn svg {
+  color: #3b2218 !important;
+  flex: 0 0 auto !important;
 }
 
 .reportsPremiumPage.completeReportPage label.reportActionBtn input[type="date"] {
@@ -79,7 +86,7 @@
   border-radius: 10px !important;
   background: rgba(255, 248, 237, .82) !important;
   color: #3b2218 !important;
-  font: inherit !important;
+  font-family: inherit !important;
   font-size: 13px !important;
   font-weight: 800 !important;
   cursor: pointer !important;
