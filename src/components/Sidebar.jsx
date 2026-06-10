@@ -1,4 +1,4 @@
-import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator } from 'lucide-react'
+import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator, Flame } from 'lucide-react'
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
@@ -20,8 +20,13 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
   return (
     <aside className="sidebar premiumSidebar compactSidebar">
       <div className="brand sidebarLogoBrand">
-        <strong>Fogão a Lenha</strong>
-        <span>Gestão da churrascaria</span>
+        <div className="sidebarLogoMark" aria-hidden="true">
+          <Flame size={27} />
+        </div>
+        <div className="sidebarLogoText">
+          <strong>Fogão a Lenha</strong>
+          <span>Gestão da churrascaria</span>
+        </div>
       </div>
 
       <nav>
