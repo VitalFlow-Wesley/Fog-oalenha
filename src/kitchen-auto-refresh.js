@@ -22,17 +22,19 @@ function clickHiddenKitchenRefresh() {
 
 const kitchenAutoRefreshStyle = document.createElement('style')
 kitchenAutoRefreshStyle.textContent = `
-  .kitchenOrdersPage .kitchenPrimaryBtn {
+  .kitchenOrdersPage .kitchenPrimaryBtn,
+  .kitchenOrdersPage .periodSelectWrap,
+  .kitchenOrdersPage .kitchenLightBtn {
     display: none !important;
   }
 
   .kitchenOrdersHeaderRefined {
-    grid-template-columns: minmax(280px, 1fr) minmax(560px, 680px) !important;
+    grid-template-columns: minmax(280px, 1fr) minmax(420px, 620px) !important;
     align-items: start !important;
   }
 
   .kitchenOrdersPage .kitchenActionsRefined {
-    max-width: 680px !important;
+    max-width: 620px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
@@ -45,44 +47,16 @@ kitchenAutoRefreshStyle.textContent = `
     display: contents !important;
   }
 
-  .kitchenOrdersPage .kitchenSearch,
-  .kitchenOrdersPage .periodSelectWrap,
-  .kitchenOrdersPage .kitchenLightBtn,
-  .kitchenOrdersPage .kitchenPeriodBtn {
+  .kitchenOrdersPage .kitchenSearch {
+    order: 1 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 360px !important;
+    max-width: 620px !important;
     height: 56px !important;
     min-height: 56px !important;
     box-sizing: border-box !important;
-  }
-
-  .kitchenOrdersPage .kitchenSearch {
-    order: 1 !important;
-    flex: 1 1 360px !important;
-    width: auto !important;
-    min-width: 320px !important;
-    max-width: none !important;
     border-radius: 18px !important;
-  }
-
-  .kitchenOrdersPage .periodSelectWrap {
-    order: 2 !important;
-    flex: 0 0 132px !important;
-    width: 132px !important;
-  }
-
-  .kitchenOrdersPage .kitchenLightBtn {
-    order: 3 !important;
-    flex: 0 0 138px !important;
-    width: 138px !important;
-    border-radius: 18px !important;
-  }
-
-  .kitchenOrdersPage .kitchenPeriodBtn {
-    border-radius: 18px !important;
-  }
-
-  .kitchenOrdersPage .kitchenPeriodMenu {
-    right: auto !important;
-    left: 0 !important;
   }
 
   @media (max-width: 1180px) {
@@ -96,6 +70,10 @@ kitchenAutoRefreshStyle.textContent = `
       justify-content: stretch !important;
       margin-top: 4px !important;
     }
+
+    .kitchenOrdersPage .kitchenSearch {
+      max-width: none !important;
+    }
   }
 
   @media (max-width: 760px) {
@@ -104,9 +82,7 @@ kitchenAutoRefreshStyle.textContent = `
       grid-template-columns: 1fr !important;
     }
 
-    .kitchenOrdersPage .kitchenSearch,
-    .kitchenOrdersPage .periodSelectWrap,
-    .kitchenOrdersPage .kitchenLightBtn {
+    .kitchenOrdersPage .kitchenSearch {
       width: 100% !important;
       min-width: 0 !important;
       flex: none !important;
