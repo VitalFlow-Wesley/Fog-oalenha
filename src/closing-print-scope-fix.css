@@ -1,7 +1,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 7mm;
   }
 
   body.print-closing-report html,
@@ -48,8 +48,8 @@
   body.print-closing-report .closingPrintReport {
     position: static !important;
     inset: auto !important;
-    width: 78mm !important;
-    max-width: 78mm !important;
+    width: 86mm !important;
+    max-width: 86mm !important;
     min-height: 0 !important;
     height: auto !important;
     padding: 0 !important;
@@ -57,8 +57,8 @@
     background: #fff !important;
     color: #111 !important;
     font-family: Arial, sans-serif !important;
-    font-size: 9.2px !important;
-    line-height: 1.12 !important;
+    font-size: 10.4px !important;
+    line-height: 1.13 !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     page-break-before: avoid !important;
@@ -68,7 +68,7 @@
   }
 
   body.print-closing-report .closingPrintReport h1 {
-    font-size: 13px !important;
+    font-size: 14.5px !important;
     margin: 0 0 4px !important;
     text-align: center !important;
   }
@@ -94,12 +94,12 @@
   }
 
   body.print-closing-report .closingPrintReport .printLine span {
-    max-width: 48mm !important;
+    max-width: 56mm !important;
   }
 
   body.print-closing-report .closingPrintReport .printFooter {
     margin-top: 5px !important;
-    font-size: 8px !important;
+    font-size: 8.8px !important;
     text-align: center !important;
   }
 }
