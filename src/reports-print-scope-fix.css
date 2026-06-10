@@ -1,0 +1,97 @@
+@media print {
+  body.print-reports-report html,
+  body.print-reports-report,
+  body.print-reports-report #root,
+  body.print-reports-report .appShell,
+  body.print-reports-report .content,
+  body.print-reports-report .reportsPremiumPage {
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body.print-reports-report * {
+    visibility: hidden !important;
+    box-shadow: none !important;
+  }
+
+  body.print-reports-report #root,
+  body.print-reports-report .appShell,
+  body.print-reports-report .content,
+  body.print-reports-report .reportsPremiumPage,
+  body.print-reports-report .reportsPrintReport,
+  body.print-reports-report .reportsPrintReport * {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  body.print-reports-report .sidebar,
+  body.print-reports-report .reportsHeader,
+  body.print-reports-report .reportsSummaryGrid,
+  body.print-reports-report .simpleSectorPanel,
+  body.print-reports-report .reportsMainGrid,
+  body.print-reports-report .completeReportLayout,
+  body.print-reports-report .printOnly:not(.reportsPrintReport) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body.print-reports-report .reportsPrintReport {
+    position: static !important;
+    inset: auto !important;
+    width: 92mm !important;
+    max-width: 92mm !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 10.5px !important;
+    line-height: 1.14 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  body.print-reports-report .reportsPrintReport h1 {
+    font-size: 15px !important;
+    margin: 0 0 4px !important;
+    text-align: center !important;
+  }
+
+  body.print-reports-report .reportsPrintReport p {
+    margin: 1px 0 !important;
+  }
+
+  body.print-reports-report .reportsPrintReport hr {
+    border: 0 !important;
+    border-top: 1px dashed #111 !important;
+    margin: 4px 0 !important;
+  }
+
+  body.print-reports-report .reportsPrintReport .printLine {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 1px 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  body.print-reports-report .reportsPrintReport .printLine span {
+    max-width: 62mm !important;
+  }
+
+  body.print-reports-report .reportsPrintReport .printFooter {
+    margin-top: 5px !important;
+    font-size: 8.8px !important;
+    text-align: center !important;
+  }
+}
