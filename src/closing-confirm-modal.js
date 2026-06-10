@@ -97,7 +97,7 @@ async function syncResetTables(resetTables) {
 
 async function resetCashMovementAfterClose(extra = {}) {
   const snapshot = getClosingSnapshot()
-  const resetTables = snapshot.tables.map(resetTableForNewCash)
+  const resetTables = []
   const history = readStored(CLOSINGS_KEY, [])
   const closingRecord = {
     id: `closing-${Date.now()}`,
@@ -128,8 +128,8 @@ function openClosingConfirmModal() {
     document.querySelector('.closingConfirmOverlay')?.remove()
     const openTables = getOpenCashTables()
     const warningText = openTables.length
-      ? `Existem ${openTables.length} mesa(s) abertas ou com movimentação. Ao confirmar, todas serão fechadas, os pedidos serão limpos e o salão será zerado para iniciar um novo caixa.`
-      : 'Os valores estão conferidos. Após fechar o caixa do dia, o movimento atual será encerrado e o salão ficará pronto para um novo caixa.'
+      ? `Existem ${openTables.length} mesa(s) abertas ou com movimentação. Ao confirmar, todas as mesas serão apagadas, os pedidos serão limpos e o salão ficará sem mesas cadastradas.`
+      : 'Os valores estão conferidos. Após fechar o caixa do dia, todas as mesas serão apagadas e o salão ficará vazio para um novo caixa.'
 
     const overlay = document.createElement('div')
     overlay.className = 'closingConfirmOverlay'
@@ -169,7 +169,7 @@ function openClosingAuthorizationModal(difference) {
 
     const formattedDiff = `R$ ${Math.abs(difference).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     const openTables = getOpenCashTables()
-    const openTablesText = openTables.length ? `<p><strong>Atenção:</strong> ${openTables.length} mesa(s) serão fechadas e zeradas ao autorizar o fechamento.</p>` : ''
+    const openTablesText = openTables.length ? `<p><strong>Atenção:</strong> ${openTables.length} mesa(s) serão apagadas ao autorizar o fechamento.</p>` : ''
     const overlay = document.createElement('div')
     overlay.className = 'closingConfirmOverlay'
     overlay.innerHTML = `
@@ -266,7 +266,7 @@ function enhanceClosingConfirmButtons() {
 
       page.classList.add('cashClosed')
       buttons.forEach(btn => { btn.disabled = true })
-      showClosingToast('Fechando caixa e zerando salão...')
+      showClosingToast('Fechando caixa e apagando mesas...')
       await resetCashMovementAfterClose({ observation: ok.observation || '', divergent: Boolean(ok.divergent) })
       showClosingToast(ok.divergent ? 'Caixa fechado com autorização. Novo caixa iniciado.' : 'Caixa fechado com sucesso. Novo caixa iniciado.')
       setTimeout(() => window.location.reload(), 700)
