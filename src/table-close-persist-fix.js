@@ -102,7 +102,42 @@ async function syncCurrentState() {
 
 function scheduleSync() {
   window.clearTimeout(window.__fogaoTableCloseSyncTimer)
-  window.__fogaoTableCloseSyncTimer = window.setTimeout(syncCurrentState, 900)
+  window.__fogaoTableCloseSyncTimer = window.setTimeout(syncCurrentState, 500)
+}
+
+function markSelectedTableAsClosed(table) {
+  const tables = readJson(TABLES_KEY, [])
+  const nowLabel = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const nextTables = tables.map(item => {
+    if (item.id === table.id) {
+      return {
+        ...item,
+        status: 'fechada',
+        closedAt: new Date().toISOString(),
+        closedAtLabel: nowLabel,
+        billRequested: false,
+        kitchenSent: false,
+      }
+    }
+    if (table.mergedTableIds?.includes(item.id)) {
+      return {
+        ...item,
+        status: 'fechada',
+        closedAt: new Date().toISOString(),
+        closedAtLabel: nowLabel,
+        billRequested: false,
+        kitchenSent: false,
+        mergedTo: undefined,
+        mergedToNumber: undefined,
+        previousMergeState: undefined,
+      }
+    }
+    return item
+  })
+
+  writeJson(TABLES_KEY, nextTables)
+  window.dispatchEvent(new Event('storage'))
+  window.dispatchEvent(new Event('fogao-tables-updated'))
 }
 
 if (!window.__fogaoTableClosePersistFixInstalled) {
@@ -117,19 +152,31 @@ if (!window.__fogaoTableClosePersistFixInstalled) {
     if (!button) return
 
     const label = button.textContent.trim().toLowerCase()
-    const isTableClose = label.includes('fechar mesa')
+    const isTableClose = label === 'fechar mesa' || label.includes('fechar mesa')
     const isCashClose = label.includes('sim, fechar caixa') || label.includes('autorizar fechamento')
 
     if (isTableClose) {
       const table = getSelectedTable()
-      if (table) saveSalesHistory([buildRecord(table, 'mesa_fechada')])
+      if (!table) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+
+      saveSalesHistory([buildRecord(table, 'mesa_fechada')])
+      markSelectedTableAsClosed(table)
+      scheduleSync()
+
+      window.setTimeout(() => {
+        window.location.reload()
+      }, 250)
+      return
     }
 
     if (isCashClose) {
       saveSalesHistory(getOpenTables().map(table => buildRecord(table, 'caixa_fechado')))
+      scheduleSync()
     }
-
-    if (isTableClose || isCashClose) scheduleSync()
   }, true)
 
   window.addEventListener('beforeunload', () => {
