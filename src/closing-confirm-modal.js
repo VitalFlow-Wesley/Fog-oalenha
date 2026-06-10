@@ -1,4 +1,26 @@
 const CASH_AUTH_PASSWORD_KEY = 'fogao-cash-auth-password'
+const TABLES_KEY = 'fogao-tables-v1'
+const CLOSINGS_KEY = 'fogao-closings-v1'
+const USERS_KEY = 'fogao-users-v1'
+const SETTINGS_KEY = 'fogao-settings-v1'
+const PRODUCTS_KEY = 'fogao-products-v1'
+
+function readStored(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeStored(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Mantem o app funcionando mesmo se o navegador bloquear armazenamento.
+  }
+}
 
 function getCashAuthPassword() {
   return localStorage.getItem(CASH_AUTH_PASSWORD_KEY) || '1234'
@@ -17,6 +39,80 @@ function getClosingDifference() {
   return parseCashValue(diffElement?.textContent || '0')
 }
 
+function getTableTotal(table) {
+  return (table.items || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
+}
+
+function getOpenCashTables(tables = readStored(TABLES_KEY, [])) {
+  return Array.isArray(tables)
+    ? tables.filter(table => table.status !== 'livre' || getTableTotal(table) > 0 || Number(table.guests || 0) > 0 || Boolean(table.items?.length))
+    : []
+}
+
+function resetTableForNewCash(table) {
+  return {
+    ...table,
+    status: 'livre',
+    guests: 0,
+    openedAt: null,
+    closedAt: null,
+    items: [],
+    kitchenSent: false,
+    kitchenSentAt: null,
+    kitchenWaiterName: null,
+    billRequested: false,
+    lastKitchenPrinter: null,
+    lastCashierPrinter: null,
+    mergedTableIds: [],
+    mergedTableNumbers: [],
+    mergedTo: undefined,
+    mergedToNumber: undefined,
+    previousMergeState: undefined,
+  }
+}
+
+function getClosingSnapshot() {
+  const tables = readStored(TABLES_KEY, [])
+  const openTables = getOpenCashTables(tables)
+  const total = openTables.reduce((sum, table) => sum + getTableTotal(table), 0)
+  return { tables, openTables, total }
+}
+
+async function syncResetTables(resetTables) {
+  try {
+    await fetch('/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        users: readStored(USERS_KEY, []),
+        tables: resetTables,
+        settings: readStored(SETTINGS_KEY, {}),
+        products: readStored(PRODUCTS_KEY, []),
+      }),
+    })
+  } catch (error) {
+    console.warn('Nao foi possivel sincronizar o fechamento agora:', error.message)
+  }
+}
+
+async function resetCashMovementAfterClose(extra = {}) {
+  const snapshot = getClosingSnapshot()
+  const resetTables = snapshot.tables.map(resetTableForNewCash)
+  const history = readStored(CLOSINGS_KEY, [])
+  const closingRecord = {
+    id: `closing-${Date.now()}`,
+    closedAt: new Date().toISOString(),
+    total: snapshot.total,
+    openTables: snapshot.openTables.length,
+    tablesSnapshot: snapshot.openTables,
+    ...extra,
+  }
+
+  writeStored(CLOSINGS_KEY, [closingRecord, ...history].slice(0, 60))
+  writeStored(TABLES_KEY, resetTables)
+  await syncResetTables(resetTables)
+}
+
 function showClosingToast(message, type = 'success') {
   document.querySelector('.closingSuccessToast')?.remove()
   const badge = document.createElement('div')
@@ -30,6 +126,10 @@ function showClosingToast(message, type = 'success') {
 function openClosingConfirmModal() {
   return new Promise(resolve => {
     document.querySelector('.closingConfirmOverlay')?.remove()
+    const openTables = getOpenCashTables()
+    const warningText = openTables.length
+      ? `Existem ${openTables.length} mesa(s) abertas ou com movimentação. Ao confirmar, todas serão fechadas, os pedidos serão limpos e o salão será zerado para iniciar um novo caixa.`
+      : 'Os valores estão conferidos. Após fechar o caixa do dia, o movimento atual será encerrado e o salão ficará pronto para um novo caixa.'
 
     const overlay = document.createElement('div')
     overlay.className = 'closingConfirmOverlay'
@@ -39,7 +139,7 @@ function openClosingConfirmModal() {
         <div class="closingConfirmContent">
           <span>FECHAMENTO DO CAIXA</span>
           <h3>Confirmar fechamento?</h3>
-          <p>Os valores estão conferidos. Após fechar o caixa do dia, os dados não devem ser alterados.</p>
+          <p>${warningText}</p>
         </div>
         <div class="closingConfirmActions">
           <button type="button" class="closingConfirmCancel">Cancelar</button>
@@ -68,6 +168,8 @@ function openClosingAuthorizationModal(difference) {
     document.querySelector('.closingConfirmOverlay')?.remove()
 
     const formattedDiff = `R$ ${Math.abs(difference).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    const openTables = getOpenCashTables()
+    const openTablesText = openTables.length ? `<p><strong>Atenção:</strong> ${openTables.length} mesa(s) serão fechadas e zeradas ao autorizar o fechamento.</p>` : ''
     const overlay = document.createElement('div')
     overlay.className = 'closingConfirmOverlay'
     overlay.innerHTML = `
@@ -77,6 +179,7 @@ function openClosingAuthorizationModal(difference) {
           <span>DIVERGÊNCIA NO CAIXA</span>
           <h3>Autorização necessária</h3>
           <p>O fechamento está com diferença de <strong>${formattedDiff}</strong>. Para fechar mesmo assim, informe a senha de autorização e registre uma observação.</p>
+          ${openTablesText}
         </div>
         <form class="closingAuthForm">
           <label>Senha de autorização<input type="password" data-auth-password placeholder="Digite a senha" autocomplete="off" /></label>
@@ -163,7 +266,10 @@ function enhanceClosingConfirmButtons() {
 
       page.classList.add('cashClosed')
       buttons.forEach(btn => { btn.disabled = true })
-      showClosingToast(ok.divergent ? 'Caixa fechado com autorização.' : 'Caixa fechado com sucesso.')
+      showClosingToast('Fechando caixa e zerando salão...')
+      await resetCashMovementAfterClose({ observation: ok.observation || '', divergent: Boolean(ok.divergent) })
+      showClosingToast(ok.divergent ? 'Caixa fechado com autorização. Novo caixa iniciado.' : 'Caixa fechado com sucesso. Novo caixa iniciado.')
+      setTimeout(() => window.location.reload(), 700)
     }, true)
   })
 }
@@ -224,7 +330,7 @@ closingConfirmStyle.textContent = `
   }
 
   .closingConfirmContent p {
-    margin: 0;
+    margin: 0 0 8px;
     color: #725744;
     font-size: 15px;
     line-height: 1.45;
