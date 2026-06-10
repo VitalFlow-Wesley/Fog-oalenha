@@ -1,0 +1,63 @@
+.closingPage .otherDetailsPanel p {
+  grid-template-columns: 28px minmax(180px, 1fr) minmax(86px, auto) minmax(132px, auto) !important;
+  gap: 12px !important;
+  min-height: 50px !important;
+}
+
+.closingPage .otherDetailsPanel p span {
+  min-width: 0 !important;
+  line-height: 1.25 !important;
+}
+
+.closingPage .otherDetailsPanel p strong {
+  max-width: 130px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+}
+
+.closingPage .otherDetailsPanel p small {
+  min-width: 112px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.closingPage .otherDetailsPanel p:first-of-type strong {
+  color: #32180f !important;
+  font-size: 18px !important;
+}
+
+.closingPage .otherDetailsPanel p:first-of-type small {
+  color: #7b6253 !important;
+}
+
+.closingPage .topWaiterHighlight strong {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 1180px) {
+  .closingPage .otherDetailsPanel p {
+    grid-template-columns: 28px minmax(160px, 1fr) minmax(80px, auto) minmax(110px, auto) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .closingPage .otherDetailsPanel p {
+    grid-template-columns: 26px 1fr !important;
+  }
+
+  .closingPage .otherDetailsPanel p strong,
+  .closingPage .otherDetailsPanel p small {
+    grid-column: 2 !important;
+    text-align: left !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+}
