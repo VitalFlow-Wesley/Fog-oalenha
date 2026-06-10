@@ -26,7 +26,7 @@ function openDatePicker(input) {
       return
     }
   } catch {
-    // Alguns navegadores bloqueiam showPicker; nesse caso tenta o click normal.
+    // fallback
   }
 
   input.click()
@@ -34,31 +34,31 @@ function openDatePicker(input) {
 
 function fixReportsDateButton() {
   const control = findReportDateControl()
-  if (!control || control.dataset.dateRuntimeFixed === '1') return
+  if (!control) return
 
   const input = control.querySelector('input[type="date"]')
   if (!input) return
 
-  control.dataset.dateRuntimeFixed = '1'
   control.setAttribute('role', 'button')
   control.setAttribute('tabindex', '0')
   control.style.cursor = 'pointer'
+  control.style.pointerEvents = 'auto'
 
   input.style.position = 'absolute'
   input.style.left = '0'
   input.style.top = '0'
-  input.style.width = '100%'
-  input.style.height = '100%'
+  input.style.width = '1px'
+  input.style.height = '1px'
   input.style.opacity = '0'
-  input.style.cursor = 'pointer'
-  input.style.zIndex = '3'
+  input.style.pointerEvents = 'none'
+  input.style.zIndex = '0'
+
+  if (control.dataset.dateRuntimeFixed === '1') return
+  control.dataset.dateRuntimeFixed = '1'
 
   control.addEventListener('click', event => {
-    const clickedInput = event.target === input
-    if (!clickedInput) {
-      event.preventDefault()
-      openDatePicker(input)
-    }
+    event.preventDefault()
+    openDatePicker(input)
   })
 
   control.addEventListener('keydown', event => {
@@ -73,6 +73,7 @@ if (!window.__fogaoReportsDateClickFixInstalled) {
   window.__fogaoReportsDateClickFixInstalled = true
   window.addEventListener('DOMContentLoaded', fixReportsDateButton)
   window.addEventListener('focus', fixReportsDateButton)
+  window.addEventListener('click', () => setTimeout(fixReportsDateButton, 50), true)
   new MutationObserver(fixReportsDateButton).observe(document.body, { childList: true, subtree: true })
   setTimeout(fixReportsDateButton, 300)
 }
