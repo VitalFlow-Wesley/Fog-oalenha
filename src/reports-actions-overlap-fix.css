@@ -1,6 +1,6 @@
 .reportsPremiumPage .reportsHeader {
   display: grid !important;
-  grid-template-columns: minmax(300px, 1fr) minmax(360px, auto) !important;
+  grid-template-columns: minmax(300px, 1fr) minmax(520px, auto) !important;
   align-items: flex-start !important;
   gap: 18px !important;
   overflow: visible !important;
@@ -8,10 +8,10 @@
 
 .reportsPremiumPage .reportsActions {
   width: 100% !important;
-  max-width: 610px !important;
+  max-width: 660px !important;
   justify-self: end !important;
   display: grid !important;
-  grid-template-columns: minmax(280px, 1fr) minmax(150px, 180px) !important;
+  grid-template-columns: minmax(320px, 1.35fr) minmax(170px, .65fr) !important;
   grid-template-areas:
     "tabs date"
     "print pdf" !important;
@@ -19,6 +19,8 @@
   align-items: stretch !important;
   justify-content: stretch !important;
   padding-top: 0 !important;
+  position: static !important;
+  overflow: visible !important;
 }
 
 .reportsPremiumPage .reportTabs {
@@ -44,44 +46,44 @@
 .reportsPremiumPage .reportActionBtn {
   width: 100% !important;
   min-width: 0 !important;
-  min-height: 48px !important;
+  min-height: 52px !important;
   justify-content: center !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   position: relative !important;
   transform: none !important;
   overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
-.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(1) {
+/* Ordem real do JSX: 1 abas, 2 data, 3 imprimir, 4 exportar PDF */
+.reportsPremiumPage .reportsActions > :nth-child(1) {
+  grid-area: tabs !important;
+}
+
+.reportsPremiumPage .reportsActions > :nth-child(2) {
   grid-area: date !important;
 }
 
-.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(2) {
+.reportsPremiumPage .reportsActions > :nth-child(3) {
   grid-area: print !important;
 }
 
-.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(3) {
+.reportsPremiumPage .reportsActions > :nth-child(4) {
   grid-area: pdf !important;
 }
 
-.reportsPremiumPage .reportCalendarPickerBtn {
-  grid-area: date !important;
-  min-width: 0 !important;
-  max-width: none !important;
-}
-
-.reportsPremiumPage .reportCalendarPickerBtn .reportCalendarInput {
+.reportsPremiumPage .reportsActions > label.reportActionBtn input[type="date"] {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
   opacity: 0 !important;
   z-index: 2 !important;
+  cursor: pointer !important;
 }
 
-.reportsPremiumPage .reportCalendarPickerBtn svg,
-.reportsPremiumPage .reportCalendarPickerBtn .reportCalendarLabel {
+.reportsPremiumPage .reportsActions > label.reportActionBtn svg {
   position: relative !important;
   z-index: 1 !important;
   pointer-events: none !important;
@@ -95,6 +97,7 @@
   .reportsPremiumPage .reportsActions {
     justify-self: stretch !important;
     max-width: none !important;
+    grid-template-columns: minmax(320px, 1fr) minmax(170px, 220px) !important;
   }
 }
 
