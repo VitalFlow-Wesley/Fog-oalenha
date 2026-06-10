@@ -53,5 +53,6 @@ import './print.css'
 import './command-premium.css'
 import './sidebar-logout-fix.css'
 import './sidebar-logo-brand.css'
+import './mobile-layout-fix.css'
 
 createRoot(document.getElementById('root')).render(<App />)
