@@ -64,6 +64,8 @@
 .sectorPerformancePanel { grid-column: span 5; }
 .categoryPanelComplete { grid-column: span 4; }
 .paymentPanelComplete { grid-column: span 3; }
+.quantityProductsComplete { grid-column: span 6; }
+.revenueProductsComplete { grid-column: span 6; }
 .topProductsComplete { grid-column: span 6; }
 .tablePerformanceComplete { grid-column: span 6; }
 .movementPanel { grid-column: span 4; }
@@ -205,6 +207,8 @@
   .sectorPerformancePanel,
   .categoryPanelComplete,
   .paymentPanelComplete,
+  .quantityProductsComplete,
+  .revenueProductsComplete,
   .topProductsComplete,
   .tablePerformanceComplete,
   .movementPanel,
