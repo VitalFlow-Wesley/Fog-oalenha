@@ -1,4 +1,4 @@
-import { LayoutDashboard, ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator } from 'lucide-react'
+import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator } from 'lucide-react'
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
@@ -7,7 +7,6 @@ const waiterMenu = [
 
 const managerMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'pedidos-cozinha', label: 'Pedidos', icon: ChefHat },
   { key: 'relatorios', label: 'Relatórios', icon: BarChart3 },
   { key: 'fechamento', label: 'Fechamento', icon: Calculator },
