@@ -1,7 +1,13 @@
+.closingPage .otherDetailsPanel {
+  overflow: hidden !important;
+}
+
 .closingPage .otherDetailsPanel p {
-  grid-template-columns: 28px minmax(180px, 1fr) minmax(86px, auto) minmax(132px, auto) !important;
+  grid-template-columns: 28px minmax(0, 1fr) auto !important;
   gap: 12px !important;
-  min-height: 50px !important;
+  min-height: 56px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .closingPage .otherDetailsPanel p span {
@@ -10,42 +16,42 @@
 }
 
 .closingPage .otherDetailsPanel p strong {
-  max-width: 130px !important;
   text-align: right !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  font-size: 18px !important;
+  font-size: 20px !important;
   line-height: 1.1 !important;
+  max-width: 150px !important;
 }
 
 .closingPage .otherDetailsPanel p small {
-  min-width: 112px !important;
+  grid-column: 2 / 4 !important;
+  justify-self: end !important;
+  max-width: 100% !important;
   text-align: right !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  color: #7b6253 !important;
+  margin-top: -8px !important;
+}
+
+.closingPage .otherDetailsPanel p:first-of-type {
+  grid-template-columns: 28px minmax(0, 1fr) minmax(80px, auto) !important;
+  align-items: center !important;
 }
 
 .closingPage .otherDetailsPanel p:first-of-type strong {
   color: #32180f !important;
-  font-size: 18px !important;
-}
-
-.closingPage .otherDetailsPanel p:first-of-type small {
-  color: #7b6253 !important;
+  font-size: 20px !important;
+  max-width: 110px !important;
 }
 
 .closingPage .topWaiterHighlight strong {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-}
-
-@media (max-width: 1180px) {
-  .closingPage .otherDetailsPanel p {
-    grid-template-columns: 28px minmax(160px, 1fr) minmax(80px, auto) minmax(110px, auto) !important;
-  }
 }
 
 @media (max-width: 760px) {
@@ -56,8 +62,10 @@
   .closingPage .otherDetailsPanel p strong,
   .closingPage .otherDetailsPanel p small {
     grid-column: 2 !important;
+    justify-self: start !important;
     text-align: left !important;
     max-width: none !important;
     min-width: 0 !important;
+    margin-top: 0 !important;
   }
 }
