@@ -19,12 +19,22 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
 
   return (
     <aside className="sidebar premiumSidebar compactSidebar">
-      <div className="brand sidebarLogoBrand">
-        <div className="sidebarLogoMark" aria-hidden="true">
-          <Flame size={27} />
+      <div className="brand sidebarLogoBrand officialLogoBrand">
+        <div className="sidebarOfficialLogoWrap">
+          <img
+            className="sidebarOfficialLogo"
+            src="/assets/logooficial.png"
+            alt="Logo Fogão a Lenha"
+            onError={event => {
+              event.currentTarget.style.display = 'none'
+              event.currentTarget.nextElementSibling?.classList.remove('hiddenLogoFallback')
+            }}
+          />
+          <span className="sidebarLogoFallback hiddenLogoFallback" aria-hidden="true">
+            <Flame size={27} />
+          </span>
         </div>
-        <div className="sidebarLogoText">
-          <strong>Fogão a Lenha</strong>
+        <div className="sidebarLogoText officialLogoText">
           <span>Gestão da churrascaria</span>
         </div>
       </div>
