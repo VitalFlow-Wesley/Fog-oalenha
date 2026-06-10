@@ -1,0 +1,25 @@
+.closingCashPage .closingActions,
+.closingCashPage .closingFooterActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.closingCashPage .closingActions button,
+.closingCashPage .closingFooterActions button {
+  min-height: 46px;
+}
+
+@media (max-width: 760px) {
+  .closingCashPage .closingActions,
+  .closingCashPage .closingFooterActions {
+    justify-content: stretch;
+  }
+
+  .closingCashPage .closingActions button,
+  .closingCashPage .closingFooterActions button {
+    width: 100%;
+  }
+}
