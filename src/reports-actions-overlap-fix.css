@@ -1,0 +1,120 @@
+.reportsPremiumPage .reportsHeader {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) minmax(360px, auto) !important;
+  align-items: flex-start !important;
+  gap: 18px !important;
+  overflow: visible !important;
+}
+
+.reportsPremiumPage .reportsActions {
+  width: 100% !important;
+  max-width: 610px !important;
+  justify-self: end !important;
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1fr) minmax(150px, 180px) !important;
+  grid-template-areas:
+    "tabs date"
+    "print pdf" !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  padding-top: 0 !important;
+}
+
+.reportsPremiumPage .reportTabs {
+  grid-area: tabs !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+  padding: 5px !important;
+  box-sizing: border-box !important;
+}
+
+.reportsPremiumPage .reportTabs button {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.reportsPremiumPage .reportActionBtn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  position: relative !important;
+  transform: none !important;
+  overflow: hidden !important;
+}
+
+.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(1) {
+  grid-area: date !important;
+}
+
+.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(2) {
+  grid-area: print !important;
+}
+
+.reportsPremiumPage .reportsActions > .reportActionBtn:nth-of-type(3) {
+  grid-area: pdf !important;
+}
+
+.reportsPremiumPage .reportCalendarPickerBtn {
+  grid-area: date !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+.reportsPremiumPage .reportCalendarPickerBtn .reportCalendarInput {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  z-index: 2 !important;
+}
+
+.reportsPremiumPage .reportCalendarPickerBtn svg,
+.reportsPremiumPage .reportCalendarPickerBtn .reportCalendarLabel {
+  position: relative !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 1180px) {
+  .reportsPremiumPage .reportsHeader {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage .reportsActions {
+    justify-self: stretch !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reportsPremiumPage .reportsActions {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "tabs"
+      "date"
+      "print"
+      "pdf" !important;
+  }
+
+  .reportsPremiumPage .reportTabs {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage .reportActionBtn,
+  .reportsPremiumPage .reportTabs button {
+    min-height: 52px !important;
+    font-size: 15px !important;
+  }
+}
