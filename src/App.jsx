@@ -223,7 +223,7 @@ export default function App() {
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
-        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} />}
+        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
