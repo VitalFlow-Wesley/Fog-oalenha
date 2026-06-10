@@ -56,7 +56,12 @@ function buildTopProducts(items = []) {
     current.total += Number(item.price || 0) * Number(item.qty || 0)
     map.set(name, current)
   })
-  return Array.from(map.values()).sort((a, b) => b.total - a.total).slice(0, 5)
+
+  const list = Array.from(map.values())
+  return {
+    byQty: [...list].sort((a, b) => b.qty - a.qty || b.total - a.total).slice(0, 5),
+    byRevenue: [...list].sort((a, b) => b.total - a.total || b.qty - a.qty).slice(0, 5),
+  }
 }
 
 function buildClosingData(tables = []) {
@@ -84,7 +89,8 @@ function buildClosingData(tables = []) {
     sentToKitchen,
     categories,
     categoryTotal: total,
-    topProducts,
+    topProductsByQty: topProducts.byQty,
+    topProductsByRevenue: topProducts.byRevenue,
     waiters,
     topWaiter,
     ticketAverage: activeTables.length ? total / activeTables.length : 0,
@@ -93,6 +99,11 @@ function buildClosingData(tables = []) {
 
 function MiniSummary({ icon: Icon, title, value, tone = 'green' }) {
   return <div className="closingMiniCard"><div className={`closingMiniIcon ${tone}`}><Icon size={19} /></div><span>{title}</span><strong>{value}</strong></div>
+}
+
+function ProductRanking({ products, emptyMessage = 'Nenhum produto vendido ainda.' }) {
+  if (!products.length) return <div className="productsEmpty">{emptyMessage}</div>
+  return products.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>)
 }
 
 function PaymentVisual({ data }) {
@@ -152,7 +163,7 @@ export default function Fechamento({ tables = [], currentUser }) {
 
       <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><p className="conferenceHint">Informe dinheiro, PIX, cartão e outros recebimentos. A soma precisa bater com o faturamento total das mesas.</p><div className="cashRows paymentConferenceGrid"><label><span>Dinheiro recebido</span><input value={reportedPayments.dinheiro} onChange={e => setPayment('dinheiro', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>PIX recebido</span><input value={reportedPayments.pix} onChange={e => setPayment('pix', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Cartões recebidos</span><input value={reportedPayments.cartao} onChange={e => setPayment('cartao', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Outros recebimentos</span><input value={reportedPayments.outros} onChange={e => setPayment('outros', e.target.value)} disabled={closed} placeholder="0,00" /></label></div><div className="cashTotalsGrid"><p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p><p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p><p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>Observação (opcional):</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={closeCash} disabled={closed}><LockKeyhole size={19} /> Conferir e fechar caixa</button></div></section>
 
-    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Recebimentos informados</h3><PaymentVisual data={receivedData} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos</h3>{data.topProducts.length ? data.topProducts.map((item, index) => <div className="productRank" key={item.name}><em>{index + 1}</em><span>{item.name}</span><b>{item.qty}</b><strong>{money(item.total)}</strong></div>) : <div className="productsEmpty">Nenhum produto vendido ainda.</div>}</div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><Users size={17} /><span>Garçom que mais vendeu</span><strong>{data.topWaiter.name}</strong><small>{data.topWaiter.tables} mesa{data.topWaiter.tables === 1 ? '' : 's'} · {money(data.topWaiter.total)}</small></p><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
+    <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Recebimentos informados</h3><PaymentVisual data={receivedData} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos por quantidade</h3><ProductRanking products={data.topProductsByQty} /></div><div className="closingPanel topProductsRevenuePanel"><h3>Produtos com maior faturamento</h3><ProductRanking products={data.topProductsByRevenue} /></div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><Users size={17} /><span>Garçom que mais vendeu</span><strong>{data.topWaiter.name}</strong><small>{data.topWaiter.tables} mesa{data.topWaiter.tables === 1 ? '' : 's'} · {money(data.topWaiter.total)}</small></p><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
 
     <div className="printOnly closingPrintReport">
       <h1>FECHAMENTO DE CAIXA</h1>
@@ -179,8 +190,11 @@ export default function Fechamento({ tables = [], currentUser }) {
       <p><strong>Vendas por categoria</strong></p>
       {data.categories.length ? data.categories.map(item => <div className="printLine" key={item.name}><span>{item.name}</span><strong>{money(item.total)}</strong></div>) : <p>Nenhuma venda por categoria.</p>}
       <hr />
-      <p><strong>Produtos mais vendidos</strong></p>
-      {data.topProducts.length ? data.topProducts.map((item, index) => <div className="printLine" key={item.name}><span>{index + 1}. {item.name} ({item.qty}x)</span><strong>{money(item.total)}</strong></div>) : <p>Nenhum produto vendido.</p>}
+      <p><strong>Produtos mais vendidos por quantidade</strong></p>
+      {data.topProductsByQty.length ? data.topProductsByQty.map((item, index) => <div className="printLine" key={item.name}><span>{index + 1}. {item.name} ({item.qty}x)</span><strong>{money(item.total)}</strong></div>) : <p>Nenhum produto vendido.</p>}
+      <hr />
+      <p><strong>Produtos com maior faturamento</strong></p>
+      {data.topProductsByRevenue.length ? data.topProductsByRevenue.map((item, index) => <div className="printLine" key={item.name}><span>{index + 1}. {item.name} ({item.qty}x)</span><strong>{money(item.total)}</strong></div>) : <p>Nenhum produto vendido.</p>}
       <hr />
       <p><strong>Ranking por garçom</strong></p>
       {data.waiters.length ? data.waiters.map(item => <div className="printLine" key={item.name}><span>{item.name} ({item.tables} mesa{item.tables === 1 ? '' : 's'})</span><strong>{money(item.total)}</strong></div>) : <p>Nenhum garçom identificado.</p>}
