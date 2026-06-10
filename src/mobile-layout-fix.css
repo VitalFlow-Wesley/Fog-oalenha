@@ -1,0 +1,399 @@
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .appShell {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    display: block;
+    overflow-x: hidden;
+  }
+
+  .sidebar,
+  .premiumSidebar,
+  .compactSidebar {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 26px 14px 22px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(111, 76, 54, .14) !important;
+    box-sizing: border-box !important;
+  }
+
+  .sidebar .brand,
+  .officialLogoBrand {
+    margin: 0 auto 18px !important;
+  }
+
+  .sidebarOfficialLogoWrap {
+    width: 122px !important;
+    min-height: auto !important;
+  }
+
+  .sidebarOfficialLogo {
+    width: 122px !important;
+  }
+
+  .sidebar nav {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .navItem,
+  .sidebar button.navItem {
+    width: auto !important;
+    min-width: 128px !important;
+    max-width: calc(50% - 8px) !important;
+    justify-content: center !important;
+    padding: 13px 14px !important;
+    border-radius: 18px !important;
+    font-size: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .sidebarLogoutArea {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    padding-top: 14px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .logoutBtn {
+    width: auto !important;
+    min-width: 118px !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 12px 10px 28px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .page,
+  .restaurantTablesPage,
+  .kitchenOrdersPage,
+  .closingPage,
+  .reportsPage,
+  .settingsPage {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px 12px !important;
+    border-radius: 24px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .pageHeader,
+  .restaurantPageHeader,
+  .kitchenHeader,
+  .closingHeader {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    align-items: start !important;
+  }
+
+  .pageHeader h1,
+  .restaurantPageHeader h1,
+  .kitchenHeader h1,
+  .closingHeader h1 {
+    font-size: clamp(34px, 12vw, 46px) !important;
+    line-height: .95 !important;
+    word-break: normal !important;
+  }
+
+  .pageHeader p,
+  .restaurantPageHeader p,
+  .kitchenHeader p,
+  .closingHeader p {
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+  }
+
+  .headerActions,
+  .kitchenActions,
+  .closingHeaderActions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  .primaryBtn,
+  .headerActions button,
+  .kitchenActions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .restaurantSummaryGrid,
+  .kitchenSummaryGrid,
+  .closingMiniGrid,
+  .closingDetailsGrid,
+  .closingMainGrid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .restaurantSummaryCard,
+  .kitchenSummaryCard,
+  .closingMiniCard {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .tablesGrid,
+  .restaurantTablesGrid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .tableCard,
+  .restaurantTableCard {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .drawerOverlay,
+  .commandOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .drawer,
+  .commandDrawer {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding: 28px 16px 34px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .commandHeader,
+  .commandTitleRow,
+  .commandActions,
+  .commandMainGrid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .commandClose {
+    position: fixed !important;
+    top: 18px !important;
+    right: 16px !important;
+    z-index: 3 !important;
+  }
+
+  .commandHeader h2 {
+    max-width: calc(100% - 74px) !important;
+    font-size: 42px !important;
+    line-height: 1 !important;
+  }
+
+  .commandGuestsEditor {
+    width: 100% !important;
+    max-width: 360px !important;
+    flex-wrap: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  .commandActions .commandBtn,
+  .commandBtn {
+    width: 100% !important;
+    min-height: 58px !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+  }
+
+  .commandPanel,
+  .commandProductsPanel {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding: 18px 14px !important;
+  }
+
+  .commandItem {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    min-height: auto !important;
+  }
+
+  .commandItemControls {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px !important;
+    justify-items: end !important;
+  }
+
+  .qtyStepper {
+    justify-self: end !important;
+  }
+
+  .commandCategoryTabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+    gap: 8px !important;
+  }
+
+  .commandCategoryTabs button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  .commandProductGrid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .commandProductCard {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .kitchenSearch,
+  .kitchenSearch input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .kitchenFilters,
+  .kitchenTabs,
+  .kitchenSectorTabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .kitchenBody,
+  .kitchenContent,
+  .kitchenMainGrid,
+  .kitchenOrdersGrid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .kitchenOrdersList,
+  .kitchenEmptyState,
+  .kitchenOperationalSummary,
+  .kitchenPanel,
+  .kitchenOrderCard {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .kitchenOperationalSummary,
+  .operationalSummary,
+  .kitchenSummaryPanel {
+    position: static !important;
+    transform: none !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+  }
+
+  .kitchenOperationalSummary h2,
+  .operationalSummary h2,
+  .kitchenSummaryPanel h2 {
+    font-size: 30px !important;
+    line-height: 1.05 !important;
+  }
+
+  .kitchenOrderCard {
+    overflow: hidden !important;
+  }
+
+  .kitchenOrderCard * {
+    max-width: 100% !important;
+  }
+
+  .closingConfirmModal {
+    width: min(92vw, 500px) !important;
+    padding: 22px !important;
+    box-sizing: border-box !important;
+  }
+
+  .closingConfirmContent h3 {
+    font-size: 28px !important;
+  }
+}
+
+@media print {
+  .drawerOverlay,
+  .commandOverlay,
+  .sidebar,
+  .content > *:not(.printOnly),
+  .page:not(.printOnly) {
+    display: none !important;
+  }
+
+  .printOnly,
+  .customerBillPrint,
+  .closingPrintReport {
+    display: block !important;
+    position: static !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 6mm !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11px !important;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}
