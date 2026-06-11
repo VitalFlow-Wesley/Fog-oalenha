@@ -1,0 +1,141 @@
+@media (max-width: 760px) {
+  .reportsPremiumPage {
+    overflow-x: hidden !important;
+  }
+
+  .reportsPremiumPage .premiumPanel,
+  .reportsPremiumPage .reportCard,
+  .reportsPremiumPage .summaryCard,
+  .reportsPremiumPage .productsCard,
+  .reportsPremiumPage .reportSummaryCard,
+  .reportsPremiumPage .reportSection,
+  .reportsPremiumPage .simpleReportGrid,
+  .reportsPremiumPage .reportsGrid,
+  .reportsPremiumPage .reportContent,
+  .reportsPremiumPage .productsTableWrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .reportsPremiumPage .simpleReportGrid,
+  .reportsPremiumPage .reportsGrid,
+  .reportsPremiumPage .reportContent {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .reportsPremiumPage .productsCard,
+  .reportsPremiumPage .reportSummaryCard {
+    padding: 18px 16px !important;
+    min-height: auto !important;
+  }
+
+  .reportsPremiumPage .productsCard h2,
+  .reportsPremiumPage .reportSummaryCard h2,
+  .reportsPremiumPage .reportSection h2 {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+    margin: 0 0 18px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .reportsPremiumPage .productsTable,
+  .reportsPremiumPage table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  .reportsPremiumPage .productsTable th,
+  .reportsPremiumPage .productsTable td,
+  .reportsPremiumPage table th,
+  .reportsPremiumPage table td {
+    max-width: 100% !important;
+    padding: 12px 10px !important;
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .reportsPremiumPage .productsTable th:first-child,
+  .reportsPremiumPage .productsTable td:first-child,
+  .reportsPremiumPage table th:first-child,
+  .reportsPremiumPage table td:first-child {
+    width: auto !important;
+  }
+
+  .reportsPremiumPage .productsTable th:last-child,
+  .reportsPremiumPage .productsTable td:last-child,
+  .reportsPremiumPage table th:last-child,
+  .reportsPremiumPage table td:last-child {
+    width: 72px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  .reportsPremiumPage .filterNotice,
+  .reportsPremiumPage .reportBadge,
+  .reportsPremiumPage .dataStatus,
+  .reportsPremiumPage .emptyNotice {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-align: center !important;
+    padding: 10px 12px !important;
+    margin: 14px 0 0 !important;
+    box-sizing: border-box !important;
+    line-height: 1.3 !important;
+  }
+
+  .reportsPremiumPage .reportSummaryCard ul,
+  .reportsPremiumPage .reportSummaryCard .summaryList,
+  .reportsPremiumPage .reportSummaryCard .reportSummaryList {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .reportsPremiumPage .reportSummaryCard li,
+  .reportsPremiumPage .reportSummaryCard p,
+  .reportsPremiumPage .reportSummaryCard .summaryItem,
+  .reportsPremiumPage .reportSummaryCard .reportSummaryItem {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 54px !important;
+    padding: 10px 0 !important;
+    overflow: visible !important;
+  }
+
+  .reportsPremiumPage .reportSummaryCard span,
+  .reportsPremiumPage .reportSummaryCard strong,
+  .reportsPremiumPage .reportSummaryCard b {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
+  }
+
+  .reportsPremiumPage .reportSummaryCard svg {
+    flex: 0 0 auto !important;
+  }
+}
