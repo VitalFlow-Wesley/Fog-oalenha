@@ -246,21 +246,30 @@
 
 .closingPage .otherDetailsPanel p {
   display: grid !important;
-  grid-template-columns: 32px minmax(0, 1fr) auto 140px !important;
-  gap: 14px !important;
+  grid-template-columns: 32px minmax(0, 1fr) minmax(220px, auto) !important;
+  grid-template-areas: "icone texto valor" "icone texto detalhe" !important;
+  gap: 4px 18px !important;
   align-items: center !important;
   padding: 14px 0 !important;
   font-size: 16px !important;
 }
 
+.closingPage .otherDetailsPanel p > svg { grid-area: icone !important; }
+.closingPage .otherDetailsPanel p > span { grid-area: texto !important; }
+
 .closingPage .otherDetailsPanel strong {
+  grid-area: valor !important;
   text-align: right !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
   font-size: 24px !important;
-  min-width: 80px !important;
+  min-width: 0 !important;
+  line-height: 1.1 !important;
 }
 
 .closingPage .otherDetailsPanel small {
+  grid-area: detalhe !important;
   text-align: right !important;
   white-space: nowrap !important;
   font-size: 13px !important;
@@ -278,6 +287,10 @@
   .closingPage .categoryLine small { text-align: left !important; }
   .closingPage .productRank { grid-template-columns: 32px minmax(0, 1fr) 42px !important; }
   .closingPage .productRank strong { grid-column: 2 / -1 !important; text-align: left !important; }
-  .closingPage .otherDetailsPanel p { grid-template-columns: 28px minmax(0, 1fr) auto !important; }
-  .closingPage .otherDetailsPanel small { grid-column: 2 / -1 !important; text-align: left !important; }
+  .closingPage .otherDetailsPanel p {
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    grid-template-areas: "icone texto" "icone valor" "icone detalhe" !important;
+  }
+  .closingPage .otherDetailsPanel strong,
+  .closingPage .otherDetailsPanel small { text-align: left !important; }
 }
