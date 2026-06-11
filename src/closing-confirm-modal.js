@@ -4,6 +4,7 @@ const CLOSINGS_KEY = 'fogao-closings-v1'
 const USERS_KEY = 'fogao-users-v1'
 const SETTINGS_KEY = 'fogao-settings-v1'
 const PRODUCTS_KEY = 'fogao-products-v1'
+let closingModalAuthorizedUntil = 0
 
 function readStored(key, fallback) {
   try {
@@ -247,6 +248,15 @@ function appendAuthorizationNote(observation) {
   noteField.dispatchEvent(new Event('input', { bubbles: true }))
 }
 
+const nativeClosingConfirm = window.confirm.bind(window)
+window.confirm = function closingConfirmBridge(message) {
+  const text = String(message || '').toLowerCase()
+  if (Date.now() < closingModalAuthorizedUntil && text.includes('caixa')) {
+    return true
+  }
+  return nativeClosingConfirm(message)
+}
+
 function enhanceClosingConfirmButtons() {
   const page = document.querySelector('.closingPage')
   if (!page) return
@@ -277,12 +287,8 @@ function enhanceClosingConfirmButtons() {
       if (!ok?.authorized) return
       if (ok.observation) appendAuthorizationNote(ok.observation)
 
-      page.classList.add('cashClosed')
-      buttons.forEach(btn => { btn.disabled = true })
-      showClosingToast('Fechando caixa e apagando mesas...')
-      await resetCashMovementAfterClose({ observation: ok.observation || '', divergent: Boolean(ok.divergent) })
-      showClosingToast(ok.divergent ? 'Caixa fechado com autorização. Novo caixa iniciado.' : 'Caixa fechado com sucesso. Novo caixa iniciado.')
-      setTimeout(() => window.location.reload(), 700)
+      closingModalAuthorizedUntil = Date.now() + 5000
+      setTimeout(() => button.click(), 60)
     }, true)
   })
 }
