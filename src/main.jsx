@@ -62,5 +62,6 @@ import './mobile-layout-fix.css'
 import './waiter-kitchen-mobile-fix.css'
 import './reports-final-actions-clean.css'
 import './closing-other-details-readable.css'
+import './waiter-persist-runtime-fix.js'
 
 createRoot(document.getElementById('root')).render(<App />)
