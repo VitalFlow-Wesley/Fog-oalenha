@@ -100,15 +100,17 @@ async function syncState() {
   }
 }
 
-function restoreClosedTable(snapshot) {
-  if (!snapshot || !snapshot.items?.length || tableTotal(snapshot) <= 0) return
+function closeKeepingValue(snapshot) {
+  if (!snapshot || !snapshot.items?.length || tableTotal(snapshot) <= 0) return false
 
   const now = new Date()
+  const closedAt = now.toISOString()
+  const closedAtLabel = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   const closedTable = {
     ...snapshot,
     status: 'fechada',
-    closedAt: now.toISOString(),
-    closedAtLabel: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    closedAt,
+    closedAtLabel,
     billRequested: false,
     kitchenSent: false,
   }
@@ -120,8 +122,8 @@ function restoreClosedTable(snapshot) {
       return {
         ...table,
         status: 'fechada',
-        closedAt: closedTable.closedAt,
-        closedAtLabel: closedTable.closedAtLabel,
+        closedAt,
+        closedAtLabel,
         billRequested: false,
         kitchenSent: false,
         mergedTo: undefined,
@@ -136,11 +138,22 @@ function restoreClosedTable(snapshot) {
   saveSalesHistory(buildRecord(closedTable, 'mesa_fechada'))
   window.dispatchEvent(new Event('storage'))
   window.dispatchEvent(new Event('fogao-tables-updated'))
-  syncState().finally(() => window.setTimeout(() => window.location.reload(), 250))
+  syncState().finally(() => window.setTimeout(() => window.location.reload(), 220))
+  return true
 }
 
 if (!window.__fogaoTableClosePersistFixInstalled) {
   window.__fogaoTableClosePersistFixInstalled = true
+  window.__fogaoCloseTableSnapshot = null
+
+  document.addEventListener('pointerdown', event => {
+    const button = event.target.closest('button')
+    if (!button) return
+    const label = button.textContent.trim().toLowerCase()
+    if (label === 'fechar mesa' || label.includes('fechar mesa')) {
+      window.__fogaoCloseTableSnapshot = getSelectedTableFromScreen()
+    }
+  }, true)
 
   document.addEventListener('click', event => {
     const button = event.target.closest('button')
@@ -149,9 +162,13 @@ if (!window.__fogaoTableClosePersistFixInstalled) {
     const label = button.textContent.trim().toLowerCase()
     if (!(label === 'fechar mesa' || label.includes('fechar mesa'))) return
 
-    const snapshot = getSelectedTableFromScreen()
+    const snapshot = window.__fogaoCloseTableSnapshot || getSelectedTableFromScreen()
     if (!snapshot || !snapshot.items?.length || tableTotal(snapshot) <= 0) return
 
-    window.setTimeout(() => restoreClosedTable(snapshot), 180)
+    event.preventDefault()
+    event.stopPropagation()
+    event.stopImmediatePropagation()
+
+    closeKeepingValue(snapshot)
   }, true)
 }
