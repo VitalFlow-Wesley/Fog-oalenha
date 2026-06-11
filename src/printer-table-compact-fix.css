@@ -502,3 +502,144 @@
     box-sizing: border-box !important;
   }
 }
+
+/* Correção final: primeiro e último card da aba Impressão no mobile */
+@media (max-width: 760px) {
+  .settingsPremiumPage,
+  .compactSettingsPage,
+  .refinedSettingsPage {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  .printSettingsTabV2 {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .printSettingsTabV2 .printPrintersBlock,
+  .printSettingsTabV2 .printFooterBlock,
+  .printSettingsTabV2 .settingsFooterActions,
+  .printSettingsTabV2 .printFooterBar,
+  .printSettingsTabV2 .settingsPanel:last-child {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printerTableV2 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow {
+    display: grid !important;
+    grid-template-columns: 26px minmax(72px, 1fr) minmax(70px, 1fr) !important;
+    grid-template-areas:
+      "icon setor status"
+      "icon nome actions" !important;
+    gap: 8px 8px !important;
+    align-items: center !important;
+    padding: 12px 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow .sectorCell {
+    grid-area: setor !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow > strong {
+    grid-area: nome !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow > em {
+    grid-area: status !important;
+    justify-self: end !important;
+    width: auto !important;
+    max-width: 92px !important;
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions {
+    grid-area: actions !important;
+    justify-self: end !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    width: auto !important;
+    max-width: 128px !important;
+    overflow: visible !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button {
+    flex: 0 0 auto !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 68px !important;
+    padding: 0 8px !important;
+    border-radius: 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button:first-child {
+    max-width: 72px !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button:not(:first-child) {
+    width: 38px !important;
+    padding: 0 !important;
+  }
+
+  .printSettingsTabV2 .printFooterBar,
+  .printSettingsTabV2 .settingsFooterActions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .printSettingsTabV2 .printFooterBar button,
+  .printSettingsTabV2 .settingsFooterActions button {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .printSettingsTabV2 .printFooterBar div,
+  .printSettingsTabV2 .settingsFooterActions div,
+  .printSettingsTabV2 .settingsTipBar,
+  .printSettingsTabV2 .tableTipBox {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .settingsTipBar,
+  .printSettingsTabV2 .tableTipBox {
+    display: grid !important;
+    grid-template-columns: 22px 1fr !important;
+    gap: 8px !important;
+    padding: 14px !important;
+  }
+}
