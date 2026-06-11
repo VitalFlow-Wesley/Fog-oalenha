@@ -62,6 +62,7 @@ import './mobile-layout-fix.css'
 import './waiter-kitchen-mobile-fix.css'
 import './waiter-kitchen-final-mobile.css'
 import './reports-final-actions-clean.css'
+import './reports-mobile-cards-fix.css'
 import './closing-other-details-readable.css'
 import './waiter-persist-runtime-fix.js'
 
