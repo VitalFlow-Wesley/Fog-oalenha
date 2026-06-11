@@ -1,17 +1,16 @@
 @media (max-width: 760px) {
-  .waiterKitchenView .kitchenOrdersLayout {
-    display: block !important;
-    grid-template-columns: 1fr !important;
+  /* ADMIN / GERENTE: lista de pedidos primeiro, resumo operacional embaixo */
+  .kitchenOrdersLayout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
   }
 
-  .waiterKitchenView .kitchenOperationalCard {
-    display: none !important;
-  }
-
-  .waiterKitchenView .kitchenOrdersList {
+  .kitchenOrdersList {
+    order: 1 !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -21,7 +20,23 @@
     overflow: visible !important;
   }
 
-  .waiterKitchenView .kitchenOrderCard {
+  .kitchenOperationalCard {
+    order: 2 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+  }
+
+  /* GARÇOM: não mostra resumo operacional, mostra só os pedidos */
+  .waiterKitchenView .kitchenOperationalCard {
+    display: none !important;
+  }
+
+  .kitchenOrderCard {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -34,7 +49,7 @@
     overflow: visible !important;
   }
 
-  .waiterKitchenView .kitchenTableBadge {
+  .kitchenTableBadge {
     grid-column: 1 !important;
     grid-row: 1 !important;
     position: static !important;
@@ -43,8 +58,8 @@
     min-width: 54px !important;
   }
 
-  .waiterKitchenView .kitchenOrderMesa,
-  .waiterKitchenView .kitchenOrderContent {
+  .kitchenOrderMesa,
+  .kitchenOrderContent {
     grid-column: 2 !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -52,13 +67,13 @@
     overflow: visible !important;
   }
 
-  .waiterKitchenView .kitchenOrderContent ul {
+  .kitchenOrderContent ul {
     width: 100% !important;
     padding-left: 18px !important;
     margin: 8px 0 10px !important;
   }
 
-  .waiterKitchenView .kitchenOrderContent li {
+  .kitchenOrderContent li {
     width: 100% !important;
     max-width: 100% !important;
     white-space: normal !important;
@@ -66,7 +81,7 @@
     line-height: 1.25 !important;
   }
 
-  .waiterKitchenView .kitchenOrderActions {
+  .kitchenOrderActions {
     grid-column: 1 / -1 !important;
     width: 100% !important;
     display: grid !important;
