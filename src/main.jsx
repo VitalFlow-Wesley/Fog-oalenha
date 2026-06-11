@@ -65,6 +65,7 @@ import './reports-final-actions-clean.css'
 import './reports-mobile-cards-fix.css'
 import './closing-other-details-readable.css'
 import './closing-mobile-cards-fix.css'
+import './closing-mobile-final-hard-fix.css'
 import './waiter-persist-runtime-fix.js'
 
 createRoot(document.getElementById('root')).render(<App />)
