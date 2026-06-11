@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fogao-a-lenha-pwa-v1'
+const CACHE_NAME = 'fogao-a-lenha-pwa-v2'
 const APP_SHELL = ['/', '/manifest.webmanifest', '/assets/logooficial.png']
 
 self.addEventListener('install', event => {
@@ -17,9 +17,26 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const { request } = event
+  const url = new URL(request.url)
 
   if (request.method !== 'GET') return
-  if (new URL(request.url).pathname.startsWith('/api/')) return
+  if (url.pathname.startsWith('/api/')) return
+
+  // Nunca servir HTML/JS/CSS antigo primeiro. Isso evita celular ficar preso em versão antiga.
+  if (
+    request.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css')
+  ) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' })
+        .then(response => response)
+        .catch(() => caches.match(request).then(cached => cached || caches.match('/')))
+    )
+    return
+  }
 
   event.respondWith(
     fetch(request)
