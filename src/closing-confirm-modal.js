@@ -22,8 +22,20 @@ function writeStored(key, value) {
   }
 }
 
-function getCashAuthPassword() {
-  return localStorage.getItem(CASH_AUTH_PASSWORD_KEY) || '1234'
+function isCashAuthorizationPassword(password) {
+  const typedPassword = String(password || '').trim()
+  if (!typedPassword) return false
+
+  const users = readStored(USERS_KEY, [])
+  if (!Array.isArray(users)) return false
+
+  return users.some(user => {
+    const role = String(user.role || '').toLowerCase()
+    const userPassword = String(user.password || user.senha || '').trim()
+    const isAuthorizedRole = ['admin', 'administrador', 'gerente', 'manager'].includes(role)
+
+    return user.active !== false && isAuthorizedRole && userPassword === typedPassword
+  })
 }
 
 function parseCashValue(text = '') {
@@ -214,8 +226,8 @@ function openClosingAuthorizationModal(difference) {
         return
       }
 
-      if (password !== getCashAuthPassword()) {
-        error.textContent = 'Senha de autorização inválida.'
+      if (!isCashAuthorizationPassword(password)) {
+        error.textContent = 'Senha inválida. Use a senha de um gerente ou administrador ativo.'
         return
       }
 
