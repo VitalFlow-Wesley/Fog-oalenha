@@ -643,3 +643,115 @@
     padding: 14px !important;
   }
 }
+
+/* Correção real do card de impressoras no mobile */
+@media (max-width: 760px) {
+  .printSettingsTabV2 .printerTableV2 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 10px !important;
+    overflow: visible !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "setor status"
+      "nome nome"
+      "acoes acoes" !important;
+    gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px !important;
+    border: 1px solid #ead8bd !important;
+    border-radius: 16px !important;
+    background: #fffdf8 !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow .sectorCell {
+    grid-area: setor !important;
+    width: auto !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow > strong {
+    grid-area: nome !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    text-align: left !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #4f3629 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow > em {
+    grid-area: status !important;
+    justify-self: end !important;
+    align-self: center !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions {
+    grid-area: acoes !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 46px 46px !important;
+    gap: 8px !important;
+    justify-self: stretch !important;
+    overflow: visible !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button {
+    width: 100% !important;
+    height: 42px !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 0 10px !important;
+    border-radius: 13px !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button:not(:first-child) {
+    padding: 0 !important;
+  }
+
+  .printSettingsTabV2 .printerTableHead {
+    display: none !important;
+  }
+
+  .printSettingsTabV2 .printPrintersBlock {
+    overflow: visible !important;
+  }
+
+  .printSettingsTabV2 .printPrintersBlock .addPrinterBtn {
+    border-radius: 14px !important;
+    margin-bottom: 12px !important;
+  }
+}
