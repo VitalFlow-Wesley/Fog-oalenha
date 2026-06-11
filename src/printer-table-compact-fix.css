@@ -197,3 +197,119 @@
     justify-content: flex-start !important;
   }
 }
+/* Correção mobile: evita cards cortados na aba Impressão */
+.printSettingsTabV2,
+.printSettingsTabV2 * {
+  box-sizing: border-box !important;
+}
+
+.printSettingsTabV2 {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.printSettingsTabV2 .settingsPanel,
+.printSettingsTabV2 .printBlock,
+.printSettingsTabV2 .printPrintersBlock,
+.printSettingsTabV2 .printRulesBlock,
+.printSettingsTabV2 .printTypesBlock,
+.printSettingsTabV2 .receiptModelCard {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.printSettingsTabV2 .printerTableV2 {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.printSettingsTabV2 .printRulesLayout,
+.printSettingsTabV2 .receiptPreviewLayout {
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+@media (max-width: 760px) {
+  .printSettingsTabV2 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .printSettingsTabV2 .settingsPanel {
+    padding: 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .printSettingsTabV2 .printBlockHeader {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .printSettingsTabV2 .printNumberTitle {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .printSettingsTabV2 .printNumberTitle h2 {
+    font-size: clamp(24px, 7vw, 34px) !important;
+    line-height: 1.05 !important;
+    word-break: normal !important;
+  }
+
+  .printSettingsTabV2 .addPrinterBtn,
+  .printSettingsTabV2 .primaryBtn,
+  .printSettingsTabV2 .secondaryBtn {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .printSettingsTabV2 .printerTableHead {
+    display: none !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button {
+    flex: 1 1 90px !important;
+  }
+
+  .printSettingsTabV2 select,
+  .printSettingsTabV2 input,
+  .printSettingsTabV2 textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .printSettingsTabV2 .receiptPreview,
+  .printSettingsTabV2 .receiptPreviewThermal {
+    width: 100% !important;
+    max-width: 280px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .printSettingsTabV2 .printTypeRow {
+    grid-template-columns: 1fr auto !important;
+  }
+}
