@@ -313,3 +313,192 @@
     grid-template-columns: 1fr auto !important;
   }
 }
+
+/* Correção definitiva mobile - Aba Impressão sem corte lateral */
+@media (max-width: 760px) {
+  html,
+  body,
+  #root,
+  .appShell,
+  .content,
+  .page,
+  .settingsPremiumPage,
+  .compactSettingsPage,
+  .refinedSettingsPage {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .settingsPremiumPage {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .settingsTabs,
+  .settingsTabsLarge {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .settingsTabs button,
+  .settingsTabsLarge button {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    white-space: nowrap !important;
+  }
+
+  .printSettingsTabV2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .settingsPanel,
+  .printSettingsTabV2 .printBlock,
+  .printSettingsTabV2 .printPrintersBlock,
+  .printSettingsTabV2 .printRulesBlock,
+  .printSettingsTabV2 .printTypesBlock,
+  .printSettingsTabV2 .receiptModelCard {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding: 18px !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printNumberTitle {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .printSettingsTabV2 .printNumberTitle h2 {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: clamp(25px, 8vw, 34px) !important;
+    line-height: 1.05 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .printSettingsTabV2 .printerTableV2 {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    border-radius: 18px !important;
+  }
+
+  .printSettingsTabV2 .printerTableHead {
+    display: none !important;
+  }
+
+  .printSettingsTabV2 .printerTableRow {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .sectorCell,
+  .printSettingsTabV2 .printerTableRow strong,
+  .printSettingsTabV2 .printerTableRow em {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 44px 44px !important;
+    gap: 8px !important;
+  }
+
+  .printSettingsTabV2 .printerTableActions button {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .printSettingsTabV2 .addPrinterBtn,
+  .printSettingsTabV2 .primaryBtn,
+  .printSettingsTabV2 .secondaryBtn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .printSettingsTabV2 .printRulesLayout,
+  .printSettingsTabV2 .receiptPreviewLayout {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .printSettingsTabV2 .printRulesSelects,
+  .printSettingsTabV2 .rulesFields,
+  .printSettingsTabV2 .currentRulesBox,
+  .printSettingsTabV2 .receiptSideConfig {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 label,
+  .printSettingsTabV2 select,
+  .printSettingsTabV2 input,
+  .printSettingsTabV2 textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printTypeRow {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .printSettingsTabV2 .printTypeRow div,
+  .printSettingsTabV2 .printTypeRow strong,
+  .printSettingsTabV2 .printTypeRow span {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .printSettingsTabV2 .receiptPreview,
+  .printSettingsTabV2 .receiptPreviewThermal {
+    width: 100% !important;
+    max-width: 280px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+  }
+}
