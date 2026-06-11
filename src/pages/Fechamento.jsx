@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertCircle, CalendarDays, DollarSign, FileDown, Flame, LockKeyhole, Printer, ReceiptText, Star, Table2, Users } from 'lucide-react'
+import { AlertCircle, CalendarDays, CheckCircle2, DollarSign, FileDown, Flame, LockKeyhole, Printer, ReceiptText, ShieldCheck, Star, Table2, Users, X } from 'lucide-react'
 
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const parseCurrency = value => {
@@ -10,6 +10,27 @@ const parseCurrency = value => {
   return Number(raw) || 0
 }
 const todayInput = () => new Date().toISOString().slice(0, 10)
+const managerRoles = ['admin', 'administrador', 'gerente', 'manager']
+
+function getStoredUsers(fallbackUsers = []) {
+  try {
+    const stored = JSON.parse(localStorage.getItem('fogao-users-v1') || 'null')
+    if (Array.isArray(stored)) return stored
+    if (Array.isArray(stored?.users)) return stored.users
+  } catch {
+    return fallbackUsers
+  }
+
+  return fallbackUsers
+}
+
+function validateManagerPassword(password, users = []) {
+  return getStoredUsers(users).find(user => {
+    const role = String(user.role || '').toLowerCase()
+    const userPassword = user.password ?? user.senha
+    return user.active !== false && managerRoles.includes(role) && String(userPassword || '') === password
+  })
+}
 
 function getTableTotal(table) {
   return (table.items || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
@@ -135,6 +156,10 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   const [closed, setClosed] = useState(false)
   const [closingMessage, setClosingMessage] = useState('')
   const [isClosing, setIsClosing] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [authPassword, setAuthPassword] = useState('')
+  const [authObservation, setAuthObservation] = useState('')
+  const [modalError, setModalError] = useState('')
 
   const received = {
     dinheiro: parseCurrency(reportedPayments.dinheiro),
@@ -145,6 +170,7 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   const informedTotal = Object.values(received).reduce((sum, value) => sum + value, 0)
   const difference = informedTotal - data.total
   const differenceOk = Math.abs(difference) < 0.01
+  const hasDivergence = !differenceOk
   const receivedData = { ...data, payments: received, total: informedTotal }
 
   function setPayment(key, value) {
@@ -152,22 +178,49 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   }
   function handlePrint() { window.print() }
   function handlePdf() { window.print() }
-  async function closeCash() {
+  function openCloseModal() {
     if (isClosing || closed) return
-    const hasMovement = data.openTables > 0 || data.total > 0 || data.totalOrders > 0
-    const divergenceWarning = differenceOk ? '' : `\n\nAtenção: existe uma divergência de ${money(difference)} entre o valor lançado nas mesas e o valor informado no caixa. A divergência ficará registrada no fechamento.`
-    const message = hasMovement
-      ? `Existem ${data.openTables} mesa(s) abertas ou com movimentação. Ao confirmar, todas serão fechadas, os pedidos serão limpos e o salão será zerado para iniciar um novo caixa.${divergenceWarning}`
-      : `Fechar o caixa mesmo sem movimentação?${divergenceWarning}`
-    if (!window.confirm(message)) return
+    setModalError('')
+    setAuthPassword('')
+    setAuthObservation(note)
+    setModalOpen(true)
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setModalError('')
+    setAuthPassword('')
+  }
+
+  async function confirmCloseCash() {
+    if (isClosing || closed) return
+    const cleanObservation = authObservation.trim()
+    let authorizedBy = null
+    let closingNote = note.trim()
+
+    if (hasDivergence) {
+      if (!cleanObservation) {
+        setModalError('Informe uma observação explicando a divergência.')
+        return
+      }
+
+      authorizedBy = validateManagerPassword(authPassword)
+      if (!authorizedBy) {
+        setModalError('Senha inválida. Use a senha de um gerente ou administrador ativo.')
+        return
+      }
+
+      closingNote = `Divergência autorizada por gerente/admin. Observação: ${cleanObservation}`
+    }
 
     setIsClosing(true)
     try {
-      await onCloseCash?.({ date, payments: received, note })
+      await onCloseCash?.({ date, payments: received, note: closingNote })
       setClosed(true)
       setReportedPayments({ dinheiro: '', pix: '', cartao: '', outros: '' })
-      setNote('')
+      setNote(closingNote)
       setClosingMessage(differenceOk ? 'Caixa fechado com sucesso. O histórico do dia foi salvo e um novo caixa foi iniciado.' : `Caixa fechado com divergência de ${money(difference)}. O histórico do dia foi salvo e um novo caixa foi iniciado.`)
+      closeModal()
     } catch (error) {
       setClosingMessage(`Caixa fechado localmente, mas houve falha ao sincronizar: ${error.message}`)
       setClosed(true)
@@ -181,7 +234,7 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
 
     <section className="closingMainGrid"><div className="closingPanel daySummary"><h2><span><Flame size={20} /></span>Resumo do dia</h2><div className="closingMiniGrid compactClosingSummary"><MiniSummary icon={DollarSign} title="Faturamento total" value={money(data.total)} /><MiniSummary icon={Table2} title="Mesas fechadas" value={data.closedTables} tone="orange" /><MiniSummary icon={Table2} title="Mesas abertas" value={data.openTables} tone="yellow" /><MiniSummary icon={ReceiptText} title="Total de itens" value={data.totalOrders} tone="blue" /></div><div className="ticketAverage"><span><Star size={17} /> Ticket médio</span><strong>{money(data.ticketAverage)}</strong></div><div className="ticketAverage topWaiterHighlight"><span><Users size={17} /> Garçom destaque</span><strong>{data.topWaiter.name} · {data.topWaiter.tables} mesa{data.topWaiter.tables === 1 ? '' : 's'} · {money(data.topWaiter.total)}</strong></div></div>
 
-      <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><p className="conferenceHint">Informe dinheiro, PIX, cartão e outros recebimentos. Se houver divergência, o caixa ainda pode ser fechado e a diferença ficará registrada no histórico.</p><div className="cashRows paymentConferenceGrid"><label><span>Dinheiro recebido</span><input value={reportedPayments.dinheiro} onChange={e => setPayment('dinheiro', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>PIX recebido</span><input value={reportedPayments.pix} onChange={e => setPayment('pix', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Cartões recebidos</span><input value={reportedPayments.cartao} onChange={e => setPayment('cartao', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Outros recebimentos</span><input value={reportedPayments.outros} onChange={e => setPayment('outros', e.target.value)} disabled={closed} placeholder="0,00" /></label></div><div className="cashTotalsGrid"><p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p><p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p><p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>Observação (opcional):</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={closeCash} disabled={closed || isClosing}><LockKeyhole size={19} /> {isClosing ? 'Fechando caixa...' : differenceOk ? 'Conferir e fechar caixa' : 'Fechar caixa com divergência'}</button></div></section>
+      <div className="closingPanel cashConference"><h2><span><LockKeyhole size={20} /></span>Conferência do caixa</h2><p className="conferenceHint">Informe dinheiro, PIX, cartão e outros recebimentos. Se houver divergência, o caixa ainda pode ser fechado e a diferença ficará registrada no histórico.</p><div className="cashRows paymentConferenceGrid"><label><span>Dinheiro recebido</span><input value={reportedPayments.dinheiro} onChange={e => setPayment('dinheiro', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>PIX recebido</span><input value={reportedPayments.pix} onChange={e => setPayment('pix', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Cartões recebidos</span><input value={reportedPayments.cartao} onChange={e => setPayment('cartao', e.target.value)} disabled={closed} placeholder="0,00" /></label><label><span>Outros recebimentos</span><input value={reportedPayments.outros} onChange={e => setPayment('outros', e.target.value)} disabled={closed} placeholder="0,00" /></label></div><div className="cashTotalsGrid"><p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p><p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p><p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p></div><label className="noteField"><span>{hasDivergence ? 'Observação obrigatória:' : 'Observação (opcional):'}</span><textarea placeholder="Digite alguma observação sobre o fechamento..." value={note} onChange={e => setNote(e.target.value)} disabled={closed} /></label><button type="button" className="primaryClosingBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={19} /> {isClosing ? 'Fechando caixa...' : differenceOk ? 'Conferir e fechar caixa' : 'Fechar caixa com divergência'}</button></div></section>
 
     <section className="closingDetailsGrid"><div className="closingPanel paymentPanel"><h3>Recebimentos informados</h3><PaymentVisual data={receivedData} /></div><div className="closingPanel categoryPanel"><h3>Vendas por categoria</h3><CategoryBars categories={data.categories} total={data.categoryTotal} /></div><div className="closingPanel topProductsPanel"><h3>Produtos mais vendidos por quantidade</h3><ProductRanking products={data.topProductsByQty} /></div><div className="closingPanel topProductsRevenuePanel"><h3>Produtos com maior faturamento</h3><ProductRanking products={data.topProductsByRevenue} /></div><div className="closingPanel otherDetailsPanel"><h3>Outros detalhes</h3><p><Users size={17} /><span>Garçom que mais vendeu</span><strong>{data.topWaiter.name}</strong><small>{data.topWaiter.tables} mesa{data.topWaiter.tables === 1 ? '' : 's'} · {money(data.topWaiter.total)}</small></p><p><AlertCircle size={17} /><span>Itens cancelados</span><strong>{data.cancelledItems.qty}</strong><small>{money(data.cancelledItems.total)}</small></p><p><Star size={17} /><span>Descontos concedidos</span><strong>{data.discounts.qty}</strong><small>{money(data.discounts.total)}</small></p><p><Printer size={17} /><span>Reimpressões</span><strong>{data.reprints}</strong><small>ações</small></p><p><Flame size={17} /><span>Pedidos enviados para preparo</span><strong>{data.sentToKitchen}</strong><small>itens</small></p></div></section>
 
@@ -223,6 +276,42 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
       <p className="printFooter">Relatório gerado pelo sistema Fogão a Lenha.</p>
     </div>
 
-    <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={closeCash} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
+    <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" onClick={handlePdf}><FileDown size={20} /> Exportar PDF</button><button type="button" className="closeDayBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
+
+    {modalOpen && <style>{`.closingModalOverlay{position:fixed;inset:0;z-index:80;background:rgba(31,16,10,.62);display:grid;place-items:center;padding:18px;backdrop-filter:blur(3px)}.closingModalCard{width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid #ead7bf;background:linear-gradient(135deg,#fffdf8,#fff4e4);box-shadow:0 28px 70px rgba(31,16,10,.32);padding:24px;position:relative;color:#351b12}.closingModalCard.hasDivergence{border-color:#e7b18d}.closingModalClose{position:absolute;right:16px;top:16px;width:38px;height:38px;border:1px solid #ead7bf;border-radius:999px;background:#fffaf2;color:#5a2d1f;display:grid;place-items:center;cursor:pointer}.closingModalHeader{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;align-items:center;margin-right:34px}.closingModalHeader>span{width:48px;height:48px;border-radius:16px;background:#f8e8d8;color:#bd381d;display:grid;place-items:center}.closingModalHeader h2{margin:0;font-family:Georgia,serif;font-size:28px;line-height:1.05;color:#32180f}.closingModalHeader p{margin:6px 0 0;color:#7b6253;font-weight:700}.closingModalAlert{margin-top:18px;border:1px solid #f1b38e;border-radius:16px;background:#fff0e6;color:#9d2e1c;padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-weight:900}.closingModalSummary{margin-top:18px;display:grid;gap:10px}.closingModalSummary p{margin:0;display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid #ead7bf;border-radius:14px;background:#fffaf2;padding:12px 14px}.closingModalSummary span{font-weight:850;color:#5a4033}.closingModalSummary strong{font-size:18px;color:#2f1a12;text-align:right}.closingModalSummary strong.negative{color:#d2472b}.closingModalSummary strong.positive{color:#52740f}.closingModalFields{display:grid;gap:12px;margin-top:18px}.closingModalFields label{display:grid;gap:7px;font-weight:900;color:#3b261d}.closingModalFields input,.closingModalFields textarea{width:100%;border:1px solid #e2cdb3;border-radius:13px;background:#fffaf4;color:#32180f;padding:12px 13px;font-size:15px}.closingModalFields textarea{min-height:96px;resize:vertical}.closingModalNote{margin-top:16px;border-radius:14px;background:#fffaf2;border:1px solid #ead7bf;padding:12px 14px;display:grid;gap:4px}.closingModalError{margin-top:14px;border:1px solid #efb3a0;border-radius:14px;background:#fff0eb;color:#a93420;padding:12px 14px;display:flex;gap:9px;align-items:center;font-weight:900}.closingModalActions{margin-top:20px;display:grid;grid-template-columns:1fr 1.35fr;gap:12px}.closingModalActions button{height:50px;border-radius:14px;font-weight:950;font-size:15px;cursor:pointer}.closingCancelBtn{border:1px solid #e2cdb3;background:#fffaf4;color:#4a2b1f}.closingConfirmBtn{border:0;background:linear-gradient(135deg,#bd381d,#f05a36);color:#fff;box-shadow:0 12px 24px rgba(199,65,35,.22)}@media(max-width:640px){.closingModalOverlay{padding:10px;place-items:end center}.closingModalCard{border-radius:20px 20px 0 0;padding:20px 16px}.closingModalHeader{grid-template-columns:40px minmax(0,1fr);gap:11px}.closingModalHeader>span{width:40px;height:40px;border-radius:13px}.closingModalHeader h2{font-size:24px}.closingModalSummary p{display:grid;gap:4px}.closingModalSummary strong{text-align:left}.closingModalActions{grid-template-columns:1fr}}`}</style>}
+    {modalOpen && <div className="closingModalOverlay" role="dialog" aria-modal="true" aria-labelledby="closingModalTitle">
+      <div className={`closingModalCard ${hasDivergence ? 'hasDivergence' : ''}`}>
+        <button type="button" className="closingModalClose" onClick={closeModal} aria-label="Fechar"><X size={20} /></button>
+        <div className="closingModalHeader">
+          <span>{hasDivergence ? <ShieldCheck size={24} /> : <CheckCircle2 size={24} />}</span>
+          <div>
+            <h2 id="closingModalTitle">{hasDivergence ? 'Autorização necessária' : 'Confirmar fechamento'}</h2>
+            <p>{hasDivergence ? 'Existe diferença no caixa. Confirme os valores e autorize o fechamento.' : 'Revise o resumo antes de fechar o caixa do dia.'}</p>
+          </div>
+        </div>
+
+        {hasDivergence && <div className="closingModalAlert"><AlertCircle size={20} /> As mesas serão fechadas, pedidos limpos e o salão será zerado ao confirmar.</div>}
+
+        <div className="closingModalSummary">
+          <p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p>
+          <p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p>
+          <p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p>
+          <p><span>Mesas abertas/com movimentação</span><strong>{data.openTables}</strong></p>
+        </div>
+
+        {hasDivergence && <div className="closingModalFields">
+          <label><span>Senha de autorização</span><input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} autoFocus /></label>
+          <label><span>Observação obrigatória</span><textarea value={authObservation} onChange={e => setAuthObservation(e.target.value)} placeholder="Explique a divergência encontrada no caixa." /></label>
+        </div>}
+
+        {!hasDivergence && note.trim() && <div className="closingModalNote"><strong>Observação</strong><span>{note.trim()}</span></div>}
+        {modalError && <div className="closingModalError"><AlertCircle size={18} /> {modalError}</div>}
+
+        <div className="closingModalActions">
+          <button type="button" className="closingCancelBtn" onClick={closeModal}>Cancelar</button>
+          <button type="button" className="closingConfirmBtn" onClick={confirmCloseCash} disabled={isClosing}>{hasDivergence ? 'Autorizar e fechar caixa' : 'Confirmar fechamento'}</button>
+        </div>
+      </div>
+    </div>}
   </div>
 }
