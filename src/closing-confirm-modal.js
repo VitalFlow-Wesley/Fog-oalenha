@@ -241,7 +241,8 @@ function enhanceClosingConfirmButtons() {
 
   const buttons = Array.from(page.querySelectorAll('button')).filter(button =>
     button.textContent.trim().includes('Fechar caixa do dia') ||
-    button.textContent.trim().includes('Conferir e fechar caixa')
+    button.textContent.trim().includes('Conferir e fechar caixa') ||
+    button.textContent.trim().includes('Fechar caixa com divergência')
   )
 
   buttons.forEach(button => {
