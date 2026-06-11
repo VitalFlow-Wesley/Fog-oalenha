@@ -37,6 +37,14 @@ function getItemTotal(item) {
   return Number(item.price || 0) * Number(item.qty || 0)
 }
 
+function getTableTotal(table) {
+  return (table.items || []).reduce((sum, item) => sum + getItemTotal(item), 0)
+}
+
+function hasTableMovement(table) {
+  return table.status !== 'livre' || getTableTotal(table) > 0 || Number(table.guests || 0) > 0 || Boolean(table.items?.length)
+}
+
 function getSector(item) {
   const category = String(item.category || '').toLowerCase()
   const local = String(item.localSaida || item.sector || '').toLowerCase()
@@ -73,16 +81,51 @@ function groupBy(items, getKey) {
   }, {})).sort((a, b) => b.total - a.total)
 }
 
+function getTableWaiter(table) {
+  return table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom'
+}
+
 function normalizeHistoryRecord(record) {
   const total = Number(record.total || 0)
+  const status = record.status || (record.type === 'mesa_aberta' ? 'aberta' : 'fechada')
+  const waiterName = record.waiterName || 'Sem garçom'
   return {
     ...record,
     total,
-    status: 'fechada',
+    status,
     number: record.tableNumber,
     guests: Number(record.guests || 0),
-    waiterName: record.waiterName || 'Sem garçom',
-    items: (record.items || []).map(item => ({ ...item, sector: getSector(item), tableNumber: record.tableNumber, waiterName: record.waiterName || 'Sem garçom' })),
+    waiterName,
+    items: (record.items || []).map(item => ({ ...item, sector: getSector(item), tableNumber: record.tableNumber, waiterName })),
+  }
+}
+
+function buildActiveRecord(table) {
+  const total = getTableTotal(table)
+  const waiterName = getTableWaiter(table)
+  return {
+    id: `open-${table.id || table.number}`,
+    type: 'mesa_aberta',
+    status: 'aberta',
+    date: todayKey(),
+    tableId: table.id,
+    tableNumber: table.number,
+    guests: Number(table.guests || 0),
+    waiterName,
+    total,
+    closedAt: table.openedAt || new Date().toISOString(),
+    closedAtLabel: table.openedAt || table.kitchenSentAt || new Date().toISOString(),
+    items: (table.items || []).map(item => ({
+      id: item.id,
+      name: item.name || 'Produto',
+      qty: Number(item.qty || 0),
+      price: Number(item.price || 0),
+      category: item.category || 'Outros',
+      sector: item.sector || item.localSaida || '',
+      localSaida: item.localSaida || item.sector || '',
+      imprimeCozinha: Boolean(item.imprimeCozinha),
+      observation: item.observation || '',
+    })),
   }
 }
 
@@ -104,7 +147,7 @@ function buildReportFromHistory(records = []) {
   const salesByTable = salesTables.map(table => {
     const sectorsText = [...new Set(table.items.map(item => item.sector))].join(', ') || '-'
     const itemsQty = table.items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
-    return { number: table.tableNumber, status: 'fechada', total: table.total, items: itemsQty, orders: table.items.length, sectorsText, guests: table.guests, waiterName: table.waiterName, closedAtLabel: table.closedAtLabel }
+    return { number: table.tableNumber, status: table.status || 'fechada', total: table.total, items: itemsQty, orders: table.items.length, sectorsText, guests: table.guests, waiterName: table.waiterName, closedAtLabel: table.closedAtLabel }
   }).sort((a, b) => b.total - a.total)
   const waiterRanking = Object.values(salesByTable.reduce((acc, table) => {
     const name = table.waiterName
@@ -118,8 +161,10 @@ function buildReportFromHistory(records = []) {
     const count = salesTables.filter(table => Number(String(table.closedAtLabel || '').slice(11, 13)) === hour || Number(String(table.closedAt || '').slice(11, 13)) === hour).length
     return { label: `${hour}h`, count }
   })
+  const closedTables = salesTables.filter(table => table.status === 'fechada')
+  const openTables = salesTables.filter(table => table.status === 'aberta')
 
-  return { salesTables, sentTables: salesTables, closedTables: salesTables, items, total, ordersQty, ticket, topProductsByRevenue, topProductsByQty, categories, sectors, salesByTable, waiterRanking, topWaiter: waiterRanking[0], topTable: salesByTable[0], topProductByRevenue: topProductsByRevenue[0], topProductByQty: topProductsByQty[0], hours }
+  return { salesTables, sentTables: salesTables, closedTables, openTables, items, total, ordersQty, ticket, topProductsByRevenue, topProductsByQty, categories, sectors, salesByTable, waiterRanking, topWaiter: waiterRanking[0], topTable: salesByTable[0], topProductByRevenue: topProductsByRevenue[0], topProductByQty: topProductsByQty[0], hours }
 }
 
 function SummaryCard({ icon: Icon, title, value, detail, tone = 'fire' }) {
@@ -137,7 +182,7 @@ function SectorIcon({ name }) {
   return <Martini size={22} />
 }
 
-export default function Relatorios() {
+export default function Relatorios({ tables = [] }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
   const [selectedDate, setSelectedDate] = useState(() => localStorage.getItem('fogao-reports-date') || todayKey())
@@ -166,9 +211,14 @@ export default function Relatorios() {
     }
   }, [])
 
-  const recordsForDate = useMemo(() => history.filter(record => record.date === selectedDate), [history, selectedDate])
+  const activeRecords = useMemo(() => {
+    if (selectedDate !== todayKey()) return []
+    return (tables || []).filter(hasTableMovement).map(buildActiveRecord).filter(record => record.items.length || record.total > 0)
+  }, [tables, selectedDate])
+  const recordsForDate = useMemo(() => [...history.filter(record => record.date === selectedDate), ...activeRecords], [history, selectedDate, activeRecords])
   const report = useMemo(() => buildReportFromHistory(recordsForDate), [recordsForDate])
   const dateLabel = formatDateBR(selectedDate)
+  const hasMovement = recordsForDate.length > 0
 
   function handleDateChange(event) {
     const value = event.target.value || todayKey()
@@ -183,7 +233,7 @@ export default function Relatorios() {
   const summaryCards = [
     { title: 'Faturamento total', value: money(report.total), detail: `Movimentação de ${dateLabel}`, icon: WalletCards, tone: 'fire' },
     { title: 'Pedidos lançados', value: report.ordersQty, detail: 'Itens vendidos no período', icon: ReceiptText, tone: 'orange' },
-    { title: 'Mesas atendidas', value: report.salesTables.length, detail: 'Mesas fechadas no período', icon: Table2, tone: 'green' },
+    { title: 'Mesas atendidas', value: report.salesTables.length, detail: 'Mesas com movimento no período', icon: Table2, tone: 'green' },
     { title: 'Ticket médio', value: money(report.ticket), detail: 'Por mesa atendida', icon: ClipboardList, tone: 'gold' },
     { title: 'Maior valor de mesa', value: money(report.topTable?.total || 0), detail: report.topTable ? `Mesa ${report.topTable.number} · ${report.topTable.guests || 0} pessoas` : 'Sem mesa', icon: Star, tone: 'fire' },
     { title: 'Produto mais vendido', value: report.topProductByQty?.name || '-', detail: report.topProductByQty ? `${report.topProductByQty.qty} unidades · ${money(report.topProductByQty.total)}` : 'Sem vendas', icon: PackageCheck, tone: 'orange' },
@@ -210,8 +260,8 @@ export default function Relatorios() {
           <div className="reportsSummaryGrid simpleSummaryGrid">{summaryCards.slice(0, 4).map(card => <SummaryCard key={card.title} {...card} />)}</div>
           <section className="reportPanel simpleSectorPanel"><h2><BarChart3 size={22} /> Resumo por setor</h2><div className="simpleSectorGrid">{report.sectors.map(sector => <div className="simpleSectorCard" key={sector.name}><div><SectorIcon name={sector.name} /></div><strong>{sector.name}</strong><span>{sector.qty} itens</span><i /> <b>{money(sector.total)}</b></div>)}</div></section>
           <div className="reportsMainGrid simpleReportGrid">
-            <section className="reportPanel productsPanel"><div className="reportPanelHeader"><div><BarChart3 size={24} /><h2>Produtos mais lançados</h2></div><div className="periodTabs noPrint">{['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>)}</div></div><div className="premiumReportTable simpleProductsTable"><div className="premiumReportRow head"><span>Produto</span><span>Qtd</span><span>Setor</span><span>Total</span></div>{report.topProductsByQty.length ? report.topProductsByQty.slice(0, 5).map(item => { const first = item.items?.[0] || {}; return <div className="premiumReportRow" key={item.name}><span>{item.name}</span><span>{item.qty}</span><span><em>{first.sector || '-'}</em></span><span>{money(item.total)}</span></div> }) : <div className="premiumReportRow"><span>Nenhum produto vendido nessa data</span><span>0</span><span><em>-</em></span><span>{money(0)}</span></div>}</div><div className="liveDataPill"><CheckCircle2 size={15} /> {recordsForDate.length ? `Movimentação carregada de ${dateLabel}` : `Nenhuma movimentação salva em ${dateLabel}`}</div></section>
-            <aside className="reportPanel reportResumePanel simpleResumePanel"><div className="reportPanelHeader compact"><div><ClipboardList size={24} /><h2>Resumo do relatório</h2></div></div><div className="reportResumeList"><div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div><div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>{report.sectors.map(sector => <div key={sector.name}><span><SectorIcon name={sector.name} /> Itens do {sector.name.toLowerCase()}</span><strong>{sector.qty}</strong></div>)}<div><span><Table2 size={18} /> Mesas atendidas</span><strong>{report.salesTables.length}</strong></div></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório baseado no histórico salvo.</div></aside>
+            <section className="reportPanel productsPanel"><div className="reportPanelHeader"><div><BarChart3 size={24} /><h2>Produtos mais lançados</h2></div><div className="periodTabs noPrint">{['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>)}</div></div><div className="premiumReportTable simpleProductsTable"><div className="premiumReportRow head"><span>Produto</span><span>Qtd</span><span>Setor</span><span>Total</span></div>{report.topProductsByQty.length ? report.topProductsByQty.slice(0, 5).map(item => { const first = item.items?.[0] || {}; return <div className="premiumReportRow" key={item.name}><span>{item.name}</span><span>{item.qty}</span><span><em>{first.sector || '-'}</em></span><span>{money(item.total)}</span></div> }) : <div className="premiumReportRow"><span>Nenhum produto vendido nessa data</span><span>0</span><span><em>-</em></span><span>{money(0)}</span></div>}</div><div className="liveDataPill"><CheckCircle2 size={15} /> {hasMovement ? `Movimentação carregada de ${dateLabel}` : `Nenhuma movimentação salva em ${dateLabel}`}</div></section>
+            <aside className="reportPanel reportResumePanel simpleResumePanel"><div className="reportPanelHeader compact"><div><ClipboardList size={24} /><h2>Resumo do relatório</h2></div></div><div className="reportResumeList"><div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div><div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>{report.sectors.map(sector => <div key={sector.name}><span><SectorIcon name={sector.name} /> Itens do {sector.name.toLowerCase()}</span><strong>{sector.qty}</strong></div>)}<div><span><Table2 size={18} /> Mesas atendidas</span><strong>{report.salesTables.length}</strong></div></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório baseado no histórico salvo e mesas abertas.</div></aside>
           </div>
         </>
       ) : (
@@ -222,10 +272,10 @@ export default function Relatorios() {
             <section className="reportPanel categoryPanelComplete"><h2>Categorias mais consumidas</h2><div className="categoryBars">{report.categories.length ? report.categories.slice(0, 6).map(item => <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent(item.total, report.total)}</b></div><div className="progress"><span style={{ width: percent(item.total, report.total) }} /></div><small>{money(item.total)} · {item.qty} itens</small></div>) : <p>Nenhuma categoria vendida nessa data.</p>}</div></section>
             <section className="reportPanel quantityProductsComplete"><h2>Produtos mais vendidos por quantidade</h2><ProductTable products={report.topProductsByQty} type="qty" /></section>
             <section className="reportPanel revenueProductsComplete"><h2>Produtos com maior faturamento</h2><ProductTable products={report.topProductsByRevenue} type="revenue" /></section>
-            <section className="reportPanel tablePerformanceComplete"><h2>Desempenho das mesas</h2><div className="completeTable tablesCompleteTable"><div className="completeTableRow head"><span>Mesa</span><span>Total consumido</span><span>Itens</span><span>Pedidos</span><span>Setores</span><span>Garçom</span><span>Situação</span></div>{report.salesByTable.length ? report.salesByTable.slice(0, 7).map(table => <div className="completeTableRow" key={`${table.number}-${table.closedAtLabel}`}><span>Mesa {table.number}</span><span>{money(table.total)}</span><span>{table.items}</span><span>{table.orders}</span><span>{table.sectorsText}</span><span>{table.waiterName}</span><span><em className="success">Fechada</em></span></div>) : <div className="completeTableRow"><span>-</span><span>{money(0)}</span><span>0</span><span>0</span><span>-</span><span>-</span><span><em>Sem venda</em></span></div>}</div></section>
+            <section className="reportPanel tablePerformanceComplete"><h2>Desempenho das mesas</h2><div className="completeTable tablesCompleteTable"><div className="completeTableRow head"><span>Mesa</span><span>Total consumido</span><span>Itens</span><span>Pedidos</span><span>Setores</span><span>Garçom</span><span>Situação</span></div>{report.salesByTable.length ? report.salesByTable.slice(0, 7).map(table => <div className="completeTableRow" key={`${table.number}-${table.status}-${table.closedAtLabel}`}><span>Mesa {table.number}</span><span>{money(table.total)}</span><span>{table.items}</span><span>{table.orders}</span><span>{table.sectorsText}</span><span>{table.waiterName}</span><span><em className={table.status === 'aberta' ? 'warning' : 'success'}>{table.status === 'aberta' ? 'Aberta' : 'Fechada'}</em></span></div>) : <div className="completeTableRow"><span>-</span><span>{money(0)}</span><span>0</span><span>0</span><span>-</span><span>-</span><span><em>Sem venda</em></span></div>}</div></section>
             <section className="reportPanel movementPanel"><h2>Horários de maior movimento</h2><div className="movementChart">{report.hours.map(hour => <div key={hour.label}><span style={{ height: `${Math.max(8, hour.count * 24)}px` }} /><small>{hour.label}</small></div>)}</div></section>
-            <section className="reportPanel indicatorsPanel"><h2>Indicadores gerais</h2><div className="indicatorRows"><p><span>Total de comandas fechadas</span><strong>{report.closedTables.length}</strong></p><p><span>Total de itens vendidos</span><strong>{report.ordersQty}</strong></p><p><span>Ticket médio por mesa</span><strong>{money(report.ticket)}</strong></p><p><span>Média de itens por mesa</span><strong>{report.salesTables.length ? (report.ordersQty / report.salesTables.length).toFixed(1).replace('.', ',') : '0,0'}</strong></p></div></section>
-            <section className="reportPanel generalSummaryPanel"><h2>Resumo geral</h2><div className="indicatorRows"><p><span>Faturamento total</span><strong>{money(report.total)}</strong></p><p><span>Mesa destaque</span><strong>{report.topTable ? `Mesa ${report.topTable.number} · ${money(report.topTable.total)}` : '-'}</strong></p><p><span>Mais vendido em quantidade</span><strong>{report.topProductByQty ? `${report.topProductByQty.name} · ${report.topProductByQty.qty} un.` : '-'}</strong></p><p><span>Maior faturamento</span><strong>{report.topProductByRevenue ? `${report.topProductByRevenue.name} · ${money(report.topProductByRevenue.total)}` : '-'}</strong></p><p><span>Garçom destaque</span><strong>{report.topWaiter ? `${report.topWaiter.name} · ${report.topWaiter.tables} mesas · ${money(report.topWaiter.total)}` : '-'}</strong></p></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório gerado com o histórico salvo de {dateLabel}.</div></section>
+            <section className="reportPanel indicatorsPanel"><h2>Indicadores gerais</h2><div className="indicatorRows"><p><span>Total de comandas com movimento</span><strong>{report.salesTables.length}</strong></p><p><span>Total de itens vendidos</span><strong>{report.ordersQty}</strong></p><p><span>Ticket médio por mesa</span><strong>{money(report.ticket)}</strong></p><p><span>Média de itens por mesa</span><strong>{report.salesTables.length ? (report.ordersQty / report.salesTables.length).toFixed(1).replace('.', ',') : '0,0'}</strong></p></div></section>
+            <section className="reportPanel generalSummaryPanel"><h2>Resumo geral</h2><div className="indicatorRows"><p><span>Faturamento total</span><strong>{money(report.total)}</strong></p><p><span>Mesa destaque</span><strong>{report.topTable ? `Mesa ${report.topTable.number} · ${money(report.topTable.total)}` : '-'}</strong></p><p><span>Mais vendido em quantidade</span><strong>{report.topProductByQty ? `${report.topProductByQty.name} · ${report.topProductByQty.qty} un.` : '-'}</strong></p><p><span>Maior faturamento</span><strong>{report.topProductByRevenue ? `${report.topProductByRevenue.name} · ${money(report.topProductByRevenue.total)}` : '-'}</strong></p><p><span>Garçom destaque</span><strong>{report.topWaiter ? `${report.topWaiter.name} · ${report.topWaiter.tables} mesas · ${money(report.topWaiter.total)}` : '-'}</strong></p></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório gerado com histórico salvo e mesas abertas de {dateLabel}.</div></section>
           </div>
         </>
       )}
