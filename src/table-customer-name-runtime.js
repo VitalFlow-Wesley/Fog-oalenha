@@ -1,5 +1,4 @@
 const TABLES_KEY = 'fogao-tables-v1'
-const REOPEN_KEY = 'fogao-reopen-table-after-customer-name'
 
 function readTables() {
   try {
@@ -96,9 +95,8 @@ function openCustomerEditor(drawer) {
       saveButton.disabled = true
       saveButton.textContent = 'Salvando...'
       saveTables(nextTables)
-      sessionStorage.setItem(REOPEN_KEY, number)
       close()
-      window.setTimeout(() => window.location.reload(), 120)
+      window.setTimeout(scheduleEnhance, 40)
     } catch {
       saveButton.disabled = false
       saveButton.textContent = 'Salvar nome'
@@ -133,9 +131,9 @@ function enhanceDrawer() {
   const table = findTable(number)
   if (!table) return
 
+  let subtitle = titleRow.querySelector('.tableCustomerSubtitle')
   if (table.customerName) {
     if (title.textContent !== table.customerName) title.textContent = table.customerName
-    let subtitle = titleRow.querySelector('.tableCustomerSubtitle')
     if (!subtitle) {
       subtitle = document.createElement('small')
       subtitle.className = 'tableCustomerSubtitle'
@@ -143,6 +141,10 @@ function enhanceDrawer() {
     }
     const subtitleText = `Mesa ${table.number}`
     if (subtitle.textContent !== subtitleText) subtitle.textContent = subtitleText
+  } else {
+    const defaultTitle = `Mesa ${table.number}${table.mergedTableNumbers?.length ? ` + ${table.mergedTableNumbers.join(' + ')}` : ''}`
+    if (title.textContent !== defaultTitle) title.textContent = defaultTitle
+    subtitle?.remove()
   }
 
   if (!titleRow.querySelector('.tableCustomerEditBtn')) {
@@ -198,26 +200,6 @@ function clearNamesFromFreeTables() {
   if (changed) saveTables(normalized)
 }
 
-function reopenAfterReload() {
-  const number = sessionStorage.getItem(REOPEN_KEY)
-  if (!number) return
-  let attempts = 0
-  const timer = setInterval(() => {
-    attempts += 1
-    const card = Array.from(document.querySelectorAll('.restaurantTableCard')).find(element => (
-      element.querySelector('.tableTop strong')?.textContent?.includes(`Mesa ${number}`)
-    ))
-    if (card) {
-      sessionStorage.removeItem(REOPEN_KEY)
-      card.click()
-      clearInterval(timer)
-    } else if (attempts > 20) {
-      sessionStorage.removeItem(REOPEN_KEY)
-      clearInterval(timer)
-    }
-  }, 150)
-}
-
 function enhance() {
   enhanceDrawer()
   enhanceCards()
@@ -245,4 +227,3 @@ document.addEventListener('keydown', event => {
 })
 setInterval(clearNamesFromFreeTables, 2500)
 setTimeout(scheduleEnhance, 250)
-setTimeout(reopenAfterReload, 300)
