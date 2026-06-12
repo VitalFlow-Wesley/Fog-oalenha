@@ -88,6 +88,51 @@
   line-height: 1 !important;
 }
 
+/* Mesas fechadas do dia: ocupar toda a largura do relatório */
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 14px 16px !important;
+  overflow: hidden !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow h2 {
+  margin: 0 !important;
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow > span {
+  flex: 0 0 auto !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  background: #fff0cf !important;
+  color: #a55a16 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportTable {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportTable .completeTableRow {
+  grid-template-columns: 90px minmax(120px, 1fr) 90px 70px minmax(150px, 1.2fr) 100px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
 @media (max-width: 1280px) {
   .reportsPremiumPage.completeReportPage .completeSummaryGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -101,6 +146,19 @@
 
   .reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportTable {
+    overflow-x: auto !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportTable .completeTableRow {
+    min-width: 720px !important;
   }
 }
 
