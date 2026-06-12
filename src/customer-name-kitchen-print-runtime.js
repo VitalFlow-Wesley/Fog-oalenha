@@ -90,11 +90,14 @@ function enhanceLastOrder() {
 function enhancePrintBlocks() {
   document.querySelectorAll('.customerBillPrint').forEach(printBlock => {
     const paragraphs = Array.from(printBlock.querySelectorAll(':scope > p'))
-    const mesaParagraph = paragraphs.find(paragraph => /Mesa\s*:/i.test(paragraph.textContent))
+    const mesaParagraph = paragraphs.find(paragraph => /^\s*Mesa\s*:/i.test(paragraph.textContent || ''))
     if (!mesaParagraph) return
 
     const customerName = customerNameForText(mesaParagraph.textContent)
-    let customerParagraph = printBlock.querySelector('.printCustomerName')
+    const customerLines = paragraphs.filter(paragraph => /^\s*Cliente\s*:/i.test(paragraph.textContent || ''))
+    let customerParagraph = customerLines[0] || null
+
+    customerLines.slice(1).forEach(line => line.remove())
 
     if (!customerName) {
       customerParagraph?.remove()
@@ -104,9 +107,15 @@ function enhancePrintBlocks() {
     if (!customerParagraph) {
       customerParagraph = document.createElement('p')
       customerParagraph.className = 'printCustomerName'
+    } else {
+      customerParagraph.classList.add('printCustomerName')
+    }
+
+    customerParagraph.innerHTML = `<strong>Cliente:</strong> ${customerName}`
+
+    if (mesaParagraph.nextElementSibling !== customerParagraph) {
       mesaParagraph.insertAdjacentElement('afterend', customerParagraph)
     }
-    customerParagraph.innerHTML = `<strong>Cliente:</strong> ${customerName}`
   })
 }
 
