@@ -1,3 +1,5 @@
+import './command-mobile-compact.css'
+
 let scrollPosition = 0
 let modalLocked = false
 
