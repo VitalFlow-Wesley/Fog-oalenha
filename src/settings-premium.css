@@ -335,6 +335,110 @@
 .settingsSuccess { background: #edf6e8; color: #426b3e; }
 .settingsError { background: #ffe2d4; color: #b94220; }
 
+.settingsEditModal {
+  width: min(540px, 94vw);
+  display: grid;
+  gap: 12px;
+}
+
+.settingsEditModal .drawerHeader,
+.permissionsReactModal .drawerHeader {
+  margin-bottom: 4px;
+}
+
+.settingsEditModal label {
+  display: grid;
+  gap: 7px;
+  color: #4d3528;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.settingsEditModal input,
+.settingsEditModal select {
+  min-height: 44px;
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  background: #fffdf8;
+  color: #2a160e;
+  padding: 0 13px;
+  font-size: 15px;
+  outline: none;
+}
+
+.settingsEditModal input:focus,
+.settingsEditModal select:focus {
+  border-color: #d25b35;
+  box-shadow: 0 0 0 3px rgba(210, 91, 53, .14);
+}
+
+.settingsEditModal .switchRow {
+  grid-template-columns: 44px 1fr;
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  background: rgba(255, 248, 237, .72);
+  padding: 9px 11px;
+}
+
+.permissionsReactModal {
+  width: min(880px, 96vw);
+  max-height: min(720px, 92vh);
+  overflow: auto;
+}
+
+.permissionsRoleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 12px 0 18px;
+}
+
+.permissionsRoleCard {
+  border: 1px solid #ead7bf;
+  border-radius: 18px;
+  background: rgba(255, 253, 248, .9);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.permissionsRoleCard h4 {
+  margin: 0;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+}
+
+.permissionsRoleCard small {
+  color: #7d6758;
+  line-height: 1.35;
+}
+
+.permissionsChecks {
+  display: grid;
+  gap: 9px;
+}
+
+.permissionsChecks label {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #f0deca;
+  border-radius: 12px;
+  background: #fff8ed;
+  color: #4d3528;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.permissionsChecks input {
+  width: 16px;
+  height: 16px;
+  accent-color: #c24928;
+}
+
 @media (max-width: 1100px) {
   .settingsTopHeader { flex-direction: column; }
   .systemActiveCard { min-width: 0; width: 100%; max-width: 360px; }
@@ -343,6 +447,7 @@
   .tablesSettingsLayout,
   .printerRegistryGrid,
   .printerRouteGrid,
+  .permissionsRoleGrid,
   .systemSettingsGridV2,
   .securityGrid { grid-template-columns: 1fr 1fr; }
   .accessMainGrid,.tablesSettingsLayout { grid-template-columns: 1fr; }
@@ -363,6 +468,7 @@
   .registeredTablesRow,
   .printerRegistryGrid,
   .printerRouteGrid,
+  .permissionsRoleGrid,
   .establishmentGrid,
   .systemSettingsGridV2,
   .securityGrid { grid-template-columns: 1fr; }

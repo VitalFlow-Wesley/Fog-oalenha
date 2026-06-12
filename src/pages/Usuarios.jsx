@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, Plus, Printer, ReceiptText, RefreshCw, Save, Search, Settings, ShieldCheck, Store, Trash2, UserCog, Utensils } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, Plus, Printer, ReceiptText, RefreshCw, Save, Search, Settings, ShieldCheck, Store, Trash2, UserCog, Utensils, X } from 'lucide-react'
 
 const roleLabel = { admin: 'Administrador', gerente: 'Gerente', garcom: 'Garçom' }
 const basePrinters = [
@@ -12,6 +12,14 @@ const basePrinters = [
 const productCategories = ['Refeições', 'Churrasco', 'Sucos', 'Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas', 'Outros']
 const productSectors = ['Cozinha', 'Churrasco', 'Sucos', 'Bar / Caixa']
 const noPrepareCategories = ['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas']
+const PRODUCTS_KEY = 'fogao-products-v1'
+const PRODUCT_SETTINGS_KEY = 'fogao-a-lenha-products-settings'
+const PERMISSIONS_KEY = 'fogao-role-permissions-v1'
+const defaultPermissions = {
+  admin: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
+  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios'],
+  garcom: ['Lançar pedidos', 'Solicitar conta'],
+}
 const initialProducts = [
   { id: 1, name: 'Galinha caipira', category: 'Refeições', sector: 'Cozinha', price: 55, prepare: true, status: 'Ativo' },
   { id: 2, name: 'Picanha', category: 'Churrasco', sector: 'Churrasco', price: 85, prepare: true, status: 'Ativo' },
@@ -21,6 +29,48 @@ const initialProducts = [
   { id: 6, name: 'Batata frita', category: 'Refeições', sector: 'Cozinha', price: 25, prepare: true, status: 'Ativo' },
   { id: 7, name: 'Salgadinho de queijo', category: 'Salgadinhos', sector: 'Bar / Caixa', price: 12, prepare: false, status: 'Ativo' },
 ]
+
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Mantem a tela funcionando mesmo se o armazenamento local falhar.
+  }
+}
+
+function normalizeProduct(product) {
+  const category = product.category === 'Churrascos' ? 'Churrasco' : (product.category || 'Outros')
+  const sector = product.sector || product.localSaida || inferProductConfig(category).sector
+  const prepare = product.prepare ?? product.imprimeCozinha ?? !noPrepareCategories.includes(category)
+  return {
+    ...product,
+    category,
+    sector,
+    localSaida: product.localSaida || sector,
+    prepare,
+    imprimeCozinha: prepare,
+    status: product.status || 'Ativo',
+  }
+}
+
+function loadProducts() {
+  const saved = readJson(PRODUCTS_KEY, null) || readJson(PRODUCT_SETTINGS_KEY, null)
+  return Array.isArray(saved) && saved.length ? saved.map(normalizeProduct) : initialProducts.map(normalizeProduct)
+}
+
+function loadPermissions() {
+  const saved = readJson(PERMISSIONS_KEY, {})
+  return { ...defaultPermissions, ...saved }
+}
 
 function normalizeSettings(settings) {
   const printers = settings?.printers?.length ? settings.printers : basePrinters
@@ -104,10 +154,15 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [showPasswords, setShowPasswords] = useState({ manager: false, new: false, confirm: false, form: false })
   const [systemMessage, setSystemMessage] = useState('')
   const [cancelMessage, setCancelMessage] = useState('')
-  const [products, setProducts] = useState(initialProducts)
+  const [products, setProducts] = useState(loadProducts)
   const [productForm, setProductForm] = useState({ name: '', category: '', sector: '', price: '', prepare: '', status: 'Ativo' })
   const [productSearch, setProductSearch] = useState('')
   const [productStatusFilter, setProductStatusFilter] = useState('Todos os status')
+  const [productPage, setProductPage] = useState(1)
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [editingUser, setEditingUser] = useState(null)
+  const [permissionsOpen, setPermissionsOpen] = useState(false)
+  const [permissions, setPermissions] = useState(loadPermissions)
 
   const canManage = currentUser?.role === 'admin'
   const canChangeSensitive = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
@@ -125,6 +180,10 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       return matchesStatus && matchesTerm
     })
   }, [products, productSearch, productStatusFilter])
+  const productsPerPage = 7
+  const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage))
+  const safeProductPage = Math.min(productPage, totalProductPages)
+  const paginatedProducts = filteredProducts.slice((safeProductPage - 1) * productsPerPage, safeProductPage * productsPerPage)
 
   const printerAssignments = [
     { key: 'caixa', sector: 'Caixa', icon: ReceiptText, field: 'cashierPrinterId', description: 'Comanda do cliente sai em' },
@@ -142,11 +201,48 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
 
   const permissionOptions = ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários']
 
+  useEffect(() => {
+    const normalized = products.map(normalizeProduct)
+    writeJson(PRODUCTS_KEY, normalized)
+    writeJson(PRODUCT_SETTINGS_KEY, normalized)
+    window.dispatchEvent(new Event('fogao-products-updated'))
+  }, [products])
+
+  useEffect(() => {
+    setProductPage(1)
+  }, [productSearch, productStatusFilter])
+
+  useEffect(() => {
+    writeJson(PERMISSIONS_KEY, permissions)
+  }, [permissions])
+
   function addUser(e) {
     e.preventDefault()
     if (!canManage || !form.name || !form.username || !form.password) return
     setUsers(prev => [...prev, { id: Date.now(), ...form, active: true }])
     setForm({ name: '', username: '', password: '', role: 'garcom' })
+  }
+
+  function saveEditedUser(event) {
+    event.preventDefault()
+    if (!editingUser?.name?.trim() || !editingUser?.username?.trim()) return
+    const duplicated = users.some(user => user.id !== editingUser.id && user.username?.trim().toLowerCase() === editingUser.username.trim().toLowerCase())
+    if (duplicated) {
+      setSystemMessage('Já existe outro usuário com esse login.')
+      setTimeout(() => setSystemMessage(''), 2500)
+      return
+    }
+    setUsers(prev => prev.map(user => user.id === editingUser.id ? {
+      ...user,
+      name: editingUser.name.trim(),
+      username: editingUser.username.trim(),
+      role: editingUser.role,
+      active: editingUser.active !== false,
+      ...(editingUser.password ? { password: editingUser.password } : {}),
+    } : user))
+    setEditingUser(null)
+    setSystemMessage('Acesso atualizado com sucesso.')
+    setTimeout(() => setSystemMessage(''), 2500)
   }
 
   function generateTableConfigs(qty = tableQty) {
@@ -199,21 +295,44 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   function addProduct(e) {
     e.preventDefault()
     if (!productForm.name.trim()) return
-    const product = { id: Date.now(), name: productForm.name.trim(), category: productForm.category || 'Outros', sector: productForm.sector || 'Bar / Caixa', price: parsePrice(productForm.price), prepare: productForm.prepare === 'Sim', status: productForm.status || 'Ativo' }
+    const product = normalizeProduct({ id: Date.now(), name: productForm.name.trim(), category: productForm.category || 'Outros', sector: productForm.sector || 'Bar / Caixa', price: parsePrice(productForm.price), prepare: productForm.prepare === 'Sim', status: productForm.status || 'Ativo' })
     setProducts(prev => [product, ...prev])
     setProductForm({ name: '', category: '', sector: '', price: '', prepare: '', status: 'Ativo' })
   }
 
   function editProduct(product) {
-    const nextName = window.prompt('Nome do produto:', product.name)
-    if (!nextName) return
-    const nextPrice = window.prompt('Preço do produto:', String(product.price).replace('.', ','))
-    setProducts(prev => prev.map(item => item.id === product.id ? { ...item, name: nextName, price: parsePrice(nextPrice || item.price) } : item))
+    setEditingProduct({ ...normalizeProduct(product), priceText: String(product.price || '').replace('.', ','), deleteMode: false })
   }
 
   function deleteProduct(product) {
-    if (!window.confirm(`Excluir ${product.name}?`)) return
-    setProducts(prev => prev.filter(item => item.id !== product.id))
+    setEditingProduct({ ...normalizeProduct(product), priceText: String(product.price || '').replace('.', ','), deleteMode: true })
+  }
+
+  function saveEditedProduct(event) {
+    event.preventDefault()
+    if (!editingProduct) return
+    if (editingProduct.deleteMode) {
+      setProducts(prev => prev.filter(item => item.id !== editingProduct.id))
+      setEditingProduct(null)
+      return
+    }
+    if (!editingProduct.name?.trim()) return
+    const nextProduct = normalizeProduct({
+      ...editingProduct,
+      name: editingProduct.name.trim(),
+      price: parsePrice(editingProduct.priceText),
+      prepare: editingProduct.prepare === true || editingProduct.prepare === 'Sim',
+    })
+    setProducts(prev => prev.map(item => item.id === editingProduct.id ? nextProduct : item))
+    setEditingProduct(null)
+  }
+
+  function savePermissions(event) {
+    event.preventDefault()
+    writeJson(PERMISSIONS_KEY, permissions)
+    setPermissionsOpen(false)
+    setSystemMessage('Permissões salvas com sucesso.')
+    setTimeout(() => setSystemMessage(''), 2500)
   }
 
   return <div className="page settingsPremiumPage compactSettingsPage refinedSettingsPage">
@@ -227,14 +346,54 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       <button className={activeTab === 'sistema' ? 'active' : ''} onClick={() => setActiveTab('sistema')}><Settings size={18} /> Sistema</button>
     </nav>
 
-    {activeTab === 'colaboradores' && <div className="accessSettingsTab"><section className="accessSummaryGrid"><div className="accessSummaryCard"><UserCog size={22} /><div><span>Total de usuários</span><strong>{totalUsers}</strong><small>Usuários cadastrados</small></div></div><div className="accessSummaryCard"><ShieldCheck size={22} /><div><span>Administradores</span><strong>{totalAdmins}</strong><small>Acesso total ao sistema</small></div></div><div className="accessSummaryCard"><Utensils size={22} /><div><span>Garçons</span><strong>{totalWaiters}</strong><small>Acessos de atendimento</small></div></div></section><div className="accessMainGrid">{canManage && <section className="settingsPanel accessCreatePanel"><div className="settingsPanelTitle"><Plus size={22} /><h2>Criar novo acesso</h2></div><form className="settingsForm accessCreateForm" onSubmit={addUser}><label><span>Nome completo</span><input placeholder="Ex.: João da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label><span>Login</span><input placeholder="Ex.: joao.silva" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label><label className="span2"><span>Senha</span><div className="passwordInputWrap"><input type={showPasswords.form ? 'text' : 'password'} placeholder="Digite uma senha" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, form: !prev.form }))}>{showPasswords.form ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label><label className="span2"><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label><div className="permissionsChecklist"><strong>Permissões</strong>{permissionOptions.map((item, index) => <label key={item}><input type="checkbox" defaultChecked={index < 2 || form.role === 'admin'} /> {item}</label>)}</div><button className="primaryBtn"><Plus size={18} /> Criar acesso</button></form></section>}<section className="settingsPanel accessListPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div><div className="accessTable"><div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>{users.map(user => <div className="accessTableRow" key={user.id}><div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div><span>{user.username}</span><b>{roleLabel[user.role]}</b><em>● Ativo</em><div className="accessActions"><button type="button"><Pencil size={16} /></button>{canManage && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => setUsers(prev => prev.filter(u => u.id !== user.id))}><Trash2 size={16} /></button>}</div></div>)}</div><div className="permissionsInfoBox"><ShieldCheck size={20} /><div><strong>Permissões por função</strong><span>As permissões definem o que cada função pode acessar e executar no sistema.</span></div><button type="button">Gerenciar permissões</button></div></section></div><div className="settingsTipBar"><AlertTriangle size={18} /><strong>Dica</strong><span>Mantenha os acessos organizados e revise as permissões periodicamente para garantir a segurança do sistema.</span></div></div>}
+    {activeTab === 'colaboradores' && <div className="accessSettingsTab"><section className="accessSummaryGrid"><div className="accessSummaryCard"><UserCog size={22} /><div><span>Total de usuários</span><strong>{totalUsers}</strong><small>Usuários cadastrados</small></div></div><div className="accessSummaryCard"><ShieldCheck size={22} /><div><span>Administradores</span><strong>{totalAdmins}</strong><small>Acesso total ao sistema</small></div></div><div className="accessSummaryCard"><Utensils size={22} /><div><span>Garçons</span><strong>{totalWaiters}</strong><small>Acessos de atendimento</small></div></div></section><div className="accessMainGrid">{canManage && <section className="settingsPanel accessCreatePanel"><div className="settingsPanelTitle"><Plus size={22} /><h2>Criar novo acesso</h2></div><form className="settingsForm accessCreateForm" onSubmit={addUser}><label><span>Nome completo</span><input placeholder="Ex.: João da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label><span>Login</span><input placeholder="Ex.: joao.silva" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label><label className="span2"><span>Senha</span><div className="passwordInputWrap"><input type={showPasswords.form ? 'text' : 'password'} placeholder="Digite uma senha" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, form: !prev.form }))}>{showPasswords.form ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label><label className="span2"><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label><div className="permissionsChecklist"><strong>Permissões</strong>{permissionOptions.map((item, index) => <label key={item}><input type="checkbox" defaultChecked={index < 2 || form.role === 'admin'} /> {item}</label>)}</div><button className="primaryBtn"><Plus size={18} /> Criar acesso</button></form></section>}<section className="settingsPanel accessListPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div><div className="accessTable"><div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>{users.map(user => <div className="accessTableRow" key={user.id}><div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div><span>{user.username}</span><b>{roleLabel[user.role]}</b><em>{user.active === false ? '● Inativo' : '● Ativo'}</em><div className="accessActions"><button type="button" onClick={() => setEditingUser({ ...user, password: '' })}><Pencil size={16} /></button>{canManage && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => setUsers(prev => prev.filter(u => u.id !== user.id))}><Trash2 size={16} /></button>}</div></div>)}</div><div className="permissionsInfoBox"><ShieldCheck size={20} /><div><strong>Permissões por função</strong><span>As permissões definem o que cada função pode acessar e executar no sistema.</span></div><button type="button" onClick={() => setPermissionsOpen(true)}>Gerenciar permissões</button></div></section></div><div className="settingsTipBar"><AlertTriangle size={18} /><strong>Dica</strong><span>Mantenha os acessos organizados e revise as permissões periodicamente para garantir a segurança do sistema.</span></div></div>}
 
     {activeTab === 'mesas' && <div className="tablesSettingsPage"><section className="tableSummaryGrid"><div className="tableSummaryCard"><Utensils size={22} /><span>Mesas cadastradas</span><strong>{tableConfigs.length}</strong></div><div className="tableSummaryCard positive"><CheckCircle2 size={22} /><span>Mesas ativas</span><strong>{activeTables.length}</strong></div><div className="tableSummaryCard join"><KeyRound size={22} /><span>Juntar mesas</span><strong>{allowJoinTables ? 'Permitido' : 'Desativado'}</strong></div></section><div className="tablesSettingsLayout"><div className="tablesLeftColumn"><section className="settingsPanel tableConfigPanel"><div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Configuração das mesas</h2></div><div className="tableConfigGrid"><label><span>Quantidade de mesas do salão</span><input type="number" min="1" max="80" value={tableQty} onChange={e => setTableQty(e.target.value)} /></label><label><span>Prefixo das mesas</span><input value={tablePrefix} onChange={e => setTablePrefix(e.target.value)} /></label><label><span>Numeração inicial</span><input value={tableStart} onChange={e => setTableStart(e.target.value)} /></label></div><div className="tableToggles"><label><input type="checkbox" checked={autoNumberTables} onChange={e => setAutoNumberTables(e.target.checked)} /> Gerar numeração automática</label><label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label><label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label></div><div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div></section><section className="settingsPanel tablePreviewPanel"><div className="settingsPanelTitle"><Eye size={22} /><h2>Prévia das mesas cadastradas</h2></div><div className="tablePreviewGrid">{visibleTableConfigs.slice(0, 24).map(table => <span className={!table.active ? 'inactive' : ''} key={table.id}><Utensils size={14} /> {table.displayName}</span>)}</div></section></div><section className="settingsPanel registeredTablesPanel"><div className="settingsPanelTitle"><Utensils size={22} /><h2>Mesas cadastradas</h2></div><div className="registeredTablesTable"><div className="registeredTablesHead"><span>Mesa</span><span>Nome exibido</span><span>Status</span><span>Pode juntar</span><span>Ações</span></div>{visibleTableConfigs.slice(0, 8).map(table => <div className="registeredTablesRow" key={table.id}><span>{table.number}</span><strong>{table.displayName}</strong><button type="button" className={`miniStatus ${table.active ? 'active' : 'inactive'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, active: !item.active } : item))}>{table.active ? 'Ativa' : 'Inativa'}</button><button type="button" className={`miniStatus ${table.canJoin ? 'active' : 'blocked'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, canJoin: !item.canJoin } : item))}>{table.canJoin ? 'Sim' : 'Não'}</button><div className="tableRowActions"><button type="button" onClick={() => editTableName(table.id)}><Pencil size={15} /> Editar</button>{tableConfigs.length > 1 && <button type="button" className="dangerOutline" onClick={() => setTableConfigs(prev => prev.filter(item => item.id !== table.id))}><Trash2 size={15} /></button>}</div></div>)}</div><div className="tablePaginationHint">Mostrando {Math.min(visibleTableConfigs.length, 8)} de {visibleTableConfigs.length} mesas</div></section></div><div className="tableTipBox"><AlertTriangle size={18} /><span>Dica: organize nomes personalizados para mesas especiais e revise permissões de junção conforme o fluxo do salão.</span></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
 
     {activeTab === 'impressao' && <div className="printSettingsTab printSettingsTabV2"><section className="settingsPanel printBlock printPrintersBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>1. Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div><div className="printerTableV2"><div className="printerTableHead"><span>Setor</span><span>Impressora vinculada</span><span>Status</span><span>Ações</span></div>{printerAssignments.map(row => { const Icon = row.icon; const printer = printerOptions.find(p => p.id === systemForm[row.field]); return <div className="printerTableRow" key={row.key}><span className="sectorCell"><Icon size={16} /> {row.sector}</span><strong>{printer?.name || 'Não definida'}</strong><em>● Online</em><div className="printerTableActions"><button type="button" onClick={() => testPrinter(printer?.name || row.sector)}><Printer size={15} /> Testar</button><button type="button" onClick={() => { const name = window.prompt('Nome da impressora:', printer?.name || ''); if (name && printer) updatePrinterName(printer.id, name) }}><Pencil size={15} /></button><button type="button" className="iconDanger" disabled={!printer || printerOptions.length <= 1} onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div></div> })}</div></section><section className="settingsPanel printBlock printRulesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>2. Regras de impressão por setor</h2></div><div className="printRulesLayout"><div className="printRulesSelects">{printerAssignments.filter(row => row.key !== 'caixa').map(row => <label key={row.key}><span>{row.description}</span><select value={systemForm[row.field]} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>)}<label><span>Comanda do cliente sai em</span><select value={systemForm.cashierPrinterId} onChange={e => setSystemForm({ ...systemForm, cashierPrinterId: e.target.value })}>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="currentRulesBox"><CheckCircle2 size={20} /><strong>Regras atuais</strong><ul><li>Pedidos de preparo são enviados para os setores configurados.</li><li>Comanda do cliente é impressa no caixa para conferência.</li><li>Itens do bar permanecem apenas na comanda do cliente.</li></ul></div></div></section><section className="settingsPanel printBlock printTypesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>3. Tipos de impressão</h2></div><div className="printTypeList"><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Pedido de preparo</strong><span>Impressão dos itens enviados para cozinha, churrasco ou sucos.</span></div><ActiveToggle active={systemForm.printKitchenItems} onClick={() => setSystemForm(prev => ({ ...prev, printKitchenItems: !prev.printKitchenItems }))} /></div><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Comanda do cliente</strong><span>Impressão da comanda completa do cliente no caixa.</span></div><ActiveToggle active={systemForm.printFullReceipt} onClick={() => setSystemForm(prev => ({ ...prev, printFullReceipt: !prev.printFullReceipt }))} /></div><div className="printTypeRow"><RefreshCw size={20} /><div><strong>Reimpressão</strong><span>Permitir reimpressão de pedidos e comandas.</span></div><ActiveToggle active={systemForm.allowReprint} onClick={() => setSystemForm(prev => ({ ...prev, allowReprint: !prev.allowReprint }))} /></div></div></section><section className="settingsPanel printBlock receiptModelBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>4. Modelo da comanda do cliente</h2></div><button type="button" className="editReceiptBtn"><Pencil size={15} /> Editar modelo</button></div><div className="receiptPreviewLayout"><div className="receiptPreview"><h3>FOGÃO A LENHA</h3><p>Churrascaria & Restaurante</p><small>CNPJ: {systemForm.cnpj || '12.345.678/0001-90'}</small><hr /><div><span>Mesa: 05</span><span>Data: 25/05/2024 13:45</span></div><p>1x Picanha <b>R$ 85,00</b></p><p>2x Refrigerante <b>R$ 18,00</b></p><p>1x Suco Natural <b>R$ 12,00</b></p><hr /><strong className="receiptTotal">TOTAL <b>R$ 115,00</b></strong><em>{systemForm.receiptMessage || 'Obrigado pela preferência!\nVolte sempre!'}</em></div><div className="receiptInfoList"><strong>Informações exibidas</strong>{['Nome do estabelecimento','CNPJ','Mesa','Data e hora','Itens do pedido','Total','Mensagem final'].map(item => <span key={item}><CheckCircle2 size={15} /> {item}</span>)}</div></div></section><div className="printFooterBar"><div><AlertTriangle size={18} /><strong>Dica:</strong><span>Configure corretamente as impressoras e regras para garantir que os pedidos sejam enviados para os setores certos.</span></div><div><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
 
-    {activeTab === 'produtos' && <div className="productsSettingsTab"><div className="productsTopGrid"><section className="settingsPanel productCreatePanel"><div className="settingsPanelTitle"><Store size={22} /><h2>Cadastro de produto</h2></div><form className="productForm" onSubmit={addProduct}><label><span>Nome do produto</span><input placeholder="Ex.: Picanha" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} /></label><label><span>Categoria</span><select value={productForm.category} onChange={e => handleProductCategory(e.target.value)}><option value="">Selecione a categoria</option>{productCategories.map(category => <option key={category}>{category}</option>)}</select></label><label><span>Setor de impressão</span><select value={productForm.sector} onChange={e => setProductForm({ ...productForm, sector: e.target.value })}><option value="">Selecione o setor</option>{productSectors.map(sector => <option key={sector}>{sector}</option>)}</select></label><label><span>Preço (R$)</span><input placeholder="0,00" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} /></label><label><span>Vai para preparo?</span><select value={productForm.prepare} onChange={e => setProductForm({ ...productForm, prepare: e.target.value })}><option value="">Selecione</option><option>Sim</option><option>Não</option></select></label><label><span>Status</span><select value={productForm.status} onChange={e => setProductForm({ ...productForm, status: e.target.value })}><option>Ativo</option><option>Inativo</option></select></label><button className="primaryBtn addProductBtn"><Plus size={18} /> Adicionar produto</button></form></section><aside className="settingsPanel productTipsPanel"><div className="settingsPanelTitle"><CheckCircle2 size={22} /><h2>Dicas rápidas</h2></div><ul><li>Produtos que vão para preparo serão enviados para o setor selecionado.</li><li>Itens do bar normalmente não vão para preparo.</li><li>Mantenha os preços sempre atualizados.</li></ul></aside></div><section className="settingsPanel productsListPanel"><div className="productsListHeader"><div className="settingsPanelTitle"><Store size={22} /><h2>Lista de produtos cadastrados</h2></div><div className="productsFilters"><label><Search size={15} /><input placeholder="Buscar produto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} /></label><select value={productStatusFilter} onChange={e => setProductStatusFilter(e.target.value)}><option>Todos os status</option><option>Ativo</option><option>Inativo</option></select></div></div><div className="productsTable"><div className="productsTableHead"><span>Produto</span><span>Categoria</span><span>Setor</span><span>Preço</span><span>Vai para preparo?</span><span>Status</span><span>Ações</span></div>{filteredProducts.slice(0, 7).map(product => <div className="productsTableRow" key={product.id}><span className="productNameCell">{product.name}</span><span>{product.category}</span><span className="productSectorCell"><ProductSectorIcon sector={product.sector} /> {product.sector}</span><span>{formatMoney(product.price)}</span><span><em className={`prepareBadge ${product.prepare ? 'yes' : 'no'}`}>{product.prepare ? 'Sim' : 'Não'}</em></span><span><em className={`statusBadge ${product.status === 'Ativo' ? 'active' : 'inactive'}`}>{product.status}</em></span><span className="productActions"><button type="button" onClick={() => editProduct(product)}><Pencil size={15} /></button><button type="button" onClick={() => deleteProduct(product)}><Trash2 size={15} /></button></span></div>)}</div><footer className="productsPagination"><span>Mostrando {filteredProducts.length ? 1 : 0} a {Math.min(filteredProducts.length, 7)} de {Math.max(products.length, 37)} produtos</span><div><button disabled>Anterior</button><button className="active">1</button><button>2</button><button>3</button><button>...</button><button>6</button><button>Próxima</button></div></footer></section></div>}
+    {activeTab === 'produtos' && <div className="productsSettingsTab"><div className="productsTopGrid"><section className="settingsPanel productCreatePanel"><div className="settingsPanelTitle"><Store size={22} /><h2>Cadastro de produto</h2></div><form className="productForm" onSubmit={addProduct}><label><span>Nome do produto</span><input placeholder="Ex.: Picanha" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} /></label><label><span>Categoria</span><select value={productForm.category} onChange={e => handleProductCategory(e.target.value)}><option value="">Selecione a categoria</option>{productCategories.map(category => <option key={category}>{category}</option>)}</select></label><label><span>Setor de impressão</span><select value={productForm.sector} onChange={e => setProductForm({ ...productForm, sector: e.target.value })}><option value="">Selecione o setor</option>{productSectors.map(sector => <option key={sector}>{sector}</option>)}</select></label><label><span>Preço (R$)</span><input placeholder="0,00" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} /></label><label><span>Vai para preparo?</span><select value={productForm.prepare} onChange={e => setProductForm({ ...productForm, prepare: e.target.value })}><option value="">Selecione</option><option>Sim</option><option>Não</option></select></label><label><span>Status</span><select value={productForm.status} onChange={e => setProductForm({ ...productForm, status: e.target.value })}><option>Ativo</option><option>Inativo</option></select></label><button className="primaryBtn addProductBtn"><Plus size={18} /> Adicionar produto</button></form></section><aside className="settingsPanel productTipsPanel"><div className="settingsPanelTitle"><CheckCircle2 size={22} /><h2>Dicas rápidas</h2></div><ul><li>Produtos que vão para preparo serão enviados para o setor selecionado.</li><li>Itens do bar normalmente não vão para preparo.</li><li>Mantenha os preços sempre atualizados.</li></ul></aside></div><section className="settingsPanel productsListPanel"><div className="productsListHeader"><div className="settingsPanelTitle"><Store size={22} /><h2>Lista de produtos cadastrados</h2></div><div className="productsFilters"><label><Search size={15} /><input placeholder="Buscar produto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} /></label><select value={productStatusFilter} onChange={e => setProductStatusFilter(e.target.value)}><option>Todos os status</option><option>Ativo</option><option>Inativo</option></select></div></div><div className="productsTable"><div className="productsTableHead"><span>Produto</span><span>Categoria</span><span>Setor</span><span>Preço</span><span>Vai para preparo?</span><span>Status</span><span>Ações</span></div>{paginatedProducts.map(product => <div className="productsTableRow" key={product.id}><span className="productNameCell">{product.name}</span><span>{product.category}</span><span className="productSectorCell"><ProductSectorIcon sector={product.sector} /> {product.sector}</span><span>{formatMoney(product.price)}</span><span><em className={`prepareBadge ${product.prepare ? 'yes' : 'no'}`}>{product.prepare ? 'Sim' : 'Não'}</em></span><span><em className={`statusBadge ${product.status === 'Ativo' ? 'active' : 'inactive'}`}>{product.status}</em></span><span className="productActions"><button type="button" onClick={() => editProduct(product)}><Pencil size={15} /></button><button type="button" onClick={() => deleteProduct(product)}><Trash2 size={15} /></button></span></div>)}</div><footer className="productsPagination"><span>Mostrando {filteredProducts.length ? ((safeProductPage - 1) * productsPerPage) + 1 : 0} a {Math.min(filteredProducts.length, safeProductPage * productsPerPage)} de {filteredProducts.length} produtos</span><div><button type="button" disabled={safeProductPage === 1} onClick={() => setProductPage(page => Math.max(1, page - 1))}>Anterior</button>{Array.from({ length: totalProductPages }, (_, index) => index + 1).slice(0, 6).map(page => <button type="button" key={page} className={safeProductPage === page ? 'active' : ''} onClick={() => setProductPage(page)}>{page}</button>)}<button type="button" disabled={safeProductPage === totalProductPages} onClick={() => setProductPage(page => Math.min(totalProductPages, page + 1))}>Próxima</button></div></footer></section></div>}
 
     {activeTab === 'sistema' && <div className="systemSettingsGridV2 refinedSystemGrid"><section className="settingsPanel systemCard establishmentSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Building2 size={20} /></div><h2>Dados da empresa</h2></div><div className="establishmentGrid"><label><span>Nome do estabelecimento</span><input value={systemForm.establishmentName} onChange={e => setSystemForm({ ...systemForm, establishmentName: e.target.value })} /></label><label><span>Telefone</span><input value={systemForm.phone || ''} placeholder="(00) 00000-0000" onChange={e => setSystemForm({ ...systemForm, phone: e.target.value })} /></label><label><span>CNPJ</span><input value={systemForm.cnpj || ''} placeholder="00.000.000/0000-00" onChange={e => setSystemForm({ ...systemForm, cnpj: e.target.value })} /></label><label><span>Endereço</span><input value={systemForm.address || ''} placeholder="Rua, número, bairro, cidade" onChange={e => setSystemForm({ ...systemForm, address: e.target.value })} /></label></div></section><section className="settingsPanel systemCard printRulesSystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><Settings size={20} /></div><h2>Preferências</h2></div><div className="establishmentGrid"><label><span>Nome exibido no sistema</span><input value={systemForm.establishmentName} onChange={e => setSystemForm({ ...systemForm, establishmentName: e.target.value })} /></label><label><span>Horário de funcionamento</span><input placeholder="Ex.: 10h às 23h" /></label><label className="span2"><span>Mensagem da comanda/cupom</span><textarea maxLength={120} value={systemForm.receiptMessage || ''} onChange={e => setSystemForm({ ...systemForm, receiptMessage: e.target.value })} /></label><small className="receiptCounter">{(systemForm.receiptMessage || '').length}/120</small></div></section><section className="settingsPanel systemCard securitySystemCard"><div className="settingsPanelTitle numberedTitle"><div className="titleBadge"><ShieldCheck size={20} /></div><h2>Cancelamentos e autorizações</h2></div><div className="securityGrid"><form className="securityPasswordBox" onSubmit={changeCancelPassword}><h3>Senha de cancelamento</h3><PasswordField label="Senha atual do administrador ou gerente" value={cancelForm.managerPassword} visible={showPasswords.manager} onToggle={() => setShowPasswords(prev => ({ ...prev, manager: !prev.manager }))} onChange={e => setCancelForm({ ...cancelForm, managerPassword: e.target.value })} placeholder="Confirme sua autorização" /><PasswordField label="Nova senha de cancelamento" value={cancelForm.newPassword} visible={showPasswords.new} onToggle={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} onChange={e => setCancelForm({ ...cancelForm, newPassword: e.target.value })} placeholder="Nova senha" /><PasswordField label="Confirmar nova senha" value={cancelForm.confirmPassword} visible={showPasswords.confirm} onToggle={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} onChange={e => setCancelForm({ ...cancelForm, confirmPassword: e.target.value })} placeholder="Repita a nova senha" /><button className="primaryBtn"><KeyRound size={18} /> Salvar nova senha</button><p>Administrador ou gerente autorizam pelo próprio login/senha.</p></form><div className="authorizationBox"><h3>Ações protegidas</h3>{authToggles.map(([key, label]) => <label className="switchRow" key={key}><button type="button" className={`fakeSwitch ${systemForm[key] ? 'active' : ''}`} onClick={() => setSystemForm(prev => ({ ...prev, [key]: !prev[key] }))}><span /></button><strong>{label}</strong></label>)}</div></div>{cancelMessage && <div className={cancelMessage.includes('atualizada') ? 'settingsSuccess' : 'settingsError'}>{cancelMessage.includes('atualizada') ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}{cancelMessage}</div>}</section><div className="systemFooterActions"><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
+    {editingUser && <div className="authModalOverlay">
+      <form className="authModal settingsEditModal" onSubmit={saveEditedUser}>
+        <div className="drawerHeader"><div><span className="eyebrow">Editar acesso</span><h2>{editingUser.name}</h2></div><button type="button" className="iconBtn" onClick={() => setEditingUser(null)}><X size={22} /></button></div>
+        <label><span>Nome completo</span><input value={editingUser.name || ''} onChange={event => setEditingUser(prev => ({ ...prev, name: event.target.value }))} autoFocus /></label>
+        <label><span>Login</span><input value={editingUser.username || ''} onChange={event => setEditingUser(prev => ({ ...prev, username: event.target.value }))} /></label>
+        <label><span>Função</span><select value={editingUser.role || 'garcom'} onChange={event => setEditingUser(prev => ({ ...prev, role: event.target.value }))}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label>
+        <label><span>Nova senha (opcional)</span><input type="password" value={editingUser.password || ''} onChange={event => setEditingUser(prev => ({ ...prev, password: event.target.value }))} placeholder="Deixe em branco para manter a senha atual" /></label>
+        <label className="switchRow"><button type="button" className={`fakeSwitch ${editingUser.active !== false ? 'active' : ''}`} onClick={() => setEditingUser(prev => ({ ...prev, active: prev.active === false }))}><span /></button><strong>Usuário ativo</strong></label>
+        <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setEditingUser(null)}>Cancelar</button><button className="primaryBtn" type="submit">Salvar alterações</button></div>
+      </form>
+    </div>}
+
+    {editingProduct && <div className="authModalOverlay">
+      <form className="authModal settingsEditModal" onSubmit={saveEditedProduct}>
+        <div className="drawerHeader"><div><span className="eyebrow">{editingProduct.deleteMode ? 'Excluir produto' : 'Editar produto'}</span><h2>{editingProduct.name}</h2></div><button type="button" className="iconBtn" onClick={() => setEditingProduct(null)}><X size={22} /></button></div>
+        {editingProduct.deleteMode ? <p>Confirme a exclusão deste produto. Essa ação remove o item do cadastro, mas não altera históricos já registrados.</p> : <>
+          <label><span>Nome do produto</span><input value={editingProduct.name || ''} onChange={event => setEditingProduct(prev => ({ ...prev, name: event.target.value }))} autoFocus /></label>
+          <label><span>Categoria</span><select value={editingProduct.category || 'Outros'} onChange={event => { const inferred = inferProductConfig(event.target.value); setEditingProduct(prev => ({ ...prev, category: event.target.value, sector: inferred.sector, prepare: inferred.prepare })) }}>{productCategories.map(category => <option key={category}>{category}</option>)}</select></label>
+          <label><span>Setor de impressão</span><select value={editingProduct.sector || 'Bar / Caixa'} onChange={event => setEditingProduct(prev => ({ ...prev, sector: event.target.value }))}>{productSectors.map(sector => <option key={sector}>{sector}</option>)}</select></label>
+          <label><span>Preço (R$)</span><input value={editingProduct.priceText || ''} onChange={event => setEditingProduct(prev => ({ ...prev, priceText: event.target.value }))} /></label>
+          <label><span>Vai para preparo?</span><select value={editingProduct.prepare ? 'Sim' : 'Não'} onChange={event => setEditingProduct(prev => ({ ...prev, prepare: event.target.value === 'Sim' }))}><option>Sim</option><option>Não</option></select></label>
+          <label><span>Status</span><select value={editingProduct.status || 'Ativo'} onChange={event => setEditingProduct(prev => ({ ...prev, status: event.target.value }))}><option>Ativo</option><option>Inativo</option></select></label>
+        </>}
+        <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setEditingProduct(null)}>Cancelar</button><button className={editingProduct.deleteMode ? 'dangerBtn' : 'primaryBtn'} type="submit">{editingProduct.deleteMode ? 'Excluir produto' : 'Salvar alterações'}</button></div>
+      </form>
+    </div>}
+
+    {permissionsOpen && <div className="authModalOverlay">
+      <form className="authModal permissionsReactModal" onSubmit={savePermissions}>
+        <div className="drawerHeader"><div><span className="eyebrow">Permissões</span><h2>Gerenciar permissões</h2></div><button type="button" className="iconBtn" onClick={() => setPermissionsOpen(false)}><X size={22} /></button></div>
+        <div className="permissionsRoleGrid">
+          {Object.entries(roleLabel).map(([role, label]) => <section className="permissionsRoleCard" key={role}>
+            <h4>{label}</h4>
+            <div className="permissionsChecks">{permissionOptions.map(permission => <label key={permission}><input type="checkbox" disabled={role === 'admin'} checked={(permissions[role] || []).includes(permission)} onChange={event => setPermissions(prev => ({ ...prev, [role]: event.target.checked ? [...(prev[role] || []), permission] : (prev[role] || []).filter(item => item !== permission) }))} /> <span>{permission}</span></label>)}</div>
+            {role === 'admin' && <small>Administrador mantém acesso total.</small>}
+          </section>)}
+        </div>
+        <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setPermissionsOpen(false)}>Cancelar</button><button className="primaryBtn" type="submit">Salvar permissões</button></div>
+      </form>
+    </div>}
   </div>
 }
