@@ -1,98 +1,152 @@
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .commandDrawer {
-    padding: 18px 14px 24px !important;
+    padding: 16px 12px 24px !important;
   }
 
   .commandClose {
-    top: 14px !important;
-    right: 14px !important;
+    top: 12px !important;
+    right: 12px !important;
     width: 38px !important;
     height: 38px !important;
   }
 
   .commandHeader {
-    gap: 12px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) !important;
+    gap: 8px !important;
+    align-items: stretch !important;
     margin-bottom: 12px !important;
-    padding-right: 46px !important;
+    padding-right: 0 !important;
   }
 
-  .commandTitleRow {
-    gap: 8px !important;
+  .commandHeader > div:first-child,
+  .commandTitleRow,
+  .commandActions {
+    display: contents !important;
+  }
+
+  .commandEyebrow {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    padding-right: 52px !important;
   }
 
   .commandTitleRow h2 {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
     font-size: 34px !important;
+    line-height: 1 !important;
+    margin: 2px 0 4px !important;
+    padding-right: 52px !important;
+  }
+
+  .tableCustomerSubtitle {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    margin: 0 0 2px !important;
+  }
+
+  .tableCustomerEditBtn {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    align-self: end !important;
+    width: 34px !important;
+    height: 34px !important;
+    margin-right: 52px !important;
   }
 
   .commandGuestsEditor {
+    grid-column: 1 !important;
+    grid-row: 4 !important;
     min-height: 42px !important;
-    width: auto !important;
-    max-width: 100% !important;
+    width: 100% !important;
+    max-width: none !important;
     padding: 0 8px !important;
-    gap: 6px !important;
+    gap: 5px !important;
+    border-radius: 12px !important;
   }
 
   .commandGuestsEditor button {
-    width: 34px !important;
-    height: 34px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 
   .commandGuestsEditor input {
-    width: 42px !important;
+    width: 38px !important;
+    min-width: 38px !important;
   }
 
-  .commandActions {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    width: 100% !important;
+  .commandGuestsEditor > span {
+    font-size: 12px !important;
+  }
+
+  .commandActions > .commandBtn:nth-child(1) {
+    grid-column: 2 !important;
+    grid-row: 4 !important;
+  }
+
+  .commandActions > .commandBtn:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 5 !important;
+  }
+
+  .commandActions > .commandBtn:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 5 !important;
+  }
+
+  .commandActions > .commandBtn:nth-child(n+4) {
+    grid-column: 1 / -1 !important;
   }
 
   .commandBtn {
-    min-height: 48px !important;
+    width: 100% !important;
+    min-height: 42px !important;
     padding: 6px 8px !important;
     justify-content: center !important;
     text-align: center !important;
     font-size: 12px !important;
-    line-height: 1.15 !important;
-    border-radius: 11px !important;
+    line-height: 1.1 !important;
+    border-radius: 12px !important;
+    gap: 6px !important;
   }
 
   .commandBtn svg {
     width: 16px !important;
     height: 16px !important;
-    flex: 0 0 auto !important;
-  }
-
-  .commandDanger {
-    grid-column: 1 / -1 !important;
-    min-height: 42px !important;
   }
 
   .commandMainGrid {
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
   .commandPanel {
-    padding: 14px !important;
+    padding: 12px !important;
     border-radius: 15px !important;
   }
 
   .commandPanel h3 {
-    margin-bottom: 12px !important;
-    font-size: 20px !important;
+    margin-bottom: 10px !important;
+    font-size: 19px !important;
   }
 
   .commandItemsList {
-    gap: 8px !important;
+    gap: 7px !important;
   }
 
   .commandItem {
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding: 11px 12px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 116px !important;
+    align-items: start !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    min-height: 0 !important;
     border-radius: 13px !important;
+  }
+
+  .commandItemInfo {
+    min-width: 0 !important;
   }
 
   .commandItemInfo strong {
@@ -101,19 +155,38 @@
   }
 
   .commandItemInfo small {
-    font-size: 11px !important;
-    line-height: 1.25 !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+  }
+
+  .commandItemObservationEditor {
+    margin-top: 7px !important;
+    gap: 4px !important;
+  }
+
+  .commandItemObservationEditor span {
+    font-size: 10px !important;
+  }
+
+  .commandItemObservationEditor input {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 9px !important;
+    font-size: 12px !important;
+    border-radius: 9px !important;
   }
 
   .commandItemControls {
     display: grid !important;
-    grid-template-columns: auto 34px !important;
+    grid-template-columns: auto 30px !important;
     grid-template-areas:
       'qty remove'
       'price price' !important;
     align-items: center !important;
     justify-items: end !important;
-    gap: 5px 7px !important;
+    align-content: start !important;
+    gap: 5px 6px !important;
+    padding-top: 1px !important;
   }
 
   .commandItemControls .qtyStepper {
@@ -126,48 +199,41 @@
 
   .commandItemControls > strong {
     grid-area: price !important;
-    font-size: 13px !important;
+    font-size: 12.5px !important;
+    margin-top: 1px !important;
   }
 
   .qtyStepper button {
-    width: 28px !important;
+    width: 26px !important;
     height: 28px !important;
   }
 
   .qtyStepper b {
-    min-width: 24px !important;
-    font-size: 13px !important;
+    min-width: 22px !important;
+    font-size: 12px !important;
   }
 
   .removeItemBtn {
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
     border-radius: 9px !important;
   }
 
   .commandTotalCard {
-    min-height: 66px !important;
-    margin-top: 10px !important;
-    padding: 13px 16px !important;
-    border-radius: 14px !important;
+    min-height: 62px !important;
+    margin-top: 9px !important;
+    padding: 11px 14px !important;
   }
 
   .commandTotalCard strong {
-    font-size: 27px !important;
-  }
-
-  .commandObs {
-    min-height: 44px !important;
-    margin-bottom: 10px !important;
-    padding: 0 12px !important;
+    font-size: 25px !important;
   }
 
   .commandCategoryTabs {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     gap: 6px !important;
-    margin-bottom: 10px !important;
-    padding-bottom: 3px !important;
+    margin-bottom: 9px !important;
     scrollbar-width: none !important;
   }
 
@@ -177,59 +243,40 @@
 
   .commandCategoryTabs button {
     flex: 0 0 auto !important;
-    min-height: 32px !important;
-    padding: 0 11px !important;
-    font-size: 12px !important;
+    min-height: 31px !important;
+    padding: 0 10px !important;
+    font-size: 11.5px !important;
   }
 
   .commandProductGrid {
     grid-template-columns: 1fr !important;
-    gap: 8px !important;
+    gap: 7px !important;
   }
 
   .commandProductCard {
-    min-height: 76px !important;
-    grid-template-columns: 52px minmax(0, 1fr) 30px !important;
-    gap: 9px !important;
-    padding: 9px !important;
+    min-height: 72px !important;
+    grid-template-columns: 48px minmax(0, 1fr) 28px !important;
+    gap: 8px !important;
+    padding: 8px !important;
   }
 
   .productThumb {
-    width: 52px !important;
-    height: 52px !important;
-    font-size: 24px !important;
-  }
-
-  .commandProductCard strong {
-    font-size: 13px !important;
-    margin-bottom: 4px !important;
-  }
-
-  .commandProductCard span {
-    font-size: 13px !important;
-    margin-bottom: 3px !important;
-  }
-
-  .commandProductCard small {
-    font-size: 11px !important;
-  }
-
-  .commandProductCard em {
-    width: 30px !important;
-    height: 30px !important;
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
   }
 }
 
 @media (max-width: 420px) {
-  .commandActions {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .commandDanger {
-    grid-column: 1 / -1 !important;
+  .commandHeader {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr) !important;
   }
 
   .commandItem {
-    grid-template-columns: minmax(0, 1fr) 118px !important;
+    grid-template-columns: minmax(0, 1fr) 108px !important;
+  }
+
+  .commandBtn {
+    font-size: 11px !important;
   }
 }
