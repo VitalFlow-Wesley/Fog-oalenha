@@ -19,10 +19,11 @@ function enhanceMovementChart() {
       const value = Math.round(values[index])
       const ratio = maxValue > 0 ? value / maxValue : 0
       const normalizedHeight = value > 0 ? Math.max(14, Math.round(ratio * 112)) : 8
+      const quantityLabel = value === 1 ? '1 mesa' : `${value} mesas`
 
       bar.style.height = `${normalizedHeight}px`
       bar.dataset.level = ratio >= 1 && value > 0 ? 'peak' : ratio >= 0.66 ? 'high' : ratio >= 0.34 ? 'medium' : value > 0 ? 'low' : 'empty'
-      bar.title = `${label.textContent}: ${value} ${value === 1 ? 'comanda' : 'comandas'}`
+      bar.title = `${label.textContent}: ${quantityLabel} atendidas`
 
       let valueLabel = column.querySelector('.movementBarValue')
       if (!valueLabel) {
@@ -30,7 +31,7 @@ function enhanceMovementChart() {
         valueLabel.className = 'movementBarValue'
         column.insertBefore(valueLabel, bar)
       }
-      valueLabel.textContent = value > 0 ? String(value) : ''
+      valueLabel.textContent = value > 0 ? quantityLabel : ''
 
       let peakLabel = column.querySelector('.movementPeakLabel')
       if (bar.dataset.level === 'peak') {
