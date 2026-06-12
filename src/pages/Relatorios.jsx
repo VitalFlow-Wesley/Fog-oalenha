@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
 
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
+const CLOSINGS_KEY = 'fogao-closings-v1'
+const REPORTS_OPEN_DAY_KEY = 'fogao-reports-open-day'
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
@@ -32,6 +34,18 @@ function readJson(key, fallback) {
   } catch {
     return fallback
   }
+}
+
+function initialReportDate() {
+  const currentDay = todayKey()
+  const openDay = localStorage.getItem(REPORTS_OPEN_DAY_KEY)
+  if (openDay !== currentDay) {
+    localStorage.setItem(REPORTS_OPEN_DAY_KEY, currentDay)
+    localStorage.setItem('fogao-reports-date', currentDay)
+    localStorage.setItem('fogao-reports-date-label', formatDateBR(currentDay))
+    return currentDay
+  }
+  return localStorage.getItem('fogao-reports-date') || currentDay
 }
 
 function getItemTotal(item) {
@@ -183,13 +197,130 @@ function SectorIcon({ name }) {
   return <Martini size={22} />
 }
 
+function paymentLabel(key) {
+  const labels = { dinheiro: 'Dinheiro', pix: 'PIX', cartao: 'Cartão', outros: 'Outros' }
+  return labels[key] || key
+}
+
+function paymentTotal(payments = {}) {
+  return Object.values(payments || {}).reduce((sum, value) => sum + Number(value || 0), 0)
+}
+
+function closingTables(record = {}) {
+  const activeTables = (record.tables || []).map(table => ({
+    id: table.id || table.tableId || table.number,
+    number: table.number || table.tableNumber,
+    waiterName: getTableWaiter(table),
+    total: getTableTotal(table),
+    itemsQty: (table.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
+    origin: 'Fechamento do caixa',
+  }))
+  const closedTables = (record.closedTables || []).map(table => ({
+    id: table.id || table.tableId || table.tableNumber,
+    number: table.tableNumber || table.number,
+    waiterName: table.waiterName || 'Sem garçom',
+    total: Number(table.total || 0),
+    itemsQty: (table.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
+    origin: table.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+  }))
+  return [...activeTables, ...closedTables]
+}
+
+function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosing, dateLabel }) {
+  const selectedPayments = selectedClosing?.payments || {}
+  const selectedTables = selectedClosing ? closingTables(selectedClosing) : []
+  const selectedDifference = Number(selectedClosing?.difference ?? paymentTotal(selectedPayments) - Number(selectedClosing?.total || 0))
+
+  return (
+    <div className="closingsHistoryLayout">
+      <div className="reportsSummaryGrid closingsSummaryGrid">
+        <SummaryCard title="Fechamentos" value={summary.count} detail={`Registros em ${dateLabel}`} icon={History} tone="fire" />
+        <SummaryCard title="Total fechado" value={money(summary.total)} detail="Valor lançado nas mesas" icon={WalletCards} tone="green" />
+        <SummaryCard title="Informado" value={money(summary.informedTotal)} detail="Recebido no caixa" icon={ReceiptText} tone="orange" />
+        <SummaryCard title="Diferença" value={money(summary.difference)} detail="Informado x lançado" icon={TrendingUp} tone={Math.abs(summary.difference) < 0.01 ? 'green' : 'gold'} />
+      </div>
+
+      <section className="reportPanel closingsHistoryPanel">
+        <div className="reportPanelTitleRow">
+          <h2>Fechamentos de {dateLabel}</h2>
+          <span>{closings.length} registros</span>
+        </div>
+        {closings.length ? (
+          <div className="closingsHistoryGrid">
+            <div className="closingsHistoryList">
+              {closings.map(record => {
+                const difference = Number(record.difference ?? paymentTotal(record.payments) - Number(record.total || 0))
+                return (
+                  <button className={`closingHistoryItem ${selectedClosing?.id === record.id ? 'active' : ''}`} key={record.id} type="button" onClick={() => onSelectClosing(record.id)}>
+                    <span>
+                      <strong>{record.closedAtLabel || formatDateBR(record.date)}</strong>
+                      <small>{record.operatorName || 'Operador'} · {record.tableCount || closingTables(record).length || 0} mesas</small>
+                    </span>
+                    <b>{money(record.total)}</b>
+                    <em className={Math.abs(difference) < 0.01 ? 'success' : 'warning'}>{Math.abs(difference) < 0.01 ? 'Sem diferença' : money(difference)}</em>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="closingHistoryDetails">
+              <div className="closingDetailHero">
+                <div><span>Total fechado</span><strong>{money(selectedClosing?.total || 0)}</strong></div>
+                <div><span>Total informado</span><strong>{money(selectedClosing?.informedTotal ?? paymentTotal(selectedPayments))}</strong></div>
+                <div><span>Diferença</span><strong className={Math.abs(selectedDifference) < 0.01 ? 'success' : 'warning'}>{money(selectedDifference)}</strong></div>
+              </div>
+
+              <div className="closingDetailInfo">
+                <p><span>Operador</span><strong>{selectedClosing?.operatorName || 'Operador'}</strong></p>
+                <p><span>Fechado em</span><strong>{selectedClosing?.closedAtLabel || '-'}</strong></p>
+                <p><span>Mesas</span><strong>{selectedClosing?.tableCount || selectedTables.length || 0}</strong></p>
+                <p><span>Itens</span><strong>{selectedClosing?.itemCount || selectedTables.reduce((sum, table) => sum + Number(table.itemsQty || 0), 0)}</strong></p>
+              </div>
+
+              <div className="closingPaymentGrid">
+                {Object.keys(selectedPayments).length ? Object.entries(selectedPayments).map(([key, value]) => (
+                  <div key={key}><span>{paymentLabel(key)}</span><strong>{money(value)}</strong></div>
+                )) : <div><span>Pagamentos</span><strong>{money(0)}</strong></div>}
+              </div>
+
+              <div className="closingTablesBlock">
+                <h3>Mesas do fechamento</h3>
+                <div className="closingTablesList">
+                  {selectedTables.length ? selectedTables.map(table => (
+                    <div key={`${table.id}-${table.number}`}>
+                      <span>Mesa {table.number || '-'}</span>
+                      <small>{table.waiterName || 'Sem garçom'} · {table.itemsQty || 0} itens · {table.origin}</small>
+                      <strong>{money(table.total)}</strong>
+                    </div>
+                  )) : <p>Nenhuma mesa registrada nesse fechamento.</p>}
+                </div>
+              </div>
+
+              {selectedClosing?.note && <div className="closingNoteBox"><strong>Observação</strong><span>{selectedClosing.note}</span></div>}
+            </div>
+          </div>
+        ) : (
+          <div className="emptyClosingsHistory">
+            <History size={28} />
+            <strong>Nenhum fechamento encontrado</strong>
+            <span>Quando o caixa for fechado, o registro aparece aqui para consulta posterior.</span>
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
+
 export default function Relatorios({ tables = [] }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
-  const [selectedDate, setSelectedDate] = useState(() => localStorage.getItem('fogao-reports-date') || todayKey())
+  const [selectedDate, setSelectedDate] = useState(initialReportDate)
   const [history, setHistory] = useState(() => readJson(SALES_KEY, []))
   const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
+  const [closingsHistory, setClosingsHistory] = useState(() => readJson(CLOSINGS_KEY, []))
   const [includeClosedTables, setIncludeClosedTables] = useState(false)
+  const [selectedClosingId, setSelectedClosingId] = useState('')
+  const currentDayRef = useRef(todayKey())
 
   useEffect(() => {
     async function loadHistory() {
@@ -204,21 +335,47 @@ export default function Relatorios({ tables = [] }) {
           localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remote.closedTablesHistory))
           setClosedTablesHistory(remote.closedTablesHistory)
         }
+        if (Array.isArray(remote.closings)) {
+          localStorage.setItem(CLOSINGS_KEY, JSON.stringify(remote.closings))
+          setClosingsHistory(remote.closings)
+        }
       } catch {
         setHistory(readJson(SALES_KEY, []))
         setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+        setClosingsHistory(readJson(CLOSINGS_KEY, []))
       }
     }
     loadHistory()
     const onUpdate = () => setHistory(readJson(SALES_KEY, []))
     const onClosedTablesUpdate = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    const onClosingsUpdate = () => setClosingsHistory(readJson(CLOSINGS_KEY, []))
     window.addEventListener('fogao-sales-history-updated', onUpdate)
     window.addEventListener('fogao-closed-tables-updated', onClosedTablesUpdate)
+    window.addEventListener('fogao-closings-updated', onClosingsUpdate)
     window.addEventListener('focus', loadHistory)
     return () => {
       window.removeEventListener('fogao-sales-history-updated', onUpdate)
       window.removeEventListener('fogao-closed-tables-updated', onClosedTablesUpdate)
+      window.removeEventListener('fogao-closings-updated', onClosingsUpdate)
       window.removeEventListener('focus', loadHistory)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncCurrentDay = () => {
+      const currentDay = todayKey()
+      if (currentDayRef.current === currentDay) return
+      currentDayRef.current = currentDay
+      localStorage.setItem(REPORTS_OPEN_DAY_KEY, currentDay)
+      localStorage.setItem('fogao-reports-date', currentDay)
+      localStorage.setItem('fogao-reports-date-label', formatDateBR(currentDay))
+      setSelectedDate(currentDay)
+    }
+    const interval = setInterval(syncCurrentDay, 60 * 1000)
+    window.addEventListener('focus', syncCurrentDay)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', syncCurrentDay)
     }
   }, [])
 
@@ -238,12 +395,43 @@ export default function Relatorios({ tables = [] }) {
       }))
       .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
   }, [closedTablesHistory, selectedDate])
+  const closingsForDate = useMemo(() => {
+    return (closingsHistory || [])
+      .filter(record => record.date === selectedDate)
+      .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
+  }, [closingsHistory, selectedDate])
+  const selectedClosing = useMemo(() => {
+    return closingsForDate.find(record => record.id === selectedClosingId) || closingsForDate[0] || null
+  }, [closingsForDate, selectedClosingId])
+  const closingsSummary = useMemo(() => {
+    return closingsForDate.reduce((acc, record) => {
+      const informed = Number(record.informedTotal ?? paymentTotal(record.payments))
+      const difference = Number(record.difference ?? informed - Number(record.total || 0))
+      acc.count += 1
+      acc.total += Number(record.total || 0)
+      acc.informedTotal += informed
+      acc.difference += difference
+      return acc
+    }, { count: 0, total: 0, informedTotal: 0, difference: 0 })
+  }, [closingsForDate])
+
+  useEffect(() => {
+    if (!closingsForDate.length) {
+      setSelectedClosingId('')
+      return
+    }
+    if (!closingsForDate.some(record => record.id === selectedClosingId)) {
+      setSelectedClosingId(closingsForDate[0].id)
+    }
+  }, [closingsForDate, selectedClosingId])
+
   const dateLabel = formatDateBR(selectedDate)
   const hasMovement = recordsForDate.length > 0
 
   function handleDateChange(event) {
     const value = event.target.value || todayKey()
     setSelectedDate(value)
+    localStorage.setItem(REPORTS_OPEN_DAY_KEY, todayKey())
     localStorage.setItem('fogao-reports-date', value)
     localStorage.setItem('fogao-reports-date-label', formatDateBR(value))
   }
@@ -259,17 +447,19 @@ export default function Relatorios({ tables = [] }) {
     { title: 'Maior valor de mesa', value: money(report.topTable?.total || 0), detail: report.topTable ? `Mesa ${report.topTable.number} · ${report.topTable.guests || 0} pessoas` : 'Sem mesa', icon: Star, tone: 'fire' },
     { title: 'Produto mais vendido', value: report.topProductByQty?.name || '-', detail: report.topProductByQty ? `${report.topProductByQty.qty} unidades · ${money(report.topProductByQty.total)}` : 'Sem vendas', icon: PackageCheck, tone: 'orange' },
   ]
+  const reportTitle = mode === 'fechamentos' ? 'Fechamentos anteriores' : mode === 'completo' ? 'Relatório completo' : 'Relatórios'
+  const reportSubtitle = mode === 'fechamentos' ? 'Consulte caixas fechados, valores informados, diferenças e mesas do fechamento.' : mode === 'completo' ? 'Análises detalhadas de vendas, pedidos, mesas, produtos e desempenho.' : 'Acompanhe resultados, pedidos, setores e desempenho da operação.'
 
   return (
     <div className="page reportsPremiumPage completeReportPage">
       <div className="reportsHeader">
         <div>
           <span className="eyebrow reportsEyebrow">RESUMO E ANÁLISES</span>
-          <h1>{mode === 'completo' ? 'Relatório completo' : 'Relatórios'}</h1>
-          <p>{mode === 'completo' ? 'Análises detalhadas de vendas, pedidos, mesas, produtos e desempenho.' : 'Acompanhe resultados, pedidos, setores e desempenho da operação.'}</p>
+          <h1>{reportTitle}</h1>
+          <p>{reportSubtitle}</p>
         </div>
         <div className="reportsActions noPrint">
-          <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Relatório simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Relatório completo</button></div>
+          <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Completo</button><button className={mode === 'fechamentos' ? 'active' : ''} onClick={() => setMode('fechamentos')} type="button">Fechamentos</button></div>
           <label className="reportActionBtn" style={{ position: 'relative', cursor: 'pointer' }}><CalendarDays size={16} /> {dateLabel}<input type="date" value={selectedDate} onChange={handleDateChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} /></label>
           {mode === 'completo' && <label className="reportClosedToggle"><input type="checkbox" checked={includeClosedTables} onChange={event => setIncludeClosedTables(event.target.checked)} /> Incluir mesas fechadas do dia</label>}
           <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
@@ -277,7 +467,9 @@ export default function Relatorios({ tables = [] }) {
         </div>
       </div>
 
-      {mode === 'simples' ? (
+      {mode === 'fechamentos' ? (
+        <ClosingsHistoryView closings={closingsForDate} summary={closingsSummary} selectedClosing={selectedClosing} onSelectClosing={setSelectedClosingId} dateLabel={dateLabel} />
+      ) : mode === 'simples' ? (
         <>
           <div className="reportsSummaryGrid simpleSummaryGrid">{summaryCards.slice(0, 4).map(card => <SummaryCard key={card.title} {...card} />)}</div>
           <section className="reportPanel simpleSectorPanel"><h2><BarChart3 size={22} /> Resumo por setor</h2><div className="simpleSectorGrid">{report.sectors.map(sector => <div className="simpleSectorCard" key={sector.name}><div><SectorIcon name={sector.name} /></div><strong>{sector.name}</strong><span>{sector.qty} itens</span><i /> <b>{money(sector.total)}</b></div>)}</div></section>

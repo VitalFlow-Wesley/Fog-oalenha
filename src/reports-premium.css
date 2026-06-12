@@ -503,11 +503,215 @@
 .fullClosingGrid div { grid-template-columns: 1fr; }
 .fullClosingGrid strong { font-family: Georgia, 'Times New Roman', serif; font-size: 20px; }
 
+.closingsHistoryLayout {
+  display: grid;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.closingsSummaryGrid {
+  margin-bottom: 0;
+}
+
+.closingsHistoryGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, .82fr) minmax(0, 1.18fr);
+  gap: 12px;
+}
+
+.closingsHistoryList,
+.closingHistoryDetails,
+.closingTablesList {
+  display: grid;
+  gap: 9px;
+}
+
+.closingHistoryItem {
+  width: 100%;
+  min-height: 76px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: rgba(255, 248, 237, .64);
+  color: #3b2419;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.closingHistoryItem.active {
+  border-color: #ef6336;
+  background: #fff3e5;
+  box-shadow: 0 8px 18px rgba(194, 74, 38, .1);
+}
+
+.closingHistoryItem span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.closingHistoryItem strong,
+.closingHistoryItem b {
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+}
+
+.closingHistoryItem small {
+  color: #7d6758;
+  font-size: 11px;
+}
+
+.closingHistoryItem em {
+  grid-column: 1 / -1;
+  width: max-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.closingHistoryItem em.success,
+.closingDetailHero strong.success {
+  color: #367448;
+}
+
+.closingHistoryItem em.success {
+  background: #e8f5e4;
+}
+
+.closingHistoryItem em.warning,
+.closingDetailHero strong.warning {
+  color: #b84b2c;
+}
+
+.closingHistoryItem em.warning {
+  background: #ffe8d8;
+}
+
+.closingDetailHero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.closingDetailHero div,
+.closingDetailInfo p,
+.closingPaymentGrid div,
+.closingTablesList div,
+.closingNoteBox {
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  background: rgba(255, 253, 248, .82);
+  padding: 10px;
+}
+
+.closingDetailHero span,
+.closingDetailInfo span,
+.closingPaymentGrid span,
+.closingTablesList small,
+.closingNoteBox span {
+  color: #7d6758;
+  font-size: 11px;
+}
+
+.closingDetailHero strong {
+  display: block;
+  margin-top: 4px;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.closingDetailInfo,
+.closingPaymentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.closingDetailInfo p {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.closingDetailInfo strong,
+.closingPaymentGrid strong,
+.closingTablesList strong,
+.closingNoteBox strong {
+  color: #2a160e;
+  font-weight: 900;
+}
+
+.closingTablesBlock h3 {
+  margin: 2px 0 8px;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+}
+
+.closingTablesList div {
+  display: grid;
+  grid-template-columns: minmax(90px, .55fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.closingTablesList span {
+  color: #3b2419;
+  font-weight: 900;
+}
+
+.closingTablesList p {
+  margin: 0;
+  color: #7d6758;
+}
+
+.closingNoteBox {
+  display: grid;
+  gap: 5px;
+}
+
+.emptyClosingsHistory {
+  min-height: 230px;
+  border: 1px dashed #e4c8a7;
+  border-radius: 15px;
+  background: rgba(255, 248, 237, .52);
+  color: #7d6758;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+  padding: 24px;
+}
+
+.emptyClosingsHistory svg {
+  color: #c24928;
+}
+
+.emptyClosingsHistory strong {
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+}
+
 @media (max-width: 1220px) {
   .reportsSummaryGrid,
   .reportsMainGrid,
   .fullReportGrid,
-  .fullClosingGrid {
+  .fullClosingGrid,
+  .closingsHistoryGrid,
+  .closingDetailHero,
+  .closingDetailInfo,
+  .closingPaymentGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -527,7 +731,12 @@
   .reportsSummaryGrid,
   .reportsMainGrid,
   .fullReportGrid,
-  .fullClosingGrid { grid-template-columns: 1fr; }
+  .fullClosingGrid,
+  .closingsHistoryGrid,
+  .closingDetailHero,
+  .closingDetailInfo,
+  .closingPaymentGrid,
+  .closingTablesList div { grid-template-columns: 1fr; }
   .reportTabs, .reportsActions { width: 100%; }
   .reportTabs button, .reportActionBtn, .reportClosedToggle { flex: 1; }
   .reportPanelTitleRow { align-items: flex-start; flex-direction: column; }
