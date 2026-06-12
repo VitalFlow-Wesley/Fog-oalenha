@@ -1,5 +1,4 @@
 const TABLES_KEY = 'fogao-tables-v1'
-const REOPEN_KEY = 'fogao-reopen-table-after-item-note'
 
 function readTables() {
   try {
@@ -11,8 +10,9 @@ function readTables() {
 }
 
 function currentTableNumber(drawer) {
+  const subtitle = drawer.querySelector('.tableCustomerSubtitle')?.textContent || ''
   const title = drawer.querySelector('.commandTitleRow h2')?.textContent || ''
-  const match = title.match(/Mesa\s+(\d+)/i)
+  const match = `${subtitle} ${title}`.match(/Mesa\s+(\d+)/i)
   return match?.[1]?.padStart(2, '0') || ''
 }
 
@@ -36,7 +36,6 @@ function saveObservation(drawer, itemIndex, observation) {
   if (!changed) return false
   localStorage.setItem(TABLES_KEY, JSON.stringify(nextTables))
   window.dispatchEvent(new Event('fogao-tables-updated'))
-  sessionStorage.setItem(REOPEN_KEY, tableNumber)
   return true
 }
 
@@ -74,9 +73,8 @@ function createEditor(drawer, itemElement, itemIndex) {
     if (nextValue === originalValue) return
     if (!saveObservation(drawer, itemIndex, nextValue)) return
     originalValue = nextValue
-    input.disabled = true
-    input.placeholder = 'Salvando...'
-    window.setTimeout(() => window.location.reload(), 180)
+    input.dataset.saved = 'true'
+    window.setTimeout(() => delete input.dataset.saved, 700)
   }
 
   input.addEventListener('blur', commit)
@@ -104,36 +102,19 @@ function enhanceCommandDrawer() {
   })
 }
 
-function reopenTableAfterReload() {
-  const tableNumber = sessionStorage.getItem(REOPEN_KEY)
-  if (!tableNumber) return
-
-  let attempts = 0
-  const timer = window.setInterval(() => {
-    attempts += 1
-    const card = Array.from(document.querySelectorAll('.restaurantTableCard')).find(element => {
-      const title = element.querySelector('.tableTop strong')?.textContent || ''
-      return title.includes(`Mesa ${tableNumber}`)
-    })
-
-    if (card) {
-      sessionStorage.removeItem(REOPEN_KEY)
-      card.click()
-      window.clearInterval(timer)
-      return
-    }
-
-    if (attempts > 20) {
-      sessionStorage.removeItem(REOPEN_KEY)
-      window.clearInterval(timer)
-    }
-  }, 150)
+let scheduled = false
+function scheduleEnhance() {
+  if (scheduled) return
+  scheduled = true
+  requestAnimationFrame(() => {
+    scheduled = false
+    enhanceCommandDrawer()
+  })
 }
 
-const observer = new MutationObserver(enhanceCommandDrawer)
+const observer = new MutationObserver(scheduleEnhance)
 observer.observe(document.documentElement, { childList: true, subtree: true })
 
-document.addEventListener('click', () => window.setTimeout(enhanceCommandDrawer, 0), true)
-window.addEventListener('DOMContentLoaded', reopenTableAfterReload)
-window.setTimeout(reopenTableAfterReload, 300)
-window.setTimeout(enhanceCommandDrawer, 300)
+document.addEventListener('click', scheduleEnhance, true)
+window.addEventListener('fogao-tables-updated', scheduleEnhance)
+window.setTimeout(scheduleEnhance, 300)
