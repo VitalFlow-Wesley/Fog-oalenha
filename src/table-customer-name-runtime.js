@@ -126,7 +126,10 @@ function selectDefaultProductCategory(drawer) {
   const tabs = [...drawer.querySelectorAll('.commandCategoryTabs button')]
   if (!tabs.length) return
 
-  const mealsButton = tabs.find(button => button.textContent?.trim() === 'Refeições')
+  const mealsButton = tabs.find(button => {
+    const label = button.textContent?.trim()
+    return label === 'Refeições' || label === 'Refeiçõeses'
+  }) || tabs[2]
   if (!mealsButton) return
 
   initializedProductDrawers.add(drawer)
