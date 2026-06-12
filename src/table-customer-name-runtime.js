@@ -43,7 +43,7 @@ function createModal() {
       <div class="tableCustomerActions">
         <button type="button" data-action="clear">Remover nome</button>
         <button type="button" data-action="cancel">Cancelar</button>
-        <button type="button" data-action="save">Salvar nome</button>
+        <button type="submit" data-action="save">Salvar nome</button>
       </div>
     </form>
   `
@@ -59,6 +59,7 @@ function openCustomerEditor(drawer) {
   if (!table) return
 
   modal ||= createModal()
+  const form = modal.querySelector('form')
   const input = modal.querySelector('input')
   const error = modal.querySelector('.tableCustomerError')
   const saveButton = modal.querySelector('[data-action="save"]')
@@ -97,7 +98,7 @@ function openCustomerEditor(drawer) {
       saveTables(nextTables)
       sessionStorage.setItem(REOPEN_KEY, number)
       close()
-      window.setTimeout(() => window.location.reload(), 180)
+      window.setTimeout(() => window.location.reload(), 120)
     } catch {
       saveButton.disabled = false
       saveButton.textContent = 'Salvar nome'
@@ -108,16 +109,9 @@ function openCustomerEditor(drawer) {
 
   cancelButton.onclick = close
   clearButton.onclick = () => persist('')
-  saveButton.onclick = () => persist(input.value)
-  modal.querySelector('form').onsubmit = event => {
+  form.onsubmit = event => {
     event.preventDefault()
     persist(input.value)
-  }
-  input.onkeydown = event => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      persist(input.value)
-    }
   }
   modal.onclick = event => {
     if (event.target === modal) close()
@@ -140,14 +134,15 @@ function enhanceDrawer() {
   if (!table) return
 
   if (table.customerName) {
-    title.textContent = table.customerName
+    if (title.textContent !== table.customerName) title.textContent = table.customerName
     let subtitle = titleRow.querySelector('.tableCustomerSubtitle')
     if (!subtitle) {
       subtitle = document.createElement('small')
       subtitle.className = 'tableCustomerSubtitle'
       title.insertAdjacentElement('afterend', subtitle)
     }
-    subtitle.textContent = `Mesa ${table.number}`
+    const subtitleText = `Mesa ${table.number}`
+    if (subtitle.textContent !== subtitleText) subtitle.textContent = subtitleText
   }
 
   if (!titleRow.querySelector('.tableCustomerEditBtn')) {
@@ -162,7 +157,8 @@ function enhanceDrawer() {
       event.stopPropagation()
       openCustomerEditor(drawer)
     }
-    titleRow.insertBefore(button, titleRow.querySelector('.commandGuestsEditor'))
+    const guestsEditor = titleRow.querySelector('.commandGuestsEditor')
+    titleRow.insertBefore(button, guestsEditor || null)
   }
 }
 
@@ -185,7 +181,7 @@ function enhanceCards() {
       badge.className = 'tableCustomerBadge'
       title.insertAdjacentElement('afterend', badge)
     }
-    badge.textContent = table.customerName
+    if (badge.textContent !== table.customerName) badge.textContent = table.customerName
   })
 }
 
@@ -227,16 +223,26 @@ function enhance() {
   enhanceCards()
 }
 
-const observer = new MutationObserver(enhance)
+let enhanceScheduled = false
+function scheduleEnhance() {
+  if (enhanceScheduled) return
+  enhanceScheduled = true
+  window.requestAnimationFrame(() => {
+    enhanceScheduled = false
+    enhance()
+  })
+}
+
+const observer = new MutationObserver(scheduleEnhance)
 observer.observe(document.documentElement, { childList: true, subtree: true })
-window.addEventListener('fogao-tables-updated', enhance)
-window.addEventListener('focus', enhance)
+window.addEventListener('fogao-tables-updated', scheduleEnhance)
+window.addEventListener('focus', scheduleEnhance)
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && modal && !modal.hidden) {
     modal.hidden = true
     document.body.classList.remove('table-customer-modal-open')
   }
 })
-setInterval(clearNamesFromFreeTables, 1200)
-setTimeout(enhance, 250)
+setInterval(clearNamesFromFreeTables, 2500)
+setTimeout(scheduleEnhance, 250)
 setTimeout(reopenAfterReload, 300)
