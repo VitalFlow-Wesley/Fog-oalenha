@@ -1,0 +1,137 @@
+.closedTablesCompactToolbar {
+  display: grid;
+  grid-template-columns: 1.55fr .72fr .72fr 1fr;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  margin: 10px 0 12px;
+  border: 1px solid #ead4b7;
+  border-radius: 14px;
+  background: #fffaf2;
+  overflow: hidden;
+}
+
+.closedTablesCompactItem {
+  min-width: 0;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-right: 1px solid #ead4b7;
+  background: transparent !important;
+}
+
+.closedTablesCompactItem:last-child {
+  border-right: 0;
+}
+
+.closedTablesCompactItem span {
+  flex: 0 0 auto;
+  color: #7a6458;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.closedTablesCompactItem strong {
+  color: #3b2118;
+  font-size: 17px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.closedTablesCompactDateItem {
+  justify-content: flex-start;
+}
+
+.closedTablesCompactDate {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #3b2118;
+  font-size: 16px !important;
+  font-weight: 900;
+  box-shadow: none !important;
+}
+
+.closedTablesModal {
+  width: min(860px, calc(100vw - 24px)) !important;
+  padding: 18px !important;
+}
+
+.closedTablesModal .drawerHeader {
+  margin-bottom: 4px !important;
+}
+
+.closedTablesModal .drawerHeader h2 {
+  font-size: 28px !important;
+}
+
+.closedTableCard {
+  padding: 11px 13px !important;
+}
+
+.closedTableCard header strong,
+.closedTableCard header b {
+  font-size: 18px !important;
+}
+
+.closedTableMeta {
+  margin: 7px 0 !important;
+}
+
+.closedTableMeta span {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+}
+
+.closedTableFooter {
+  gap: 10px !important;
+}
+
+.closedTableFooter button {
+  min-height: 38px !important;
+  min-width: 122px !important;
+  padding: 0 12px !important;
+}
+
+@media (max-width: 760px) {
+  .closedTablesCompactToolbar {
+    grid-template-columns: 1.35fr .65fr .65fr 1fr;
+  }
+
+  .closedTablesCompactItem {
+    min-height: 54px;
+    padding: 7px 10px;
+    gap: 6px;
+  }
+
+  .closedTablesCompactItem span {
+    font-size: 10px;
+  }
+
+  .closedTablesCompactItem strong,
+  .closedTablesCompactDate {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .closedTablesCompactToolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .closedTablesCompactItem:nth-child(2) {
+    border-right: 0;
+  }
+
+  .closedTablesCompactItem:nth-child(-n+2) {
+    border-bottom: 1px solid #ead4b7;
+  }
+}
