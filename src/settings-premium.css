@@ -336,14 +336,24 @@
 .settingsError { background: #ffe2d4; color: #b94220; }
 
 .settingsEditModal {
-  width: min(540px, 94vw);
+  width: min(620px, 94vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: grid;
   gap: 12px;
+  padding-bottom: 0;
+  scrollbar-width: thin;
 }
 
 .settingsEditModal .drawerHeader,
 .permissionsReactModal .drawerHeader {
   margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+  padding-bottom: 8px;
 }
 
 .settingsEditModal label {
@@ -378,6 +388,16 @@
   border-radius: 13px;
   background: rgba(255, 248, 237, .72);
   padding: 9px 11px;
+}
+
+.settingsEditModal .actionsRow {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 4px -24px 0;
+  padding: 14px 24px 18px;
+  background: linear-gradient(180deg, rgba(255, 253, 248, .78), var(--panel) 34%);
+  justify-content: flex-end;
 }
 
 .permissionsReactModal {
