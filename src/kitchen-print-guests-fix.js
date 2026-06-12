@@ -58,10 +58,24 @@ function normalizeGuestsInKitchenPrint() {
   })
 }
 
+let scheduled = false
+function scheduleNormalize() {
+  if (scheduled) return
+  scheduled = true
+  requestAnimationFrame(() => {
+    scheduled = false
+    normalizeGuestsInKitchenPrint()
+  })
+}
+
 if (!window.__fogaoKitchenPrintGuestsFixInstalled) {
   window.__fogaoKitchenPrintGuestsFixInstalled = true
   window.addEventListener('beforeprint', normalizeGuestsInKitchenPrint)
-  window.addEventListener('DOMContentLoaded', normalizeGuestsInKitchenPrint)
-  new MutationObserver(normalizeGuestsInKitchenPrint).observe(document.body, { childList: true, subtree: true })
-  setInterval(normalizeGuestsInKitchenPrint, 500)
+  window.addEventListener('DOMContentLoaded', scheduleNormalize)
+  window.addEventListener('fogao-tables-updated', scheduleNormalize)
+  window.addEventListener('storage', event => {
+    if (event.key === TABLES_KEY) scheduleNormalize()
+  })
+  new MutationObserver(scheduleNormalize).observe(document.body, { childList: true, subtree: true })
+  setTimeout(scheduleNormalize, 250)
 }
