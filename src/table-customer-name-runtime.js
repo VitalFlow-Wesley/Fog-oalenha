@@ -1,4 +1,5 @@
 const TABLES_KEY = 'fogao-tables-v1'
+const initializedProductDrawers = new WeakSet()
 
 function readTables() {
   try {
@@ -120,9 +121,22 @@ function openCustomerEditor(drawer) {
   window.setTimeout(() => input.focus(), 30)
 }
 
+function selectDefaultProductCategory(drawer) {
+  if (initializedProductDrawers.has(drawer)) return
+  const tabs = [...drawer.querySelectorAll('.commandCategoryTabs button')]
+  if (!tabs.length) return
+
+  const mealsButton = tabs.find(button => button.textContent?.trim() === 'Refeições')
+  if (!mealsButton) return
+
+  initializedProductDrawers.add(drawer)
+  if (!mealsButton.classList.contains('active')) mealsButton.click()
+}
+
 function enhanceDrawer() {
   const drawer = document.querySelector('.commandDrawer')
   if (!drawer) return
+  selectDefaultProductCategory(drawer)
   const titleRow = drawer.querySelector('.commandTitleRow')
   const title = titleRow?.querySelector('h2')
   if (!titleRow || !title) return
