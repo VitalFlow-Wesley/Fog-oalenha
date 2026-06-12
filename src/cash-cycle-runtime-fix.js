@@ -36,6 +36,10 @@ function isCurrentClosingPage() {
   return !selectedDate || selectedDate === todayKey()
 }
 
+function isConfirmingCashClosing() {
+  return Boolean(document.querySelector('.closingModalOverlay'))
+}
+
 function latestClosingTimestamp() {
   const closings = readJson(CLOSINGS_KEY, [])
   if (!Array.isArray(closings) || !closings.length) return 0
@@ -61,9 +65,12 @@ function currentCashClosedTables(rawValue) {
 
 Storage.prototype.getItem = function patchedGetItem(key) {
   const value = nativeGetItem.call(this, key)
-  if (this === localStorage && key === CLOSED_TABLES_KEY && isCurrentClosingPage()) {
-    return currentCashClosedTables(value)
-  }
+  const shouldFilterCurrentCash = this === localStorage
+    && key === CLOSED_TABLES_KEY
+    && isCurrentClosingPage()
+    && !isConfirmingCashClosing()
+
+  if (shouldFilterCurrentCash) return currentCashClosedTables(value)
   return value
 }
 
