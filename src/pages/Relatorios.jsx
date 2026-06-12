@@ -459,11 +459,11 @@ export default function Relatorios({ tables = [] }) {
           <p>{reportSubtitle}</p>
         </div>
         <div className="reportsActions noPrint">
-          <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Completo</button><button className={mode === 'fechamentos' ? 'active' : ''} onClick={() => setMode('fechamentos')} type="button">Fechamentos</button></div>
-          <label className="reportActionBtn" style={{ position: 'relative', cursor: 'pointer' }}><CalendarDays size={16} /> {dateLabel}<input type="date" value={selectedDate} onChange={handleDateChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} /></label>
-          {mode === 'completo' && <label className="reportClosedToggle"><input type="checkbox" checked={includeClosedTables} onChange={event => setIncludeClosedTables(event.target.checked)} /> Incluir mesas fechadas do dia</label>}
           <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
           <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
+          <label className="reportActionBtn reportDateBtn" style={{ position: 'relative', cursor: 'pointer' }}><CalendarDays size={16} /> {dateLabel}<input type="date" value={selectedDate} onChange={handleDateChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} /></label>
+          <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Completo</button><button className={mode === 'fechamentos' ? 'active' : ''} onClick={() => setMode('fechamentos')} type="button">Fechamentos</button></div>
+          {mode === 'completo' && <label className="reportClosedToggle"><input type="checkbox" checked={includeClosedTables} onChange={event => setIncludeClosedTables(event.target.checked)} /> Incluir mesas fechadas do dia</label>}
         </div>
       </div>
 

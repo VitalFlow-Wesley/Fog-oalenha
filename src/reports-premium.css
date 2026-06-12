@@ -2,7 +2,7 @@
   max-width: 1240px;
   min-height: calc(100vh - 32px);
   margin: 0 auto;
-  padding: 20px 22px 18px;
+  padding: 18px 22px 18px;
   border: 1px solid rgba(234, 215, 191, .95);
   border-radius: 24px;
   background:
@@ -26,11 +26,16 @@
 }
 
 .reportsHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(520px, .92fr);
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 26px 24px;
+  border: 1px solid #ead7bf;
+  border-radius: 21px;
+  background: rgba(255, 253, 248, .78);
+  box-shadow: 0 10px 22px rgba(90, 45, 20, .035);
   position: relative;
   z-index: 1;
 }
@@ -45,7 +50,7 @@
 .reportsHeader h1 {
   margin-top: 4px;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(32px, 3vw, 44px);
+  font-size: clamp(34px, 3.2vw, 48px);
   line-height: .96;
   letter-spacing: -.04em;
   color: #341d13;
@@ -54,45 +59,48 @@
 .reportsHeader p {
   margin-top: 6px;
   color: #7d6758;
-  font-size: 13px;
-  max-width: 450px;
+  font-size: 14px;
+  max-width: 540px;
 }
 
 .reportsActions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  gap: 7px;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-  padding-top: 6px;
+  gap: 10px;
+  justify-content: stretch;
 }
 
 .reportTabs {
-  display: flex;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   padding: 4px;
-  gap: 4px;
+  gap: 0;
   border: 1px solid #ead7bf;
-  border-radius: 13px;
+  border-radius: 12px;
   background: rgba(255, 249, 239, .88);
   box-shadow: 0 6px 14px rgba(90, 45, 20, .035);
+  overflow: hidden;
 }
 
 .reportTabs button,
 .reportActionBtn {
-  min-height: 34px;
-  border-radius: 10px;
+  min-height: 40px;
+  border-radius: 9px;
   border: 0;
   background: transparent;
   color: #6f5849;
-  padding: 0 11px;
+  padding: 0 13px;
   display: inline-flex;
+  justify-content: center;
   align-items: center;
   gap: 6px;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .reportTabs button.active {
@@ -107,8 +115,13 @@
   color: #3b2419;
 }
 
+.reportDateBtn {
+  justify-content: space-between;
+}
+
 .reportClosedToggle {
-  min-height: 34px;
+  grid-column: 1 / -1;
+  min-height: 36px;
   border-radius: 10px;
   border: 1px solid #ead7bf;
   background: rgba(255, 249, 239, .9);
@@ -132,22 +145,22 @@
 .reportsSummaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 12px;
   position: relative;
   z-index: 1;
 }
 
 .reportSummaryCard {
-  min-height: 82px;
+  min-height: 70px;
   display: grid;
-  grid-template-columns: 40px 1fr;
+  grid-template-columns: 36px 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   background: rgba(255, 253, 248, .92);
   border: 1px solid #ead7bf;
-  border-radius: 15px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 9px 10px;
   box-shadow: 0 8px 18px rgba(90, 45, 20, .045);
   position: relative;
   overflow: hidden;
@@ -164,8 +177,8 @@
 }
 
 .reportSummaryIcon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -176,7 +189,7 @@
 .reportSummaryCard span {
   display: block;
   color: #4b2d1f;
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 4px;
   line-height: 1.15;
 }
@@ -185,7 +198,7 @@
   display: block;
   color: #2a160e;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
   margin-bottom: 4px;
   white-space: nowrap;
@@ -193,7 +206,7 @@
 
 .reportSummaryCard small {
   color: #7d6758;
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .reportSummaryCard.fire .reportSummaryIcon { background: linear-gradient(135deg, #c44f2c, #f06738); }
@@ -716,13 +729,13 @@
   }
 
   .reportsHeader {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    padding: 22px;
   }
 
   .reportsActions {
-    justify-content: flex-start;
+    width: 100%;
     padding-top: 0;
-    flex-wrap: wrap;
   }
 }
 
@@ -737,7 +750,9 @@
   .closingDetailInfo,
   .closingPaymentGrid,
   .closingTablesList div { grid-template-columns: 1fr; }
-  .reportTabs, .reportsActions { width: 100%; }
+  .reportsHeader { padding: 18px; }
+  .reportsActions { grid-template-columns: 1fr; width: 100%; }
+  .reportTabs { width: 100%; }
   .reportTabs button, .reportActionBtn, .reportClosedToggle { flex: 1; }
   .reportPanelTitleRow { align-items: flex-start; flex-direction: column; }
   .premiumReportRow { grid-template-columns: 1fr 55px 90px; padding: 0 10px; }
