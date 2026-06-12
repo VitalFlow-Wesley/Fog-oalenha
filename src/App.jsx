@@ -84,6 +84,7 @@ function buildSalesRecord(table, type, closingDate) {
     type,
     tableId: table.id,
     tableNumber: table.number,
+    customerName: repairText(table.customerName || ''),
     guests: Number(table.guests || 0),
     waiterName: getTableWaiter(table),
     total: tableTotal(table),
@@ -111,6 +112,7 @@ function buildClosedTableRecord(table, mode, { closingDate, payments, closedBy, 
     closedAtLabel: now.toLocaleString('pt-BR'),
     tableId: table.id,
     tableNumber: table.number,
+    customerName: repairText(table.customerName || ''),
     waiterName: getTableWaiter(table),
     guests: Number(table.guests || 0),
     previousStatus: table.status || 'ocupada',
@@ -161,6 +163,7 @@ function resetTableForNewCash(table) {
   return {
     ...table,
     status: 'livre',
+    customerName: '',
     guests: 0,
     openedAt: null,
     closedAt: null,
@@ -318,6 +321,17 @@ export default function App() {
   useEffect(() => writeStored(TABLES_KEY, tables), [tables])
   useEffect(() => writeStored(USERS_KEY, users), [users])
   useEffect(() => writeStored(SETTINGS_KEY, settings), [settings])
+
+  useEffect(() => {
+    const syncTablesFromStorage = () => {
+      const storedTables = readStored(TABLES_KEY, null)
+      if (!Array.isArray(storedTables)) return
+      setTables(storedTables)
+    }
+
+    window.addEventListener('fogao-tables-updated', syncTablesFromStorage)
+    return () => window.removeEventListener('fogao-tables-updated', syncTablesFromStorage)
+  }, [])
 
   useEffect(() => {
     if (!remoteLoadedRef.current) return
