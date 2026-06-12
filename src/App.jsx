@@ -18,6 +18,7 @@ const SETTINGS_KEY = 'fogao-settings-v1'
 const PRODUCTS_KEY = 'fogao-products-v1'
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
+const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 
 const initialSettings = {
@@ -97,6 +98,53 @@ function buildSalesRecord(table, type, closingDate) {
       observation: item.observation || '',
     })),
   }
+}
+
+function buildClosedTableRecord(table, mode, { closingDate, payments, closedBy, observation } = {}) {
+  const now = new Date()
+  const total = tableTotal(table)
+  return {
+    id: `closed-table-${table.id || table.number}-${now.getTime()}`,
+    date: dateKey(closingDate || now),
+    closedAt: now.toISOString(),
+    closedAtLabel: now.toLocaleString('pt-BR'),
+    tableId: table.id,
+    tableNumber: table.number,
+    waiterName: getTableWaiter(table),
+    guests: Number(table.guests || 0),
+    previousStatus: table.status || 'ocupada',
+    total,
+    items: (table.items || []).map(item => {
+      const qty = Number(item.qty || 0)
+      const price = Number(item.price || 0)
+      return {
+        id: item.id,
+        name: item.name || 'Produto',
+        qty,
+        price,
+        total: qty * price,
+        category: item.category || 'Outros',
+        sector: item.sector || item.localSaida || '',
+        localSaida: item.localSaida || item.sector || '',
+        observation: item.observation || '',
+      }
+    }),
+    payments: payments || null,
+    closedBy: closedBy || 'Operador',
+    closedByMode: mode,
+    observation: observation || '',
+  }
+}
+
+function mergeClosedTableHistory(records, history) {
+  const seen = new Set()
+  return [...records, ...(history || [])]
+    .filter(record => {
+      if (!record?.id || seen.has(record.id)) return false
+      seen.add(record.id)
+      return true
+    })
+    .slice(0, 2000)
 }
 
 function resetTableForNewCash(table) {
@@ -182,6 +230,7 @@ export default function App() {
         const localProducts = readStored(PRODUCTS_KEY, [])
         const localSalesHistory = readStored(SALES_KEY, [])
         const localClosings = readStored(CLOSINGS_KEY, [])
+        const localClosedTables = readStored(CLOSED_TABLES_KEY, [])
         const missingRemoteState = {}
 
         if (Array.isArray(remote.users)) {
@@ -234,6 +283,14 @@ export default function App() {
           missingRemoteState.closings = localClosings
         }
 
+        if (Array.isArray(remote.closedTablesHistory)) {
+          const closedTablesHistory = remote.closedTablesHistory.length ? remote.closedTablesHistory : localClosedTables
+          writeStored(CLOSED_TABLES_KEY, closedTablesHistory)
+          if (!remote.closedTablesHistory.length && Array.isArray(localClosedTables) && localClosedTables.length) missingRemoteState.closedTablesHistory = localClosedTables
+        } else if (Array.isArray(localClosedTables) && localClosedTables.length) {
+          missingRemoteState.closedTablesHistory = localClosedTables
+        }
+
         if (Object.keys(missingRemoteState).length) {
           await saveRemoteState(missingRemoteState)
         }
@@ -259,7 +316,8 @@ export default function App() {
       const products = readStored(PRODUCTS_KEY, [])
       const salesHistory = readStored(SALES_KEY, [])
       const closings = readStored(CLOSINGS_KEY, [])
-      saveRemoteState({ users, tables, settings, products, salesHistory, closings }).catch(error => {
+      const closedTablesHistory = readStored(CLOSED_TABLES_KEY, [])
+      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory }).catch(error => {
         console.warn('Nao foi possivel salvar no MongoDB:', error.message)
       })
     }, 650)
@@ -273,7 +331,8 @@ export default function App() {
       const products = readStored(PRODUCTS_KEY, [])
       const salesHistory = readStored(SALES_KEY, [])
       const closings = readStored(CLOSINGS_KEY, [])
-      saveRemoteState({ users, tables, settings, products, salesHistory, closings }).catch(error => {
+      const closedTablesHistory = readStored(CLOSED_TABLES_KEY, [])
+      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory }).catch(error => {
         console.warn('Nao foi possivel salvar produtos no MongoDB:', error.message)
       })
     }
@@ -281,10 +340,12 @@ export default function App() {
     window.addEventListener('fogao-products-updated', syncProducts)
     window.addEventListener('fogao-sales-history-updated', syncProducts)
     window.addEventListener('fogao-closings-updated', syncProducts)
+    window.addEventListener('fogao-closed-tables-updated', syncProducts)
     return () => {
       window.removeEventListener('fogao-products-updated', syncProducts)
       window.removeEventListener('fogao-sales-history-updated', syncProducts)
       window.removeEventListener('fogao-closings-updated', syncProducts)
+      window.removeEventListener('fogao-closed-tables-updated', syncProducts)
     }
   }, [users, tables, settings])
 
@@ -323,6 +384,14 @@ export default function App() {
     const informedTotal = Object.values(payments || {}).reduce((sum, value) => sum + Number(value || 0), 0)
     const nextTables = tables.map(resetTableForNewCash)
     const nextSalesHistory = [...salesRecords, ...readStored(SALES_KEY, [])].slice(0, 2000)
+    const closedTableRecords = activeTables
+      .map(table => buildClosedTableRecord(table, 'fechamento_caixa', {
+        closingDate,
+        payments,
+        closedBy: currentUser?.name || currentUser?.username || 'Operador',
+        observation: note,
+      }))
+    const nextClosedTablesHistory = mergeClosedTableHistory(closedTableRecords, readStored(CLOSED_TABLES_KEY, []))
     const closingRecord = {
       id: `closing-${Date.now()}`,
       date: closingDate,
@@ -342,10 +411,12 @@ export default function App() {
 
     writeStored(SALES_KEY, nextSalesHistory)
     writeStored(CLOSINGS_KEY, nextClosings)
+    writeStored(CLOSED_TABLES_KEY, nextClosedTablesHistory)
     writeStored(TABLES_KEY, nextTables)
     setTables(nextTables)
     window.dispatchEvent(new Event('fogao-sales-history-updated'))
     window.dispatchEvent(new Event('fogao-closings-updated'))
+    window.dispatchEvent(new Event('fogao-closed-tables-updated'))
 
     await saveRemoteState({
       users,
@@ -354,9 +425,45 @@ export default function App() {
       products: readStored(PRODUCTS_KEY, []),
       salesHistory: nextSalesHistory,
       closings: nextClosings,
+      closedTablesHistory: nextClosedTablesHistory,
     })
 
     return closingRecord
+  }
+
+  async function handleCloseTable(tableId) {
+    const table = tables.find(item => item.id === tableId)
+    if (!table) return null
+
+    const shouldRecord = table.items?.length && tableTotal(table) > 0
+    const salesRecord = shouldRecord ? buildSalesRecord(table, 'mesa_fechada', new Date()) : null
+    const closedTableRecord = shouldRecord ? buildClosedTableRecord(table, 'mesa', {
+      closedBy: currentUser?.name || currentUser?.username || 'Operador',
+    }) : null
+    const resetIds = new Set([table.id, ...(table.mergedTableIds || [])])
+    const nextTables = tables.map(item => resetIds.has(item.id) ? resetTableForNewCash(item) : item)
+    const currentSalesHistory = readStored(SALES_KEY, [])
+    const nextSalesHistory = salesRecord ? [salesRecord, ...currentSalesHistory].slice(0, 2000) : currentSalesHistory
+    const nextClosedTablesHistory = closedTableRecord ? mergeClosedTableHistory([closedTableRecord], readStored(CLOSED_TABLES_KEY, [])) : readStored(CLOSED_TABLES_KEY, [])
+
+    if (salesRecord) writeStored(SALES_KEY, nextSalesHistory)
+    if (closedTableRecord) writeStored(CLOSED_TABLES_KEY, nextClosedTablesHistory)
+    writeStored(TABLES_KEY, nextTables)
+    setTables(nextTables)
+    if (salesRecord) window.dispatchEvent(new Event('fogao-sales-history-updated'))
+    if (closedTableRecord) window.dispatchEvent(new Event('fogao-closed-tables-updated'))
+
+    await saveRemoteState({
+      users,
+      tables: nextTables,
+      settings,
+      products: readStored(PRODUCTS_KEY, []),
+      salesHistory: nextSalesHistory,
+      closings: readStored(CLOSINGS_KEY, []),
+      closedTablesHistory: nextClosedTablesHistory,
+    })
+
+    return salesRecord
   }
 
   if (!currentUser) return <Login users={users} onLogin={handleLogin} />
@@ -366,7 +473,7 @@ export default function App() {
       <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={handleLogout} />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
-        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} />}
+        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} />}
         {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}

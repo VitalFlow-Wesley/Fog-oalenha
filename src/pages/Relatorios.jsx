@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
 
 const SALES_KEY = 'fogao-sales-history-v1'
+const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 
 function money(value) {
   return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
@@ -187,6 +188,8 @@ export default function Relatorios({ tables = [] }) {
   const [period, setPeriod] = useState('Hoje')
   const [selectedDate, setSelectedDate] = useState(() => localStorage.getItem('fogao-reports-date') || todayKey())
   const [history, setHistory] = useState(() => readJson(SALES_KEY, []))
+  const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
+  const [includeClosedTables, setIncludeClosedTables] = useState(false)
 
   useEffect(() => {
     async function loadHistory() {
@@ -197,16 +200,24 @@ export default function Relatorios({ tables = [] }) {
           localStorage.setItem(SALES_KEY, JSON.stringify(remote.salesHistory))
           setHistory(remote.salesHistory)
         }
+        if (Array.isArray(remote.closedTablesHistory)) {
+          localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remote.closedTablesHistory))
+          setClosedTablesHistory(remote.closedTablesHistory)
+        }
       } catch {
         setHistory(readJson(SALES_KEY, []))
+        setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
       }
     }
     loadHistory()
     const onUpdate = () => setHistory(readJson(SALES_KEY, []))
+    const onClosedTablesUpdate = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
     window.addEventListener('fogao-sales-history-updated', onUpdate)
+    window.addEventListener('fogao-closed-tables-updated', onClosedTablesUpdate)
     window.addEventListener('focus', loadHistory)
     return () => {
       window.removeEventListener('fogao-sales-history-updated', onUpdate)
+      window.removeEventListener('fogao-closed-tables-updated', onClosedTablesUpdate)
       window.removeEventListener('focus', loadHistory)
     }
   }, [])
@@ -217,6 +228,16 @@ export default function Relatorios({ tables = [] }) {
   }, [tables, selectedDate])
   const recordsForDate = useMemo(() => [...history.filter(record => record.date === selectedDate), ...activeRecords], [history, selectedDate, activeRecords])
   const report = useMemo(() => buildReportFromHistory(recordsForDate), [recordsForDate])
+  const closedTablesForDate = useMemo(() => {
+    return (closedTablesHistory || [])
+      .filter(record => record.date === selectedDate)
+      .map(record => ({
+        ...record,
+        itemsQty: (record.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
+        sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+      }))
+      .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
+  }, [closedTablesHistory, selectedDate])
   const dateLabel = formatDateBR(selectedDate)
   const hasMovement = recordsForDate.length > 0
 
@@ -250,6 +271,7 @@ export default function Relatorios({ tables = [] }) {
         <div className="reportsActions noPrint">
           <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Relatório simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Relatório completo</button></div>
           <label className="reportActionBtn" style={{ position: 'relative', cursor: 'pointer' }}><CalendarDays size={16} /> {dateLabel}<input type="date" value={selectedDate} onChange={handleDateChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} /></label>
+          {mode === 'completo' && <label className="reportClosedToggle"><input type="checkbox" checked={includeClosedTables} onChange={event => setIncludeClosedTables(event.target.checked)} /> Incluir mesas fechadas do dia</label>}
           <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
           <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
         </div>
@@ -273,6 +295,7 @@ export default function Relatorios({ tables = [] }) {
             <section className="reportPanel quantityProductsComplete"><h2>Produtos mais vendidos por quantidade</h2><ProductTable products={report.topProductsByQty} type="qty" /></section>
             <section className="reportPanel revenueProductsComplete"><h2>Produtos com maior faturamento</h2><ProductTable products={report.topProductsByRevenue} type="revenue" /></section>
             <section className="reportPanel tablePerformanceComplete"><h2>Desempenho das mesas</h2><div className="completeTable tablesCompleteTable"><div className="completeTableRow head"><span>Mesa</span><span>Total consumido</span><span>Itens</span><span>Pedidos</span><span>Setores</span><span>Garçom</span><span>Situação</span></div>{report.salesByTable.length ? report.salesByTable.slice(0, 7).map(table => <div className="completeTableRow" key={`${table.number}-${table.status}-${table.closedAtLabel}`}><span>Mesa {table.number}</span><span>{money(table.total)}</span><span>{table.items}</span><span>{table.orders}</span><span>{table.sectorsText}</span><span>{table.waiterName}</span><span><em className={table.status === 'aberta' ? 'warning' : 'success'}>{table.status === 'aberta' ? 'Aberta' : 'Fechada'}</em></span></div>) : <div className="completeTableRow"><span>-</span><span>{money(0)}</span><span>0</span><span>0</span><span>-</span><span>-</span><span><em>Sem venda</em></span></div>}</div></section>
+            {includeClosedTables && <section className="reportPanel closedTablesReportPanel"><div className="reportPanelTitleRow"><h2>Mesas fechadas do dia</h2><span>{closedTablesForDate.length} mesas em {dateLabel}</span></div><div className="completeTable closedTablesReportTable"><div className="completeTableRow head"><span>Mesa</span><span>Garçom</span><span>Horário</span><span>Itens</span><span>Origem</span><span>Total</span></div>{closedTablesForDate.length ? closedTablesForDate.map(record => <div className="completeTableRow" key={record.id}><span>Mesa {record.tableNumber}</span><span>{record.waiterName || 'Sem garçom'}</span><span>{record.closedAtLabel || '-'}</span><span>{record.itemsQty}</span><span>{record.sourceLabel}</span><span>{money(record.total)}</span></div>) : <div className="completeTableRow"><span>-</span><span>Nenhuma mesa fechada nessa data</span><span>-</span><span>0</span><span>-</span><span>{money(0)}</span></div>}</div></section>}
             <section className="reportPanel movementPanel"><h2>Horários de maior movimento</h2><div className="movementChart">{report.hours.map(hour => <div key={hour.label}><span style={{ height: `${Math.max(8, hour.count * 24)}px` }} /><small>{hour.label}</small></div>)}</div></section>
             <section className="reportPanel indicatorsPanel"><h2>Indicadores gerais</h2><div className="indicatorRows"><p><span>Total de comandas com movimento</span><strong>{report.salesTables.length}</strong></p><p><span>Total de itens vendidos</span><strong>{report.ordersQty}</strong></p><p><span>Ticket médio por mesa</span><strong>{money(report.ticket)}</strong></p><p><span>Média de itens por mesa</span><strong>{report.salesTables.length ? (report.ordersQty / report.salesTables.length).toFixed(1).replace('.', ',') : '0,0'}</strong></p></div></section>
             <section className="reportPanel generalSummaryPanel"><h2>Resumo geral</h2><div className="indicatorRows"><p><span>Faturamento total</span><strong>{money(report.total)}</strong></p><p><span>Mesa destaque</span><strong>{report.topTable ? `Mesa ${report.topTable.number} · ${money(report.topTable.total)}` : '-'}</strong></p><p><span>Mais vendido em quantidade</span><strong>{report.topProductByQty ? `${report.topProductByQty.name} · ${report.topProductByQty.qty} un.` : '-'}</strong></p><p><span>Maior faturamento</span><strong>{report.topProductByRevenue ? `${report.topProductByRevenue.name} · ${money(report.topProductByRevenue.total)}` : '-'}</strong></p><p><span>Garçom destaque</span><strong>{report.topWaiter ? `${report.topWaiter.name} · ${report.topWaiter.tables} mesas · ${money(report.topWaiter.total)}` : '-'}</strong></p></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório gerado com histórico salvo e mesas abertas de {dateLabel}.</div></section>

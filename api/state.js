@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'PUT') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
-      const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings']
+      const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings', 'closedTablesHistory']
       const nextState = Object.fromEntries(Object.entries(body).filter(([key]) => allowedKeys.includes(key)))
 
       if (!Object.keys(nextState).length) {

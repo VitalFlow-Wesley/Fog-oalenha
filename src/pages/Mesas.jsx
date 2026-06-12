@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
-import { ChefHat, Clock, DollarSign, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
+import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
+const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const productIcons = {
   Refeições: '🍲',
   Churrasco: '🥩',
@@ -55,6 +56,35 @@ function formatUpdateTime(date) {
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
+function todayKey() {
+  const date = new Date()
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function getItemsQty(record) {
+  return (record.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)
+}
+
+function getClosedTableRecords(history, date = todayKey()) {
+  return (history || [])
+    .filter(record => record.date === date)
+    .map(record => ({
+      ...record,
+      itemsQty: getItemsQty(record),
+      sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+    }))
+    .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
+}
+
 function createTable(nextId) {
   return {
     id: nextId,
@@ -68,9 +98,13 @@ function createTable(nextId) {
   }
 }
 
-export default function Mesas({ tables, setTables, users, currentUser, settings }) {
+export default function Mesas({ tables, setTables, users, currentUser, settings, onCloseTable }) {
   const [selected, setSelected] = useState(null)
   const [availableProducts, setAvailableProducts] = useState(() => readProducts())
+  const [closedTablesOpen, setClosedTablesOpen] = useState(false)
+  const [closedTablesDate, setClosedTablesDate] = useState(todayKey())
+  const [selectedClosedTable, setSelectedClosedTable] = useState(null)
+  const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
   const categories = useMemo(() => [...new Set(availableProducts.filter(p => p.status !== 'Inativo').map(p => p.category))], [availableProducts])
   const [activeCategory, setActiveCategory] = useState(categories[0] || 'Refeições')
   const [observation, setObservation] = useState('')
@@ -109,6 +143,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     () => table ? tables.filter(t => t.id !== table.id && t.status !== 'juntada' && !t.mergedTableIds?.length) : [],
     [tables, table]
   )
+  const closedTablesToday = useMemo(() => getClosedTableRecords(closedTablesHistory, closedTablesDate), [closedTablesHistory, closedTablesDate])
 
   useEffect(() => {
     if (!categories.length) return
@@ -132,6 +167,32 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     const timer = setTimeout(() => window.print(), 150)
     return () => clearTimeout(timer)
   }, [printJob])
+
+  useEffect(() => {
+    async function syncClosedTablesHistory() {
+      try {
+        const response = await fetch('/api/state')
+        const remote = response.ok ? await response.json() : {}
+        if (Array.isArray(remote.closedTablesHistory)) {
+          localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remote.closedTablesHistory))
+          setClosedTablesHistory(remote.closedTablesHistory)
+          return
+        }
+      } catch {
+        // Usa o histórico local se a sincronização remota não responder.
+      }
+      setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    }
+
+    const onUpdate = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    syncClosedTablesHistory()
+    window.addEventListener('fogao-closed-tables-updated', onUpdate)
+    window.addEventListener('focus', syncClosedTablesHistory)
+    return () => {
+      window.removeEventListener('fogao-closed-tables-updated', onUpdate)
+      window.removeEventListener('focus', syncClosedTablesHistory)
+    }
+  }, [])
 
   function updateTable(id, patch) {
     setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
@@ -275,12 +336,17 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
     touch()
   }
 
-  function closeTable() {
-    setTables(prev => prev.map(t => {
-      if (t.id === selected.id) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTableIds: [], mergedTableNumbers: [] }
-      if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
-      return t
-    }))
+  async function closeTable() {
+    if (onCloseTable) {
+      await onCloseTable(selected.id)
+    } else {
+      setTables(prev => prev.map(t => {
+        if (t.id === selected.id) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTableIds: [], mergedTableNumbers: [] }
+        if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
+        return t
+      }))
+    }
+    setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
     setSelected(null)
     touch()
   }
@@ -300,6 +366,9 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
           <p>Acompanhe ocupação, consumo e status das mesas.</p>
         </div>
         <div className="headerActions">
+          <button className="secondaryTableBtn" type="button" onClick={() => setClosedTablesOpen(true)}>
+            <History size={18} /> Mesas fechadas <strong>{closedTablesToday.length}</strong>
+          </button>
           <button className="primaryBtn" type="button" onClick={addTable}><Plus size={18} /> Adicionar mesa</button>
           <span className={`updatedPill ${isRefreshing ? 'refreshing' : ''}`}><Clock size={17} /> {updatedLabel}</span>
           <button className={`refreshBtn ${isRefreshing ? 'refreshing' : ''}`} type="button" onClick={touch} title="Atualizar mesas"><RefreshCw size={20} /></button>
@@ -408,6 +477,87 @@ export default function Mesas({ tables, setTables, users, currentUser, settings 
             {cancelError && <div className="loginError">{cancelError}</div>}
             <div className="actionsRow"><button className="dangerBtn" type="submit">Confirmar cancelamento</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button></div>
           </form>
+        </div>
+      )}
+
+      {closedTablesOpen && (
+        <div className="authModalOverlay closedTablesOverlay">
+          <section className="authModal closedTablesModal">
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Histórico do dia</span>
+                <h2>Mesas fechadas</h2>
+              </div>
+              <button type="button" className="iconBtn" onClick={() => setClosedTablesOpen(false)}><X size={22} /></button>
+            </div>
+            <label className="closedTablesDateFilter">
+              <span>Data</span>
+              <input type="date" value={closedTablesDate} onChange={event => setClosedTablesDate(event.target.value || todayKey())} />
+            </label>
+            <div className="closedTablesSummary">
+              <div><span>Mesas</span><strong>{closedTablesToday.length}</strong></div>
+              <div><span>Itens</span><strong>{closedTablesToday.reduce((sum, record) => sum + record.itemsQty, 0)}</strong></div>
+              <div><span>Consumo</span><strong>{formatMoney(closedTablesToday.reduce((sum, record) => sum + Number(record.total || 0), 0))}</strong></div>
+            </div>
+            <div className="closedTablesList">
+              {closedTablesToday.length ? closedTablesToday.map(record => (
+                <article className="closedTableCard" key={record.id}>
+                  <header>
+                    <div>
+                      <strong>Mesa {record.tableNumber}</strong>
+                      <span>{record.sourceLabel} · {record.closedAtLabel || 'Hoje'}</span>
+                    </div>
+                    <b>{formatMoney(record.total)}</b>
+                  </header>
+                  <div className="closedTableMeta">
+                    <span>{record.guests || 0} pessoas</span>
+                    <span>{record.itemsQty} itens</span>
+                    <span>{record.waiterName || 'Sem garçom'}</span>
+                  </div>
+                  <div className="closedTableFooter">
+                    <span>{record.observation || 'Sem observação'}</span>
+                    <button type="button" onClick={() => setSelectedClosedTable(record)}>Ver consumo</button>
+                  </div>
+                </article>
+              )) : (
+                <div className="closedTablesEmpty">
+                  <strong>Nenhuma mesa fechada hoje</strong>
+                  <span>As mesas fechadas manualmente ou pelo fechamento do caixa aparecerão aqui.</span>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedClosedTable && (
+        <div className="authModalOverlay closedTablesOverlay">
+          <section className="authModal closedConsumptionModal">
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Consumo fechado</span>
+                <h2>Mesa {selectedClosedTable.tableNumber}</h2>
+              </div>
+              <button type="button" className="iconBtn" onClick={() => setSelectedClosedTable(null)}><X size={22} /></button>
+            </div>
+            <div className="closedConsumptionHero">
+              <div><span>Garçom</span><strong>{selectedClosedTable.waiterName || 'Sem garçom'}</strong></div>
+              <div><span>Data e hora</span><strong>{selectedClosedTable.closedAtLabel || 'Hoje'}</strong></div>
+              <div><span>Total</span><strong>{formatMoney(selectedClosedTable.total)}</strong></div>
+            </div>
+            <div className="closedConsumptionItems">
+              {(selectedClosedTable.items || []).map((item, index) => (
+                <div className="closedConsumptionRow" key={`${selectedClosedTable.id}-${item.id}-${index}`}>
+                  <span>{Number(item.qty || 0)}x</span>
+                  <strong>{item.name}</strong>
+                  <em>{item.category || item.sector || '-'}</em>
+                  <b>{formatMoney(item.price)}</b>
+                  <b>{formatMoney(item.total ?? Number(item.price || 0) * Number(item.qty || 0))}</b>
+                </div>
+              ))}
+            </div>
+            {selectedClosedTable.observation && <p className="closedConsumptionNote">{selectedClosedTable.observation}</p>}
+          </section>
         </div>
       )}
 
