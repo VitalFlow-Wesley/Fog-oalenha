@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
+import AppErrorBoundary from './components/AppErrorBoundary.jsx'
 import './styles.css'
 import './theme.css'
 import './cancel.css'
@@ -64,8 +65,13 @@ import './closing-mobile-final-hard-fix.css'
 import './waiter-persist-runtime-fix.js'
 import './reports-toolbar-final.css'
 import './reports-complete-compact.css'
+import './app-quality-guard.css'
 
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(
+  <AppErrorBoundary>
+    <App />
+  </AppErrorBoundary>
+)
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
