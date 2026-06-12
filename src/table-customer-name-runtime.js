@@ -16,8 +16,10 @@ function saveTables(tables) {
 }
 
 function getCurrentTableNumber(drawer) {
-  const text = drawer.querySelector('.commandTitleRow h2')?.textContent || ''
-  return text.match(/Mesa\s+(\d+)/i)?.[1]?.padStart(2, '0') || ''
+  const subtitle = drawer.querySelector('.tableCustomerSubtitle')?.textContent || ''
+  const title = drawer.querySelector('.commandTitleRow h2')?.textContent || ''
+  const source = `${subtitle} ${title}`
+  return source.match(/Mesa\s+(\d+)/i)?.[1]?.padStart(2, '0') || ''
 }
 
 function findTable(number) {
@@ -29,7 +31,7 @@ function createModal() {
   overlay.className = 'tableCustomerModalOverlay'
   overlay.hidden = true
   overlay.innerHTML = `
-    <form class="tableCustomerModal" role="dialog" aria-modal="true">
+    <form class="tableCustomerModal" role="dialog" aria-modal="true" novalidate>
       <span class="tableCustomerEyebrow">IDENTIFICAÇÃO DA MESA</span>
       <h2>Nome do cliente</h2>
       <p>Use um nome ou referência para o garçom identificar esta comanda. O número físico da mesa continuará salvo.</p>
@@ -41,7 +43,7 @@ function createModal() {
       <div class="tableCustomerActions">
         <button type="button" data-action="clear">Remover nome</button>
         <button type="button" data-action="cancel">Cancelar</button>
-        <button type="submit">Salvar nome</button>
+        <button type="button" data-action="save">Salvar nome</button>
       </div>
     </form>
   `
@@ -59,8 +61,14 @@ function openCustomerEditor(drawer) {
   modal ||= createModal()
   const input = modal.querySelector('input')
   const error = modal.querySelector('.tableCustomerError')
+  const saveButton = modal.querySelector('[data-action="save"]')
+  const clearButton = modal.querySelector('[data-action="clear"]')
+  const cancelButton = modal.querySelector('[data-action="cancel"]')
+
   input.value = table.customerName || ''
   error.hidden = true
+  saveButton.disabled = false
+  saveButton.textContent = 'Salvar nome'
 
   const close = () => {
     modal.hidden = true
@@ -68,25 +76,51 @@ function openCustomerEditor(drawer) {
   }
 
   const persist = customerName => {
-    const tables = readTables().map(item => (
-      String(item.number || '').padStart(2, '0') === number
-        ? { ...item, customerName: customerName.trim() }
-        : item
-    ))
-    saveTables(tables)
-    sessionStorage.setItem(REOPEN_KEY, number)
-    close()
-    window.setTimeout(() => window.location.reload(), 120)
+    const cleanName = String(customerName || '').trim()
+    const tables = readTables()
+    let changed = false
+    const nextTables = tables.map(item => {
+      if (String(item.number || '').padStart(2, '0') !== number) return item
+      changed = true
+      return { ...item, customerName: cleanName }
+    })
+
+    if (!changed) {
+      error.textContent = 'Não foi possível localizar esta mesa. Feche a comanda e abra novamente.'
+      error.hidden = false
+      return
+    }
+
+    try {
+      saveButton.disabled = true
+      saveButton.textContent = 'Salvando...'
+      saveTables(nextTables)
+      sessionStorage.setItem(REOPEN_KEY, number)
+      close()
+      window.setTimeout(() => window.location.reload(), 180)
+    } catch {
+      saveButton.disabled = false
+      saveButton.textContent = 'Salvar nome'
+      error.textContent = 'Não foi possível salvar o nome. Tente novamente.'
+      error.hidden = false
+    }
   }
 
-  modal.querySelector('[data-action="cancel"]').onclick = close
-  modal.querySelector('[data-action="clear"]').onclick = () => persist('')
-  modal.onclick = event => {
-    if (event.target === modal) close()
-  }
+  cancelButton.onclick = close
+  clearButton.onclick = () => persist('')
+  saveButton.onclick = () => persist(input.value)
   modal.querySelector('form').onsubmit = event => {
     event.preventDefault()
     persist(input.value)
+  }
+  input.onkeydown = event => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      persist(input.value)
+    }
+  }
+  modal.onclick = event => {
+    if (event.target === modal) close()
   }
 
   modal.hidden = false
@@ -139,9 +173,13 @@ function enhanceCards() {
     if (!title) return
     const number = title.textContent.match(/Mesa\s+(\d+)/i)?.[1]?.padStart(2, '0')
     const table = tables.find(item => String(item.number || '').padStart(2, '0') === number)
-    if (!table?.customerName) return
-
     let badge = card.querySelector('.tableCustomerBadge')
+
+    if (!table?.customerName) {
+      badge?.remove()
+      return
+    }
+
     if (!badge) {
       badge = document.createElement('span')
       badge.className = 'tableCustomerBadge'
