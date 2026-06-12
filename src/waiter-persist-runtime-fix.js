@@ -1,3 +1,5 @@
+import { saveRemoteState } from './services/appStateApi.js'
+
 const TABLES_KEY = 'fogao-tables-v1'
 const USERS_KEY = 'fogao-users-v1'
 const SESSION_KEY = 'fogao-a-lenha-session'
@@ -57,16 +59,12 @@ function getSelectedTableIdFromScreen() {
 
 async function syncRemote(tables) {
   try {
-    await fetch('/api/state', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        users: readJson(USERS_KEY, []),
-        tables,
-        settings: readJson(SETTINGS_KEY, {}),
-        products: readJson(PRODUCTS_KEY, []),
-        salesHistory: readJson(SALES_KEY, []),
-      }),
+    await saveRemoteState({
+      users: readJson(USERS_KEY, []),
+      tables,
+      settings: readJson(SETTINGS_KEY, {}),
+      products: readJson(PRODUCTS_KEY, []),
+      salesHistory: readJson(SALES_KEY, []),
     })
   } catch {
     // sem travar o app se a API estiver indisponivel

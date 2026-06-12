@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
+import { loadRemoteState } from '../services/appStateApi.js'
 
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -325,8 +326,7 @@ export default function Relatorios({ tables = [] }) {
   useEffect(() => {
     async function loadHistory() {
       try {
-        const response = await fetch('/api/state')
-        const remote = response.ok ? await response.json() : {}
+        const remote = await loadRemoteState()
         if (Array.isArray(remote.salesHistory)) {
           localStorage.setItem(SALES_KEY, JSON.stringify(remote.salesHistory))
           setHistory(remote.salesHistory)

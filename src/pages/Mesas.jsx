@@ -3,6 +3,7 @@ import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
+import { loadRemoteState } from '../services/appStateApi.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -174,8 +175,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   useEffect(() => {
     async function syncClosedTablesHistory() {
       try {
-        const response = await fetch('/api/state')
-        const remote = response.ok ? await response.json() : {}
+        const remote = await loadRemoteState()
         if (Array.isArray(remote.closedTablesHistory)) {
           localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remote.closedTablesHistory))
           setClosedTablesHistory(remote.closedTablesHistory)

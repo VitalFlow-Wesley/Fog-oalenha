@@ -1,3 +1,5 @@
+import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
+
 const REPAIR_VERSION = '2026-06-12-v1'
 const REPAIR_SESSION_KEY = 'fogao-encoding-repair-session'
 
@@ -71,20 +73,14 @@ function repairLocalStorage() {
 
 async function repairRemoteState() {
   try {
-    const response = await fetch('/api/state', { cache: 'no-store' })
-    if (!response.ok) return false
+    const current = await loadRemoteState()
+    if (!current || !Object.keys(current).length) return false
 
-    const current = await response.json()
     const repaired = repairDeep(current)
     if (stableJson(repaired) === stableJson(current)) return false
 
-    const saveResponse = await fetch('/api/state', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(repaired),
-    })
-
-    return saveResponse.ok
+    await saveRemoteState(repaired)
+    return true
   } catch {
     return false
   }
