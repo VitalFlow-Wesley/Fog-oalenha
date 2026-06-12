@@ -23,6 +23,7 @@ let inFlight = false
 let pending = false
 let retryDelay = 1500
 let lastPayload = ''
+let remoteDisabled = import.meta.env.DEV
 
 function readJson(key, fallback) {
   try {
@@ -46,6 +47,11 @@ function setStatus(status) {
 }
 
 async function syncNow() {
+  if (remoteDisabled) {
+    setStatus('local')
+    return
+  }
+
   if (!navigator.onLine) {
     setStatus('offline')
     pending = true
@@ -75,6 +81,13 @@ async function syncNow() {
       body: payload,
       cache: 'no-store',
     })
+
+    if (response.status === 404 || response.status === 405) {
+      remoteDisabled = true
+      pending = false
+      setStatus('local')
+      return
+    }
 
     if (!response.ok) throw new Error(`Falha ao sincronizar: ${response.status}`)
 

@@ -43,3 +43,20 @@
     min-width: 116px !important;
   }
 }
+
+@media (max-width: 560px) {
+  .settingsPremiumPage .settingsTabs.settingsTabsLarge {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
+    gap: 5px !important;
+  }
+
+  .settingsPremiumPage .settingsTabs.settingsTabsLarge button {
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
+  }
+}
