@@ -1,3 +1,5 @@
+import './printer-settings-runtime.js'
+
 const PRODUCTS_KEY = 'fogao-products-v1'
 
 const categoryMap = new Map([
