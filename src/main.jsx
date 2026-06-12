@@ -66,6 +66,8 @@ import './closing-mobile-final-hard-fix.css'
 import './waiter-persist-runtime-fix.js'
 import './reports-toolbar-final.css'
 import './reports-complete-compact.css'
+import './closed-tables-compact-toolbar.js'
+import './closed-tables-compact-toolbar.css'
 import './app-quality-guard.css'
 
 createRoot(document.getElementById('root')).render(
