@@ -8,15 +8,20 @@ const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 
+const nativeGetItem = Storage.prototype.getItem
 let finalizingCashCycle = false
 
-function readJson(key, fallback) {
+function safeParse(raw, fallback) {
   try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
+    const parsed = JSON.parse(raw || 'null')
+    return parsed ?? fallback
   } catch {
     return fallback
   }
+}
+
+function readJson(key, fallback) {
+  return safeParse(nativeGetItem.call(localStorage, key), fallback)
 }
 
 function todayKey() {
@@ -24,23 +29,53 @@ function todayKey() {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
+function isCurrentClosingPage() {
+  const page = document.querySelector('.closingPage')
+  if (!page) return false
+  const selectedDate = page.querySelector('input[type="date"]')?.value
+  return !selectedDate || selectedDate === todayKey()
+}
+
+function latestClosingTimestamp() {
+  const closings = readJson(CLOSINGS_KEY, [])
+  if (!Array.isArray(closings) || !closings.length) return 0
+
+  return closings.reduce((latest, closing) => {
+    const timestamp = new Date(closing?.closedAt || 0).getTime()
+    return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest
+  }, 0)
+}
+
+function currentCashClosedTables(rawValue) {
+  const history = safeParse(rawValue, [])
+  if (!Array.isArray(history)) return rawValue
+
+  const lastClosingAt = latestClosingTimestamp()
+  if (!lastClosingAt) return rawValue
+
+  return JSON.stringify(history.filter(record => {
+    const closedAt = new Date(record?.closedAt || 0).getTime()
+    return Number.isFinite(closedAt) && closedAt > lastClosingAt
+  }))
+}
+
+Storage.prototype.getItem = function patchedGetItem(key) {
+  const value = nativeGetItem.call(this, key)
+  if (this === localStorage && key === CLOSED_TABLES_KEY && isCurrentClosingPage()) {
+    return currentCashClosedTables(value)
+  }
+  return value
+}
+
 async function finalizeCurrentCashCycle() {
   if (finalizingCashCycle) return
   finalizingCashCycle = true
 
   try {
+    const closedTablesHistory = readJson(CLOSED_TABLES_KEY, [])
     const closings = readJson(CLOSINGS_KEY, [])
-    const latestClosing = Array.isArray(closings) ? closings[0] : null
-    const closingDate = latestClosing?.date || todayKey()
-
-    const currentClosedTables = readJson(CLOSED_TABLES_KEY, [])
-    const remainingClosedTables = Array.isArray(currentClosedTables)
-      ? currentClosedTables.filter(record => record?.date !== closingDate)
-      : []
 
     localStorage.setItem(TABLES_KEY, '[]')
-    localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remainingClosedTables))
-
     window.dispatchEvent(new Event('fogao-tables-updated'))
     window.dispatchEvent(new Event('fogao-closed-tables-updated'))
 
@@ -51,7 +86,7 @@ async function finalizeCurrentCashCycle() {
       products: readJson(PRODUCTS_KEY, []),
       salesHistory: readJson(SALES_KEY, []),
       closings,
-      closedTablesHistory: remainingClosedTables,
+      closedTablesHistory,
     })
   } catch (error) {
     console.warn('Não foi possível concluir a limpeza do caixa:', error.message)
