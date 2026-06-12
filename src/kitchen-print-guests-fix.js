@@ -1,3 +1,5 @@
+import './kitchen-modal-lock.js'
+
 const TABLES_KEY = 'fogao-tables-v1'
 
 function readTables() {
