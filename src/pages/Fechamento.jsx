@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CalendarDays, CheckCircle2, DollarSign, FileDown, Flame, LockKeyhole, Printer, ReceiptText, ShieldCheck, Star, Table2, Users, X } from 'lucide-react'
+import { loadRemoteState } from '../services/appStateApi.js'
 
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -202,12 +203,28 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   const [modalError, setModalError] = useState('')
 
   useEffect(() => {
-    const syncClosedTables = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    let cancelled = false
+    const syncClosedTables = async () => {
+      const localHistory = readJson(CLOSED_TABLES_KEY, [])
+      setClosedTablesHistory(localHistory)
+
+      try {
+        const remoteState = await loadRemoteState()
+        if (cancelled || !Array.isArray(remoteState?.closedTablesHistory)) return
+        if (remoteState.closedTablesHistory.length) {
+          localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remoteState.closedTablesHistory))
+          setClosedTablesHistory(remoteState.closedTablesHistory)
+        }
+      } catch {
+        // Mantem a conferência usando o histórico local quando a sincronização remota falhar.
+      }
+    }
     syncClosedTables()
     window.addEventListener('fogao-closed-tables-updated', syncClosedTables)
     window.addEventListener('storage', syncClosedTables)
     window.addEventListener('focus', syncClosedTables)
     return () => {
+      cancelled = true
       window.removeEventListener('fogao-closed-tables-updated', syncClosedTables)
       window.removeEventListener('storage', syncClosedTables)
       window.removeEventListener('focus', syncClosedTables)
