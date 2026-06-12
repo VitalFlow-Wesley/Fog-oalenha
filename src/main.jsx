@@ -70,8 +70,6 @@ import './closed-tables-compact-toolbar.js'
 import './closed-tables-compact-toolbar.css'
 import './item-observation-runtime.js'
 import './item-observation.css'
-import './table-customer-name-runtime.js'
-import './table-customer-name.css'
 import './app-quality-guard.css'
 
 createRoot(document.getElementById('root')).render(
