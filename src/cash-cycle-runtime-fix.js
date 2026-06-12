@@ -1,9 +1,13 @@
+import { saveRemoteState } from './services/appStateApi.js'
+
+const TABLES_KEY = 'fogao-tables-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
 
 const nativeGetItem = Storage.prototype.getItem
 let refreshingClosingPage = false
 let pageSyncScheduled = false
+let clearingTables = false
 
 function safeParse(value, fallback) {
   try {
@@ -68,6 +72,23 @@ function requestClosingDataRefresh() {
   }, 50)
 }
 
+async function clearSalonTablesAfterCashClosing() {
+  if (clearingTables) return
+  clearingTables = true
+
+  window.setTimeout(async () => {
+    try {
+      localStorage.setItem(TABLES_KEY, '[]')
+      window.dispatchEvent(new Event('fogao-tables-updated'))
+      await saveRemoteState({ tables: [] })
+    } catch (error) {
+      console.warn('Não foi possível sincronizar o salão vazio:', error.message)
+    } finally {
+      clearingTables = false
+    }
+  }, 1200)
+}
+
 function findNavButton(label) {
   return [...document.querySelectorAll('.navItem')].find(button =>
     button.textContent?.trim().toLowerCase().includes(label.toLowerCase())
@@ -79,6 +100,8 @@ function remountClosingPageAfterSuccess() {
   const success = document.querySelector('.closingSuccessMessage')
   const closingPage = document.querySelector('.closingPage.cashClosed')
   if (!success || !closingPage) return
+
+  clearSalonTablesAfterCashClosing()
 
   const mesasButton = findNavButton('Mesas')
   const fechamentoButton = findNavButton('Fechamento')
@@ -104,6 +127,7 @@ const observer = new MutationObserver(() => {
 
 observer.observe(document.documentElement, { childList: true, subtree: true })
 window.addEventListener('fogao-closings-updated', () => {
+  clearSalonTablesAfterCashClosing()
   window.setTimeout(() => {
     requestClosingDataRefresh()
     remountClosingPageAfterSuccess()
