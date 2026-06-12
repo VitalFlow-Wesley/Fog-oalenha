@@ -147,6 +147,15 @@ function mergeClosedTableHistory(records, history) {
     .slice(0, 2000)
 }
 
+function closedTableTotal(record) {
+  if (Number(record?.total || 0) > 0) return Number(record.total || 0)
+  return (record?.items || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
+}
+
+function closedTableItemsQty(record) {
+  return (record?.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)
+}
+
 function resetTableForNewCash(table) {
   return {
     ...table,
@@ -377,10 +386,14 @@ export default function App() {
   async function handleCloseCash({ date, payments, note }) {
     const closingDate = dateKey(date)
     const activeTables = tables.filter(hasTableMovement)
+    const closedTablesAlreadyInDay = readStored(CLOSED_TABLES_KEY, [])
+      .filter(record => record?.date === closingDate && record.closedByMode !== 'fechamento_caixa')
     const salesRecords = activeTables
       .map(table => buildSalesRecord(table, 'caixa_fechado', closingDate))
       .filter(record => record.items.length && record.total > 0)
-    const total = activeTables.reduce((sum, table) => sum + tableTotal(table), 0)
+    const activeTotal = activeTables.reduce((sum, table) => sum + tableTotal(table), 0)
+    const closedTablesTotal = closedTablesAlreadyInDay.reduce((sum, record) => sum + closedTableTotal(record), 0)
+    const total = activeTotal + closedTablesTotal
     const informedTotal = Object.values(payments || {}).reduce((sum, value) => sum + Number(value || 0), 0)
     const nextTables = tables.map(resetTableForNewCash)
     const nextSalesHistory = [...salesRecords, ...readStored(SALES_KEY, [])].slice(0, 2000)
@@ -403,9 +416,10 @@ export default function App() {
       difference: informedTotal - total,
       payments: payments || {},
       note: note || '',
-      tableCount: activeTables.length,
-      itemCount: salesRecords.reduce((sum, record) => sum + record.items.reduce((itemSum, item) => itemSum + Number(item.qty || 0), 0), 0),
+      tableCount: activeTables.length + closedTablesAlreadyInDay.length,
+      itemCount: salesRecords.reduce((sum, record) => sum + record.items.reduce((itemSum, item) => itemSum + Number(item.qty || 0), 0), 0) + closedTablesAlreadyInDay.reduce((sum, record) => sum + closedTableItemsQty(record), 0),
       tables: activeTables,
+      closedTables: closedTablesAlreadyInDay,
     }
     const nextClosings = [closingRecord, ...readStored(CLOSINGS_KEY, [])].slice(0, 120)
 

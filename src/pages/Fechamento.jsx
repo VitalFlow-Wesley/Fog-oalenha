@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CalendarDays, CheckCircle2, DollarSign, FileDown, Flame, LockKeyhole, Printer, ReceiptText, ShieldCheck, Star, Table2, Users, X } from 'lucide-react'
 
+const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const parseCurrency = value => {
   const raw = String(value || '').trim().replace(/[^0-9,.-]/g, '')
@@ -11,6 +12,15 @@ const parseCurrency = value => {
 }
 const todayInput = () => new Date().toISOString().slice(0, 10)
 const managerRoles = ['admin', 'administrador', 'gerente', 'manager']
+
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
 
 function getStoredUsers(fallbackUsers = []) {
   try {
@@ -42,6 +52,32 @@ function getTableItems(tables = []) {
 
 function getTableWaiter(table) {
   return table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom'
+}
+
+function getClosedTablesForDate(history = [], date = todayInput()) {
+  return (history || [])
+    .filter(record => record?.date === date)
+    .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
+}
+
+function closedRecordToTable(record) {
+  return {
+    id: record.tableId || record.id,
+    number: record.tableNumber,
+    status: 'fechada',
+    guests: Number(record.guests || 0),
+    waiterName: record.waiterName || 'Sem garcom',
+    closedAt: record.closedAt,
+    closedAtLabel: record.closedAtLabel,
+    closedByMode: record.closedByMode,
+    items: (record.items || []).map(item => ({
+      ...item,
+      tableNumber: record.tableNumber,
+      waiterName: record.waiterName || 'Sem garcom',
+      price: Number(item.price || 0),
+      qty: Number(item.qty || 0),
+    })),
+  }
 }
 
 function buildWaiterSummary(tables = []) {
@@ -85,24 +121,27 @@ function buildTopProducts(items = []) {
   }
 }
 
-function buildClosingData(tables = []) {
+function buildClosingData(tables = [], closedTablesHistory = [], selectedDate = todayInput()) {
   const activeTables = tables.filter(table => ['ocupada', 'enviado', 'conta'].includes(table.status) || getTableTotal(table) > 0 || Number(table.guests || 0) > 0)
-  const closedTables = tables.filter(table => table.status === 'livre' && table.closedAt).length
-  const items = getTableItems(activeTables)
-  const total = activeTables.reduce((sum, table) => sum + getTableTotal(table), 0)
+  const closedTableRecords = getClosedTablesForDate(closedTablesHistory, selectedDate)
+  const closedTables = closedTableRecords.map(closedRecordToTable)
+  const conferenceTables = [...activeTables, ...closedTables]
+  const items = getTableItems(conferenceTables)
+  const total = conferenceTables.reduce((sum, table) => sum + getTableTotal(table), 0)
   const totalItems = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
   const sentToKitchen = items.filter(item => item.sentToKitchen || item.printTarget === 'cozinha' || item.imprimeCozinha).reduce((sum, item) => sum + Number(item.qty || 0), 0)
   const categories = buildCategorySummary(items)
   const topProducts = buildTopProducts(items)
-  const waiters = buildWaiterSummary(activeTables)
+  const waiters = buildWaiterSummary(conferenceTables)
   const topWaiter = waiters[0] || { name: 'Nenhum garçom', tables: 0, total: 0 }
 
   return {
-    date: todayInput(),
+    date: selectedDate,
     total,
     payments: { dinheiro: 0, pix: 0, cartao: 0, outros: 0 },
-    closedTables,
+    closedTables: closedTableRecords.length,
     openTables: activeTables.length,
+    conferenceTables: conferenceTables.length,
     totalOrders: totalItems,
     cancelledItems: { qty: 0, total: 0 },
     discounts: { qty: 0, total: 0 },
@@ -114,7 +153,7 @@ function buildClosingData(tables = []) {
     topProductsByRevenue: topProducts.byRevenue,
     waiters,
     topWaiter,
-    ticketAverage: activeTables.length ? total / activeTables.length : 0,
+    ticketAverage: conferenceTables.length ? total / conferenceTables.length : 0,
   }
 }
 
@@ -149,8 +188,9 @@ function CategoryBars({ categories, total }) {
 }
 
 export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
-  const data = useMemo(() => buildClosingData(tables), [tables])
-  const [date, setDate] = useState(data.date)
+  const [date, setDate] = useState(todayInput())
+  const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
+  const data = useMemo(() => buildClosingData(tables, closedTablesHistory, date), [tables, closedTablesHistory, date])
   const [reportedPayments, setReportedPayments] = useState(() => ({ dinheiro: '', pix: '', cartao: '', outros: '' }))
   const [note, setNote] = useState('')
   const [closed, setClosed] = useState(false)
@@ -160,6 +200,19 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   const [authPassword, setAuthPassword] = useState('')
   const [authObservation, setAuthObservation] = useState('')
   const [modalError, setModalError] = useState('')
+
+  useEffect(() => {
+    const syncClosedTables = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    syncClosedTables()
+    window.addEventListener('fogao-closed-tables-updated', syncClosedTables)
+    window.addEventListener('storage', syncClosedTables)
+    window.addEventListener('focus', syncClosedTables)
+    return () => {
+      window.removeEventListener('fogao-closed-tables-updated', syncClosedTables)
+      window.removeEventListener('storage', syncClosedTables)
+      window.removeEventListener('focus', syncClosedTables)
+    }
+  }, [])
 
   const received = {
     dinheiro: parseCurrency(reportedPayments.dinheiro),
@@ -248,6 +301,7 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
       <div className="printLine"><span>Total informado</span><strong>{money(informedTotal)}</strong></div>
       <div className="printLine"><span>Diferença final</span><strong>{money(difference)}</strong></div>
       <div className="printLine"><span>Mesas abertas</span><strong>{data.openTables}</strong></div>
+      <div className="printLine"><span>Mesas fechadas no dia</span><strong>{data.closedTables}</strong></div>
       <div className="printLine"><span>Total de itens</span><strong>{data.totalOrders}</strong></div>
       <div className="printLine"><span>Ticket médio</span><strong>{money(data.ticketAverage)}</strong></div>
       <div className="printLine"><span>Garçom destaque</span><strong>{data.topWaiter.name}</strong></div>
@@ -296,7 +350,7 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
           <p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p>
           <p><span>Total informado no caixa</span><strong>{money(informedTotal)}</strong></p>
           <p><span>Diferença final</span><strong className={differenceOk ? 'positive' : 'negative'}>{money(difference)}</strong></p>
-          <p><span>Mesas abertas/com movimentação</span><strong>{data.openTables}</strong></p>
+          <p><span>Mesas na conferência</span><strong>{data.conferenceTables}</strong></p>
         </div>
 
         {hasDivergence && <div className="closingModalFields">
