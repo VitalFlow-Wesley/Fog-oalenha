@@ -176,6 +176,76 @@ th {
   cursor: pointer;
 }
 
+/* Correção final do modal de mesas fechadas */
+.closedTablesOverlay {
+  padding: 12px !important;
+}
+
+.closedTablesModal {
+  width: min(900px, calc(100vw - 24px)) !important;
+  max-height: calc(100dvh - 24px) !important;
+  padding: 22px !important;
+  overflow-y: auto !important;
+}
+
+.closedTablesDateFilter {
+  display: grid !important;
+  grid-template-columns: max-content minmax(220px, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 10px 12px !important;
+}
+
+.closedTablesDateFilter > span {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-height: 1 !important;
+}
+
+.closedTablesDateFilter input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+}
+
+.closedTablesSummary {
+  gap: 10px !important;
+  margin: 10px 0 12px !important;
+}
+
+.closedTablesSummary > div {
+  min-height: 70px !important;
+  padding: 10px 14px !important;
+}
+
+.closedTablesList {
+  gap: 8px !important;
+}
+
+.closedTableCard {
+  padding: 12px 14px !important;
+}
+
+.closedTableCard header strong,
+.closedTableCard header b {
+  font-size: 20px !important;
+}
+
+.closedTableFooter {
+  align-items: center !important;
+}
+
+.closedTableFooter button {
+  flex: 0 0 auto !important;
+  min-width: 132px !important;
+}
+
 @media (max-width: 1024px) {
   .reportsSummaryGrid,
   .dashboardSummaryGrid,
@@ -246,6 +316,21 @@ th {
   .closingPanel {
     max-width: 100%;
   }
+
+  .closedTablesModal {
+    width: calc(100vw - 12px) !important;
+    max-height: calc(100dvh - 12px) !important;
+    padding: 16px !important;
+  }
+
+  .closedTablesDateFilter {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .closedTablesSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
 }
 
 @media (max-width: 520px) {
@@ -279,6 +364,25 @@ th {
   .appFatalErrorCard {
     padding: 22px 18px;
     border-radius: 18px;
+  }
+
+  .closedTablesSummary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .closedTablesSummary > div:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .closedTableCard header,
+  .closedTableFooter {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .closedTableFooter button {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
