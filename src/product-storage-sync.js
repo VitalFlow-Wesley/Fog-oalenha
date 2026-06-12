@@ -1,5 +1,6 @@
 import './encoding-repair-runtime.js'
 import './native-edit-modal-runtime.js'
+import './closed-tables-modal-polish.css'
 import { repairData, repairText } from './text-normalizer.js'
 
 const PRODUCT_CONFIG_KEY = 'fogao-a-lenha-products-settings'
