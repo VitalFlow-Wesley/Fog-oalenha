@@ -68,6 +68,8 @@ import './reports-toolbar-final.css'
 import './reports-complete-compact.css'
 import './closed-tables-compact-toolbar.js'
 import './closed-tables-compact-toolbar.css'
+import './item-observation-runtime.js'
+import './item-observation.css'
 import './app-quality-guard.css'
 
 createRoot(document.getElementById('root')).render(
