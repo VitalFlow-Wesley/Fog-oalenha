@@ -62,6 +62,7 @@ import './closing-mobile-cards-fix.css'
 import './closing-mobile-final-hard-fix.css'
 import './waiter-persist-runtime-fix.js'
 import './reports-toolbar-final.css'
+import './reports-complete-compact.css'
 
 createRoot(document.getElementById('root')).render(<App />)
 
