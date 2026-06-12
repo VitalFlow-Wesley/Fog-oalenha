@@ -46,6 +46,8 @@ function buildKitchenOrders(tables, orderTimes) {
       return {
         id: table.id,
         tableNumber: table.number,
+        customerName: String(table.customerName || '').trim(),
+        guests: Number(table.guests || 0),
         time: table.kitchenSentAt || orderTimes[table.id] || currentTime(),
         waiterName: table.kitchenWaiterName || table.waiterName || 'Garçom',
         items,
@@ -113,6 +115,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
       const matchesSector = activeSector === 'todos' || order.sectors.includes(activeSector)
       const matchesSearch = !term ||
         `mesa ${order.tableNumber}`.toLowerCase().includes(term) ||
+        order.customerName.toLowerCase().includes(term) ||
         order.items.some(item => item.name.toLowerCase().includes(term) || sectorConfig[item.sector]?.label.toLowerCase().includes(term))
       return matchesSector && matchesSearch
     })
@@ -173,7 +176,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
           <div className="kitchenBottomActions">
             <label className="kitchenSearch">
               <Search size={18} />
-              <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por mesa ou item..." />
+              <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por mesa, cliente ou item..." />
             </label>
             {canSeeManagementSummary && <button className="kitchenLightBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>}
           </div>
@@ -222,6 +225,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
               <div className="kitchenTableBadge">{String(order.tableNumber).padStart(2, '0')}</div>
               <div className="kitchenOrderMesa">
                 <strong>Mesa {order.tableNumber}</strong>
+                {order.customerName && <small className="kitchenCustomerName">{order.customerName}</small>}
                 <span>{order.time}</span>
               </div>
 
@@ -256,6 +260,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
             <div>
               <span>Último pedido</span>
               <strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong>
+              {summary.lastOrder?.customerName && <small className="lastOrderCustomer">{summary.lastOrder.customerName}</small>}
             </div>
           </div>
 
@@ -287,7 +292,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
       {details && <div className="authModalOverlay noPrint">
         <div className="authModal kitchenDetailsModal">
           <div className="drawerHeader">
-            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>Mesa {details.tableNumber}</h2></div>
+            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>Mesa {details.tableNumber}</h2>{details.customerName && <p className="kitchenDetailsCustomer">Cliente: {details.customerName}</p>}</div>
             <button type="button" className="iconBtn" onClick={() => setDetails(null)}><X size={22} /></button>
           </div>
           <p>Pedido enviado às {details.time}</p>
@@ -306,6 +311,8 @@ export default function PedidosCozinha({ tables, currentUser }) {
           <h1>PEDIDO PARA COZINHA</h1>
           <p><strong>Garçom:</strong> {printJob.waiterName || 'Garçom'}</p>
           <p><strong>Mesa:</strong> {printJob.tableNumber}</p>
+          {printJob.customerName && <p><strong>Cliente:</strong> {printJob.customerName}</p>}
+          {printJob.guests > 0 && <p><strong>Pessoas:</strong> {printJob.guests} pessoa(s)</p>}
           <p><strong>Data:</strong> {printJob.printedAt || currentDateTime()}</p>
           <hr />
           {printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.observation ? ` (${item.observation})` : ''}</span></div>)}
