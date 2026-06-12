@@ -1,282 +1,169 @@
 @media (max-width: 900px) {
-  .commandDrawer {
-    padding: 16px 12px 24px !important;
-  }
-
-  .commandClose {
-    top: 12px !important;
-    right: 12px !important;
-    width: 38px !important;
-    height: 38px !important;
-  }
+  .commandDrawer { padding: 16px 12px 24px !important; }
+  .commandClose { position: fixed !important; top: 12px !important; right: 12px !important; width: 38px !important; height: 38px !important; }
 
   .commandHeader {
     display: grid !important;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) !important;
-    gap: 8px !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr) !important;
+    grid-template-rows: auto auto auto 42px 42px auto !important;
+    grid-auto-rows: min-content !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
     align-items: stretch !important;
-    margin-bottom: 12px !important;
-    padding-right: 0 !important;
+    width: 100% !important;
+    margin: 0 0 12px !important;
+    padding: 0 !important;
   }
 
   .commandHeader > div:first-child,
   .commandTitleRow,
-  .commandActions {
-    display: contents !important;
-  }
+  .commandActions { display: contents !important; }
 
-  .commandEyebrow {
-    grid-column: 1 / -1 !important;
-    grid-row: 1 !important;
-    padding-right: 52px !important;
-  }
+  .commandEyebrow { grid-column: 1 / -1 !important; grid-row: 1 !important; margin: 0 !important; padding-right: 48px !important; }
 
   .commandTitleRow h2 {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
+    max-width: calc(100% - 48px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
     font-size: 34px !important;
     line-height: 1 !important;
-    margin: 2px 0 4px !important;
-    padding-right: 52px !important;
-  }
-
-  .tableCustomerSubtitle {
-    grid-column: 1 / -1 !important;
-    grid-row: 3 !important;
-    margin: 0 0 2px !important;
   }
 
   .tableCustomerEditBtn {
     grid-column: 2 !important;
     grid-row: 2 !important;
     justify-self: end !important;
-    align-self: end !important;
+    align-self: center !important;
+    margin-right: 48px !important;
     width: 34px !important;
     height: 34px !important;
-    margin-right: 52px !important;
+  }
+
+  .tableCustomerSubtitle,
+  .tableCustomerBadge {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: auto !important;
+    margin: 0 !important;
   }
 
   .commandGuestsEditor {
     grid-column: 1 !important;
     grid-row: 4 !important;
-    min-height: 42px !important;
     width: 100% !important;
     max-width: none !important;
-    padding: 0 8px !important;
-    gap: 5px !important;
-    border-radius: 12px !important;
-  }
-
-  .commandGuestsEditor button {
-    width: 32px !important;
-    height: 32px !important;
-  }
-
-  .commandGuestsEditor input {
-    width: 38px !important;
-    min-width: 38px !important;
-  }
-
-  .commandGuestsEditor > span {
-    font-size: 12px !important;
-  }
-
-  .commandActions > .commandBtn:nth-child(1) {
-    grid-column: 2 !important;
-    grid-row: 4 !important;
-  }
-
-  .commandActions > .commandBtn:nth-child(2) {
-    grid-column: 1 !important;
-    grid-row: 5 !important;
-  }
-
-  .commandActions > .commandBtn:nth-child(3) {
-    grid-column: 2 !important;
-    grid-row: 5 !important;
-  }
-
-  .commandActions > .commandBtn:nth-child(n+4) {
-    grid-column: 1 / -1 !important;
-  }
-
-  .commandBtn {
-    width: 100% !important;
     min-height: 42px !important;
-    padding: 6px 8px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 7px !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .commandGuestsEditor button { width: 31px !important; height: 31px !important; }
+  .commandGuestsEditor input { width: 38px !important; min-width: 38px !important; height: 31px !important; }
+  .commandGuestsEditor > span { font-size: 12px !important; white-space: nowrap !important; }
+
+  .commandActions > .commandBtn:nth-child(1) { grid-column: 2 !important; grid-row: 4 !important; }
+  .commandActions > .commandBtn:nth-child(2) { grid-column: 1 !important; grid-row: 5 !important; }
+  .commandActions > .commandBtn:nth-child(3) { grid-column: 2 !important; grid-row: 5 !important; }
+  .commandActions > .commandBtn:nth-child(n+4) { grid-column: 1 / -1 !important; grid-row: auto !important; }
+
+  .commandHeader .commandBtn,
+  .commandActions .commandBtn {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 5px 7px !important;
     justify-content: center !important;
     text-align: center !important;
-    font-size: 12px !important;
-    line-height: 1.1 !important;
+    font-size: 11.5px !important;
+    line-height: 1.05 !important;
     border-radius: 12px !important;
-    gap: 6px !important;
+    gap: 5px !important;
+    box-sizing: border-box !important;
   }
 
-  .commandBtn svg {
-    width: 16px !important;
-    height: 16px !important;
-  }
+  .commandHeader .commandBtn svg { width: 15px !important; height: 15px !important; flex: 0 0 auto !important; }
 
-  .commandMainGrid {
-    gap: 10px !important;
-  }
+  .commandMainGrid { gap: 10px !important; }
+  .commandPanel { padding: 11px !important; border-radius: 15px !important; }
+  .commandPanel h3 { margin: 0 0 9px !important; font-size: 19px !important; }
+  .commandItemsList { gap: 7px !important; }
 
-  .commandPanel {
-    padding: 12px !important;
-    border-radius: 15px !important;
-  }
-
-  .commandPanel h3 {
-    margin-bottom: 10px !important;
-    font-size: 19px !important;
-  }
-
-  .commandItemsList {
-    gap: 7px !important;
-  }
-
-  .commandItem {
+  .commandPanel .commandItem {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 116px !important;
     align-items: start !important;
     gap: 8px !important;
-    padding: 10px !important;
+    width: 100% !important;
     min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 10px !important;
     border-radius: 13px !important;
+    box-sizing: border-box !important;
   }
 
-  .commandItemInfo {
-    min-width: 0 !important;
-  }
+  .commandPanel .commandItemInfo { min-width: 0 !important; width: 100% !important; align-self: start !important; }
+  .commandPanel .commandItemInfo strong { margin: 0 0 3px !important; font-size: 14px !important; line-height: 1.15 !important; }
+  .commandPanel .commandItemInfo small { font-size: 10.5px !important; line-height: 1.15 !important; }
 
-  .commandItemInfo strong {
-    font-size: 14px !important;
-    margin-bottom: 3px !important;
-  }
-
-  .commandItemInfo small {
-    font-size: 10.5px !important;
-    line-height: 1.2 !important;
-  }
-
-  .commandItemObservationEditor {
-    margin-top: 7px !important;
-    gap: 4px !important;
-  }
-
-  .commandItemObservationEditor span {
-    font-size: 10px !important;
-  }
-
-  .commandItemObservationEditor input {
+  .commandPanel .commandItemObservationEditor { display: grid !important; gap: 4px !important; margin: 7px 0 0 !important; }
+  .commandPanel .commandItemObservationEditor span { font-size: 10px !important; }
+  .commandPanel .commandItemObservationEditor input {
+    width: 100% !important;
     min-height: 32px !important;
     height: 32px !important;
+    margin: 0 !important;
     padding: 0 9px !important;
     font-size: 12px !important;
     border-radius: 9px !important;
+    box-sizing: border-box !important;
   }
 
-  .commandItemControls {
+  .commandPanel .commandItemControls {
     display: grid !important;
-    grid-template-columns: auto 30px !important;
-    grid-template-areas:
-      'qty remove'
-      'price price' !important;
+    grid-template-columns: auto 28px !important;
+    grid-template-areas: 'qty remove' 'price price' !important;
     align-items: center !important;
-    justify-items: end !important;
     align-content: start !important;
+    justify-items: end !important;
+    align-self: start !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     gap: 5px 6px !important;
-    padding-top: 1px !important;
   }
 
-  .commandItemControls .qtyStepper {
-    grid-area: qty !important;
-  }
+  .commandItemControls .qtyStepper { grid-area: qty !important; justify-self: end !important; }
+  .commandItemControls .removeItemBtn { grid-area: remove !important; }
+  .commandItemControls > strong { grid-area: price !important; margin: 0 !important; font-size: 12.5px !important; line-height: 1 !important; }
 
-  .commandItemControls .removeItemBtn {
-    grid-area: remove !important;
-  }
+  .qtyStepper button { width: 26px !important; height: 28px !important; }
+  .qtyStepper b { min-width: 22px !important; font-size: 12px !important; }
+  .removeItemBtn { width: 28px !important; height: 28px !important; border-radius: 9px !important; }
 
-  .commandItemControls > strong {
-    grid-area: price !important;
-    font-size: 12.5px !important;
-    margin-top: 1px !important;
-  }
+  .commandTotalCard { min-height: 60px !important; margin-top: 8px !important; padding: 10px 13px !important; }
+  .commandTotalCard strong { font-size: 24px !important; }
 
-  .qtyStepper button {
-    width: 26px !important;
-    height: 28px !important;
-  }
-
-  .qtyStepper b {
-    min-width: 22px !important;
-    font-size: 12px !important;
-  }
-
-  .removeItemBtn {
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 9px !important;
-  }
-
-  .commandTotalCard {
-    min-height: 62px !important;
-    margin-top: 9px !important;
-    padding: 11px 14px !important;
-  }
-
-  .commandTotalCard strong {
-    font-size: 25px !important;
-  }
-
-  .commandCategoryTabs {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    gap: 6px !important;
-    margin-bottom: 9px !important;
-    scrollbar-width: none !important;
-  }
-
-  .commandCategoryTabs::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .commandCategoryTabs button {
-    flex: 0 0 auto !important;
-    min-height: 31px !important;
-    padding: 0 10px !important;
-    font-size: 11.5px !important;
-  }
-
-  .commandProductGrid {
-    grid-template-columns: 1fr !important;
-    gap: 7px !important;
-  }
-
-  .commandProductCard {
-    min-height: 72px !important;
-    grid-template-columns: 48px minmax(0, 1fr) 28px !important;
-    gap: 8px !important;
-    padding: 8px !important;
-  }
-
-  .productThumb {
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 22px !important;
-  }
+  .commandCategoryTabs { flex-wrap: nowrap !important; overflow-x: auto !important; gap: 6px !important; margin-bottom: 9px !important; scrollbar-width: none !important; }
+  .commandCategoryTabs::-webkit-scrollbar { display: none !important; }
+  .commandCategoryTabs button { flex: 0 0 auto !important; min-height: 31px !important; padding: 0 10px !important; font-size: 11.5px !important; }
+  .commandProductGrid { grid-template-columns: 1fr !important; gap: 7px !important; }
+  .commandProductCard { min-height: 72px !important; grid-template-columns: 48px minmax(0, 1fr) 28px !important; gap: 8px !important; padding: 8px !important; }
+  .productThumb { width: 48px !important; height: 48px !important; font-size: 22px !important; }
 }
 
 @media (max-width: 420px) {
-  .commandHeader {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr) !important;
-  }
-
-  .commandItem {
-    grid-template-columns: minmax(0, 1fr) 108px !important;
-  }
-
-  .commandBtn {
-    font-size: 11px !important;
-  }
+  .commandHeader { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) !important; }
+  .commandPanel .commandItem { grid-template-columns: minmax(0, 1fr) 108px !important; }
+  .commandHeader .commandBtn { font-size: 10.5px !important; }
 }
