@@ -1,4 +1,5 @@
 import { ClipboardList, Link2, Users } from 'lucide-react'
+import '../table-card-layout-fix.css'
 
 const statusLabel = {
   livre: 'Livre',
@@ -16,9 +17,12 @@ export default function TableCard({ table, onOpen }) {
 
   return (
     <button className={`tableCard restaurantTableCard ${status}`} onClick={() => onOpen(table)}>
-      <div className="tableTop">
-        <strong>Mesa {table.number}{joinedNumbers}</strong>
-        <span>{statusLabel[table.status] || 'Ocupada'}</span>
+      <div className="tableTop restaurantTableTop">
+        <div className="restaurantTableIdentification">
+          <strong>Mesa {table.number}{joinedNumbers}</strong>
+          {table.customerName ? <span className="tableCustomerBadge">{table.customerName}</span> : null}
+        </div>
+        <span className="restaurantTableStatus">{statusLabel[table.status] || 'Ocupada'}</span>
       </div>
 
       <div className="tableMeta restaurantTableMeta">
