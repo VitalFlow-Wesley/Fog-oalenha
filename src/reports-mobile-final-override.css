@@ -1,0 +1,106 @@
+@media (max-width: 760px) {
+  .completeReportLayout .closedTablesReportPanel {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .closedTablesReportPanel .reportPanelTitleRow {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+  }
+
+  .closedTablesReportPanel .reportPanelTitleRow h2 {
+    margin: 0 !important;
+    font-size: 22px !important;
+    line-height: 1.05 !important;
+  }
+
+  .closedTablesReportPanel .reportPanelTitleRow > span {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 7px 10px !important;
+    border-radius: 999px !important;
+    background: #fff0cf !important;
+    color: #a96518 !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+  }
+
+  .closedTablesReportPanel .closedTablesReportTable {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .closedTablesReportPanel .closedTablesReportTable .completeTableRow.head {
+    display: none !important;
+  }
+
+  .closedTablesReportPanel .closedTablesReportTable .completeTableRow:not(.head) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      'mesa total'
+      'garcom total'
+      'hora itens'
+      'origem origem' !important;
+    gap: 4px 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    border: 1px solid #ead7bf !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.58) !important;
+    box-sizing: border-box !important;
+  }
+
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(1) { grid-area: mesa !important; font-size: 15px !important; font-weight: 900 !important; color: #2a160e !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(2) { grid-area: garcom !important; color: #7d6758 !important; font-size: 12px !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(3) { grid-area: hora !important; color: #8f7768 !important; font-size: 11px !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(4) { grid-area: itens !important; justify-self: end !important; color: #7d6758 !important; font-size: 11px !important; font-weight: 800 !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(4)::after { content: ' itens' !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(5) { grid-area: origem !important; margin-top: 4px !important; padding-top: 7px !important; border-top: 1px solid #ead7bf !important; color: #9a7b68 !important; font-size: 11px !important; }
+  .closedTablesReportPanel .completeTableRow:not(.head) > span:nth-child(6) { grid-area: total !important; justify-self: end !important; color: #178456 !important; font-size: 15px !important; font-weight: 900 !important; white-space: nowrap !important; }
+
+  .movementPeakLabel {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  .movementChart {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    grid-template-columns: repeat(12, minmax(48px, 1fr)) !important;
+    scrollbar-width: none !important;
+  }
+
+  .movementChart::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .movementBarValue {
+    display: block !important;
+    color: #7a5948 !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+  }
+}
