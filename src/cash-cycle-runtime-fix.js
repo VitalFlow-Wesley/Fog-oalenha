@@ -2,6 +2,7 @@ import { saveRemoteState } from './services/appStateApi.js'
 import './closed-tables-scroll-fix.css'
 import './movement-peak-chart.css'
 import './movement-peak-chart.js'
+import './kitchen-details-modal-fix.css'
 
 const USERS_KEY = 'fogao-users-v1'
 const TABLES_KEY = 'fogao-tables-v1'
