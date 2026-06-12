@@ -1,0 +1,141 @@
+.reportsPremiumPage.completeReportPage .reportsHeader {
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1fr) minmax(520px, 620px) !important;
+  gap: 24px !important;
+  align-items: start !important;
+  padding: 24px 28px !important;
+  min-height: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint {
+  display: grid !important;
+  grid-template-columns: 150px 180px 190px !important;
+  grid-template-areas:
+    "print pdf date"
+    "tabs tabs tabs"
+    "toggle toggle toggle" !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 620px !important;
+  justify-self: end !important;
+  align-self: start !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(1) { grid-area: print !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(2) { grid-area: pdf !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(3) { grid-area: date !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(4) { grid-area: tabs !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(5) { grid-area: toggle !important; }
+
+.reportsPremiumPage.completeReportPage .reportActionBtn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 12px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportActionBtn svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 auto !important;
+}
+
+.reportsPremiumPage.completeReportPage label.reportActionBtn {
+  color: #3b2218 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+}
+
+.reportsPremiumPage.completeReportPage label.reportActionBtn input[type="date"] {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+  z-index: 3 !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportTabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  padding: 4px !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportTabs button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 10px !important;
+  margin: 0 !important;
+  border-radius: 9px !important;
+  font-size: 12.5px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .reportClosedToggle {
+  min-height: 34px !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+}
+
+@media (max-width: 1180px) {
+  .reportsPremiumPage.completeReportPage .reportsHeader {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
+    justify-self: stretch !important;
+    max-width: none !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas:
+      "print pdf"
+      "date date"
+      "tabs tabs"
+      "toggle toggle" !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "print"
+      "pdf"
+      "date"
+      "tabs"
+      "toggle" !important;
+  }
+}
