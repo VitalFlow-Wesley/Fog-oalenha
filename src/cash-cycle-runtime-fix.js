@@ -8,6 +8,7 @@ const PRODUCTS_KEY = 'fogao-products-v1'
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
+const CASH_CYCLE_STARTED_AT_KEY = 'fogao-cash-cycle-started-at-v1'
 
 const nativeGetItem = Storage.prototype.getItem
 let finalizingCashCycle = false
@@ -47,26 +48,32 @@ function latestClosingTimestamp() {
   }, 0)
 }
 
+function ensureCashCycleMarker() {
+  const storedMarker = Number(nativeGetItem.call(localStorage, CASH_CYCLE_STARTED_AT_KEY) || 0)
+  const latestClosingAt = latestClosingTimestamp()
+  const marker = Math.max(storedMarker, latestClosingAt)
+  if (marker > storedMarker) localStorage.setItem(CASH_CYCLE_STARTED_AT_KEY, String(marker))
+  return marker
+}
+
 function currentCashClosedTables(rawValue) {
   const history = safeParse(rawValue, [])
   if (!Array.isArray(history)) return rawValue
 
-  const lastClosingAt = latestClosingTimestamp()
-  if (!lastClosingAt) return rawValue
+  const cycleStartedAt = ensureCashCycleMarker()
+  if (!cycleStartedAt) return rawValue
 
   return JSON.stringify(history.filter(record => {
     const closedAt = new Date(record?.closedAt || 0).getTime()
-    return Number.isFinite(closedAt) && closedAt > lastClosingAt
+    return Number.isFinite(closedAt) && closedAt > cycleStartedAt
   }))
 }
 
 Storage.prototype.getItem = function patchedGetItem(key) {
   const value = nativeGetItem.call(this, key)
-  const shouldFilterCurrentCash = this === localStorage
-    && key === CLOSED_TABLES_KEY
-    && isCurrentClosingPage()
-
-  if (shouldFilterCurrentCash) return currentCashClosedTables(value)
+  if (this === localStorage && key === CLOSED_TABLES_KEY && isCurrentClosingPage()) {
+    return currentCashClosedTables(value)
+  }
   return value
 }
 
@@ -77,6 +84,9 @@ async function finalizeCurrentCashCycle() {
   try {
     const closedTablesHistory = readJson(CLOSED_TABLES_KEY, [])
     const closings = readJson(CLOSINGS_KEY, [])
+    const latestClosingAt = latestClosingTimestamp()
+
+    if (latestClosingAt) localStorage.setItem(CASH_CYCLE_STARTED_AT_KEY, String(latestClosingAt))
 
     localStorage.setItem(TABLES_KEY, '[]')
     window.dispatchEvent(new Event('fogao-tables-updated'))
@@ -97,6 +107,8 @@ async function finalizeCurrentCashCycle() {
     finalizingCashCycle = false
   }
 }
+
+ensureCashCycleMarker()
 
 window.addEventListener('fogao-closings-updated', () => {
   window.setTimeout(finalizeCurrentCashCycle, 250)
