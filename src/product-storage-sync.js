@@ -44,7 +44,13 @@ function syncProductsStorage() {
   }
 }
 
-window.addEventListener('storage', syncProductsStorage)
+window.addEventListener('storage', event => {
+  if (!event.key || event.key === PRODUCT_CONFIG_KEY || event.key === PRODUCT_COMMAND_KEY) syncProductsStorage()
+})
 window.addEventListener('fogao-products-updated', syncProductsStorage)
-setInterval(syncProductsStorage, 800)
+window.addEventListener('focus', syncProductsStorage)
+window.addEventListener('pageshow', syncProductsStorage)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) syncProductsStorage()
+})
 setTimeout(syncProductsStorage, 200)
