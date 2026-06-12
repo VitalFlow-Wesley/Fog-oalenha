@@ -133,9 +133,148 @@
   min-width: 0 !important;
 }
 
+/* Histórico de fechamentos: layout compacto e proporcional */
+.reportsPremiumPage.completeReportPage .closingsHistoryPanel {
+  padding: 14px 16px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryPanel .reportPanelTitleRow {
+  margin-bottom: 10px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryGrid {
+  grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr) !important;
+  gap: 12px !important;
+  align-items: start !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryList {
+  align-content: start !important;
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem {
+  min-height: 0 !important;
+  padding: 10px 11px !important;
+  gap: 5px 10px !important;
+  align-items: center !important;
+  border-radius: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem span {
+  gap: 2px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem strong,
+.reportsPremiumPage.completeReportPage .closingHistoryItem b {
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem small {
+  font-size: 10.5px !important;
+  line-height: 1.2 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem em {
+  grid-column: 1 / -1 !important;
+  justify-self: start !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: max-content !important;
+  padding: 4px 8px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryDetails {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero div,
+.reportsPremiumPage.completeReportPage .closingDetailInfo p,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid div,
+.reportsPremiumPage.completeReportPage .closingTablesList div,
+.reportsPremiumPage.completeReportPage .closingNoteBox {
+  padding: 9px 10px !important;
+  border-radius: 11px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero span,
+.reportsPremiumPage.completeReportPage .closingDetailInfo span,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid span,
+.reportsPremiumPage.completeReportPage .closingTablesList small,
+.reportsPremiumPage.completeReportPage .closingNoteBox span {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero strong {
+  margin-top: 2px !important;
+  font-size: 18px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo p,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid div {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo strong,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid strong {
+  display: block !important;
+  min-width: 0 !important;
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesBlock h3 {
+  margin: 1px 0 7px !important;
+  font-size: 18px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList {
+  gap: 7px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList div {
+  grid-template-columns: 82px minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList span,
+.reportsPremiumPage.completeReportPage .closingTablesList strong {
+  font-size: 12.5px !important;
+}
+
 @media (max-width: 1280px) {
   .reportsPremiumPage.completeReportPage .completeSummaryGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .reportsPremiumPage.completeReportPage .closingsHistoryGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingsHistoryList {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -159,6 +298,28 @@
 
   .reportsPremiumPage.completeReportPage .closedTablesReportTable .completeTableRow {
     min-width: 720px !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingDetailInfo,
+  .reportsPremiumPage.completeReportPage .closingPaymentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .reportsPremiumPage.completeReportPage .closingsHistoryList,
+  .reportsPremiumPage.completeReportPage .closingDetailHero,
+  .reportsPremiumPage.completeReportPage .closingDetailInfo,
+  .reportsPremiumPage.completeReportPage .closingPaymentGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingTablesList div {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingTablesList small {
+    grid-column: 1 / -1 !important;
   }
 }
 
