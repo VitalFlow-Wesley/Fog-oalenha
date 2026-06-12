@@ -33,17 +33,7 @@ function enhanceMovementChart() {
       }
       valueLabel.textContent = value > 0 ? quantityLabel : ''
 
-      let peakLabel = column.querySelector('.movementPeakLabel')
-      if (bar.dataset.level === 'peak') {
-        if (!peakLabel) {
-          peakLabel = document.createElement('em')
-          peakLabel.className = 'movementPeakLabel'
-          column.insertBefore(peakLabel, valueLabel)
-        }
-        peakLabel.textContent = 'Pico'
-      } else {
-        peakLabel?.remove()
-      }
+      column.querySelector('.movementPeakLabel')?.remove()
     })
   })
 }
