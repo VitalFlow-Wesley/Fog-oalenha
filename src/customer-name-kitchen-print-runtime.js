@@ -10,7 +10,7 @@ function readTables() {
 }
 
 function tableNumberFromText(text = '') {
-  return text.match(/Mesa\s+(\d+)/i)?.[1]?.padStart(2, '0') || ''
+  return text.match(/Mesa\s*:?\s*(\d+)/i)?.[1]?.padStart(2, '0') || ''
 }
 
 function findTable(number) {
@@ -90,7 +90,7 @@ function enhanceLastOrder() {
 function enhancePrintBlocks() {
   document.querySelectorAll('.customerBillPrint').forEach(printBlock => {
     const paragraphs = Array.from(printBlock.querySelectorAll(':scope > p'))
-    const mesaParagraph = paragraphs.find(paragraph => /Mesa:/i.test(paragraph.textContent))
+    const mesaParagraph = paragraphs.find(paragraph => /Mesa\s*:/i.test(paragraph.textContent))
     if (!mesaParagraph) return
 
     const customerName = customerNameForText(mesaParagraph.textContent)
