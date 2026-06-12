@@ -77,6 +77,7 @@ import './item-observation.css'
 import './table-customer-name-runtime.js'
 import './table-customer-name.css'
 import './app-quality-guard.css'
+import './settings-access-layout-fix.css'
 import './command-mobile-layout-runtime.js'
 import './command-mobile-compact.css'
 
