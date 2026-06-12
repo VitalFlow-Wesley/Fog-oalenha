@@ -14,9 +14,9 @@ function normalizeTableNumber(value) {
 }
 
 function getPrintedTableNumber(printArea) {
-  const mesaLine = [...printArea.querySelectorAll('p')].find(p => /Mesa:/i.test(p.textContent || ''))
+  const mesaLine = [...printArea.querySelectorAll(':scope > p')].find(p => /^\s*Mesa\s*:/i.test(p.textContent || ''))
   if (!mesaLine) return ''
-  return normalizeTableNumber((mesaLine.textContent || '').replace(/Mesa:/i, '').split('+')[0])
+  return normalizeTableNumber((mesaLine.textContent || '').replace(/Mesa\s*:/i, '').split('+')[0])
 }
 
 function getGuestsForPrint(printArea) {
@@ -27,29 +27,41 @@ function getGuestsForPrint(printArea) {
   return Number(table?.guests || 0)
 }
 
-function addGuestsToKitchenPrint() {
+function normalizeGuestsInKitchenPrint() {
   document.querySelectorAll('.printOnly.customerBillPrint').forEach(printArea => {
     const title = printArea.querySelector('h1')?.textContent || ''
     if (!/PEDIDO PARA COZINHA/i.test(title)) return
-    if (printArea.dataset.guestsPrintFixed === '1') return
 
-    const mesaLine = [...printArea.querySelectorAll('p')].find(p => /Mesa:/i.test(p.textContent || ''))
+    const directParagraphs = [...printArea.querySelectorAll(':scope > p')]
+    const mesaLine = directParagraphs.find(p => /^\s*Mesa\s*:/i.test(p.textContent || ''))
     if (!mesaLine) return
 
+    const customerLine = directParagraphs.find(p => /^\s*Cliente\s*:/i.test(p.textContent || ''))
     const guests = getGuestsForPrint(printArea)
-    const guestsLine = document.createElement('p')
-    guestsLine.className = 'printGuestsLine'
-    guestsLine.innerHTML = `<strong>Pessoas:</strong> ${guests || '-'}${guests ? ' pessoa(s)' : ''}`
+    const desiredHtml = `<strong>Pessoas:</strong> ${guests || '-'}${guests ? ' pessoa(s)' : ''}`
+    const guestsLines = directParagraphs.filter(p => /^\s*Pessoas\s*:/i.test(p.textContent || ''))
 
-    mesaLine.insertAdjacentElement('afterend', guestsLine)
-    printArea.dataset.guestsPrintFixed = '1'
+    let guestsLine = guestsLines[0]
+    guestsLines.slice(1).forEach(line => line.remove())
+
+    if (!guestsLine) {
+      guestsLine = document.createElement('p')
+      guestsLine.className = 'printGuestsLine'
+    }
+
+    if (guestsLine.innerHTML !== desiredHtml) guestsLine.innerHTML = desiredHtml
+
+    const anchor = customerLine || mesaLine
+    if (anchor.nextElementSibling !== guestsLine) {
+      anchor.insertAdjacentElement('afterend', guestsLine)
+    }
   })
 }
 
 if (!window.__fogaoKitchenPrintGuestsFixInstalled) {
   window.__fogaoKitchenPrintGuestsFixInstalled = true
-  window.addEventListener('beforeprint', addGuestsToKitchenPrint)
-  window.addEventListener('DOMContentLoaded', addGuestsToKitchenPrint)
-  new MutationObserver(addGuestsToKitchenPrint).observe(document.body, { childList: true, subtree: true })
-  setInterval(addGuestsToKitchenPrint, 400)
+  window.addEventListener('beforeprint', normalizeGuestsInKitchenPrint)
+  window.addEventListener('DOMContentLoaded', normalizeGuestsInKitchenPrint)
+  new MutationObserver(normalizeGuestsInKitchenPrint).observe(document.body, { childList: true, subtree: true })
+  setInterval(normalizeGuestsInKitchenPrint, 500)
 }
