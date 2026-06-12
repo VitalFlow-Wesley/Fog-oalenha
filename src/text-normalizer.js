@@ -36,6 +36,9 @@ const patternReplacements = [
   [/gar�om/gi, value => value[0] === 'G' ? 'Garçom' : 'garçom'],
   [/gar�ons/gi, value => value[0] === 'G' ? 'Garçons' : 'garçons'],
   [/n�o/gi, value => value[0] === 'N' ? 'Não' : 'não'],
+  [/bai�o/gi, value => value[0] === 'B' ? 'Baião' : 'baião'],
+  [/feij�o/gi, value => value[0] === 'F' ? 'Feijão' : 'feijão'],
+  [/maracuj�/gi, value => value[0] === 'M' ? 'Maracujá' : 'maracujá'],
 ]
 
 export function repairText(value) {
