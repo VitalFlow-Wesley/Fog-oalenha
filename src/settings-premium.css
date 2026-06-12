@@ -336,12 +336,12 @@
 .settingsError { background: #ffe2d4; color: #b94220; }
 
 .settingsEditModal {
-  width: min(620px, 94vw);
+  width: min(520px, 94vw);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
   overscroll-behavior: contain;
   display: grid;
-  gap: 12px;
+  gap: 9px;
   padding-bottom: 0;
   scrollbar-width: thin;
 }
@@ -353,12 +353,22 @@
   top: 0;
   z-index: 2;
   background: var(--panel);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.settingsEditModal .drawerHeader h2 {
+  font-size: clamp(24px, 3.4vw, 31px);
+  line-height: 1.05;
+}
+
+.settingsEditModal .eyebrow {
+  font-size: 11px;
+  letter-spacing: .12em;
 }
 
 .settingsEditModal label {
   display: grid;
-  gap: 7px;
+  gap: 5px;
   color: #4d3528;
   font-size: 12px;
   font-weight: 900;
@@ -366,13 +376,13 @@
 
 .settingsEditModal input,
 .settingsEditModal select {
-  min-height: 44px;
+  min-height: 38px;
   border: 1px solid #ead7bf;
-  border-radius: 13px;
+  border-radius: 11px;
   background: #fffdf8;
   color: #2a160e;
-  padding: 0 13px;
-  font-size: 15px;
+  padding: 0 12px;
+  font-size: 14px;
   outline: none;
 }
 
@@ -385,9 +395,9 @@
 .settingsEditModal .switchRow {
   grid-template-columns: 44px 1fr;
   border: 1px solid #ead7bf;
-  border-radius: 13px;
+  border-radius: 11px;
   background: rgba(255, 248, 237, .72);
-  padding: 9px 11px;
+  padding: 7px 10px;
 }
 
 .settingsEditModal .actionsRow {
@@ -395,9 +405,16 @@
   bottom: 0;
   z-index: 2;
   margin: 4px -24px 0;
-  padding: 14px 24px 18px;
+  padding: 10px 24px 14px;
   background: linear-gradient(180deg, rgba(255, 253, 248, .78), var(--panel) 34%);
   justify-content: flex-end;
+}
+
+.settingsEditModal .actionsRow button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 13px;
 }
 
 .permissionsReactModal {
