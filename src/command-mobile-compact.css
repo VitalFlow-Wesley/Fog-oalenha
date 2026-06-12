@@ -1,0 +1,235 @@
+@media (max-width: 760px) {
+  .commandDrawer {
+    padding: 18px 14px 24px !important;
+  }
+
+  .commandClose {
+    top: 14px !important;
+    right: 14px !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .commandHeader {
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+    padding-right: 46px !important;
+  }
+
+  .commandTitleRow {
+    gap: 8px !important;
+  }
+
+  .commandTitleRow h2 {
+    font-size: 34px !important;
+  }
+
+  .commandGuestsEditor {
+    min-height: 42px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 0 8px !important;
+    gap: 6px !important;
+  }
+
+  .commandGuestsEditor button {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .commandGuestsEditor input {
+    width: 42px !important;
+  }
+
+  .commandActions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .commandBtn {
+    min-height: 48px !important;
+    padding: 6px 8px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+    border-radius: 11px !important;
+  }
+
+  .commandBtn svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .commandDanger {
+    grid-column: 1 / -1 !important;
+    min-height: 42px !important;
+  }
+
+  .commandMainGrid {
+    gap: 12px !important;
+  }
+
+  .commandPanel {
+    padding: 14px !important;
+    border-radius: 15px !important;
+  }
+
+  .commandPanel h3 {
+    margin-bottom: 12px !important;
+    font-size: 20px !important;
+  }
+
+  .commandItemsList {
+    gap: 8px !important;
+  }
+
+  .commandItem {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px !important;
+    border-radius: 13px !important;
+  }
+
+  .commandItemInfo strong {
+    font-size: 14px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .commandItemInfo small {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  .commandItemControls {
+    display: grid !important;
+    grid-template-columns: auto 34px !important;
+    grid-template-areas:
+      'qty remove'
+      'price price' !important;
+    align-items: center !important;
+    justify-items: end !important;
+    gap: 5px 7px !important;
+  }
+
+  .commandItemControls .qtyStepper {
+    grid-area: qty !important;
+  }
+
+  .commandItemControls .removeItemBtn {
+    grid-area: remove !important;
+  }
+
+  .commandItemControls > strong {
+    grid-area: price !important;
+    font-size: 13px !important;
+  }
+
+  .qtyStepper button {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .qtyStepper b {
+    min-width: 24px !important;
+    font-size: 13px !important;
+  }
+
+  .removeItemBtn {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 9px !important;
+  }
+
+  .commandTotalCard {
+    min-height: 66px !important;
+    margin-top: 10px !important;
+    padding: 13px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .commandTotalCard strong {
+    font-size: 27px !important;
+  }
+
+  .commandObs {
+    min-height: 44px !important;
+    margin-bottom: 10px !important;
+    padding: 0 12px !important;
+  }
+
+  .commandCategoryTabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 3px !important;
+    scrollbar-width: none !important;
+  }
+
+  .commandCategoryTabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .commandCategoryTabs button {
+    flex: 0 0 auto !important;
+    min-height: 32px !important;
+    padding: 0 11px !important;
+    font-size: 12px !important;
+  }
+
+  .commandProductGrid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .commandProductCard {
+    min-height: 76px !important;
+    grid-template-columns: 52px minmax(0, 1fr) 30px !important;
+    gap: 9px !important;
+    padding: 9px !important;
+  }
+
+  .productThumb {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 24px !important;
+  }
+
+  .commandProductCard strong {
+    font-size: 13px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .commandProductCard span {
+    font-size: 13px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .commandProductCard small {
+    font-size: 11px !important;
+  }
+
+  .commandProductCard em {
+    width: 30px !important;
+    height: 30px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .commandActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .commandDanger {
+    grid-column: 1 / -1 !important;
+  }
+
+  .commandItem {
+    grid-template-columns: minmax(0, 1fr) 118px !important;
+  }
+}
