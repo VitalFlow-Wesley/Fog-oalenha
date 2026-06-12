@@ -84,6 +84,7 @@ import './settings-user-delete-runtime.js'
 import './command-mobile-layout-runtime.js'
 import './command-mobile-compact.css'
 import './command-mobile-title-row.css'
+import './reports-mobile-final-override.css'
 
 createRoot(document.getElementById('root')).render(
   <AppErrorBoundary>
