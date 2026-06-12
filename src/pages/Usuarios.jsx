@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, Plus, Printer, ReceiptText, RefreshCw, Save, Search, Settings, ShieldCheck, Store, Trash2, UserCog, Utensils, X } from 'lucide-react'
+import { repairData, repairText } from '../text-normalizer.js'
 
 const roleLabel = { admin: 'Administrador', gerente: 'Gerente', garcom: 'Garçom' }
 const basePrinters = [
@@ -33,7 +34,7 @@ const initialProducts = [
 function readJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
+    return raw ? repairData(JSON.parse(raw)) : fallback
   } catch {
     return fallback
   }
@@ -48,17 +49,19 @@ function writeJson(key, value) {
 }
 
 function normalizeProduct(product) {
-  const category = product.category === 'Churrascos' ? 'Churrasco' : (product.category || 'Outros')
-  const sector = product.sector || product.localSaida || inferProductConfig(category).sector
-  const prepare = product.prepare ?? product.imprimeCozinha ?? !noPrepareCategories.includes(category)
+  const fixedProduct = repairData(product)
+  const category = fixedProduct.category === 'Churrascos' ? 'Churrasco' : (fixedProduct.category || 'Outros')
+  const sector = fixedProduct.sector || fixedProduct.localSaida || inferProductConfig(category).sector
+  const prepare = fixedProduct.prepare ?? fixedProduct.imprimeCozinha ?? !noPrepareCategories.includes(category)
   return {
-    ...product,
+    ...fixedProduct,
+    name: repairText(fixedProduct.name || 'Produto'),
     category,
     sector,
-    localSaida: product.localSaida || sector,
+    localSaida: fixedProduct.localSaida || sector,
     prepare,
     imprimeCozinha: prepare,
-    status: product.status || 'Ativo',
+    status: fixedProduct.status || 'Ativo',
   }
 }
 

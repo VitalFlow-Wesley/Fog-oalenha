@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
+import { repairData, repairText } from '../text-normalizer.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -20,21 +21,23 @@ const productIcons = {
 }
 
 function normalizeProduct(product) {
-  const category = product.category || 'Outros'
-  const sector = product.sector || product.localSaida || 'Bar / Caixa'
+  const fixedProduct = repairData(product)
+  const category = fixedProduct.category || 'Outros'
+  const sector = fixedProduct.sector || fixedProduct.localSaida || 'Bar / Caixa'
   return {
-    ...product,
+    ...fixedProduct,
+    name: repairText(fixedProduct.name || 'Produto'),
     category,
     sector,
-    localSaida: product.localSaida || sector,
-    imprimeCozinha: product.imprimeCozinha ?? product.prepare ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category),
-    status: product.status || 'Ativo',
+    localSaida: fixedProduct.localSaida || sector,
+    imprimeCozinha: fixedProduct.imprimeCozinha ?? fixedProduct.prepare ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category),
+    status: fixedProduct.status || 'Ativo',
   }
 }
 
 function readProducts() {
   try {
-    const saved = JSON.parse(localStorage.getItem(PRODUCTS_KEY) || 'null')
+    const saved = repairData(JSON.parse(localStorage.getItem(PRODUCTS_KEY) || 'null'))
     return Array.isArray(saved) && saved.length ? saved.map(normalizeProduct) : defaultProducts.map(normalizeProduct)
   } catch {
     return defaultProducts.map(normalizeProduct)

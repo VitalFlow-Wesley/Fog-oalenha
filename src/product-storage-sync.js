@@ -1,22 +1,25 @@
 import './encoding-repair-runtime.js'
 import './native-edit-modal-runtime.js'
+import { repairData, repairText } from './text-normalizer.js'
 
 const PRODUCT_CONFIG_KEY = 'fogao-a-lenha-products-settings'
 const PRODUCT_COMMAND_KEY = 'fogao-products-v1'
 let lastProductsPayload = ''
 
 function normalizeSavedProduct(product) {
-  const category = product.category || 'Outros'
-  const sector = product.sector || product.localSaida || 'Bar / Caixa'
-  const prepare = product.prepare ?? product.imprimeCozinha ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category)
+  const fixedProduct = repairData(product)
+  const category = fixedProduct.category || 'Outros'
+  const sector = fixedProduct.sector || fixedProduct.localSaida || 'Bar / Caixa'
+  const prepare = fixedProduct.prepare ?? fixedProduct.imprimeCozinha ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category)
   return {
-    ...product,
+    ...fixedProduct,
+    name: repairText(fixedProduct.name || 'Produto'),
     category,
     sector,
-    localSaida: product.localSaida || sector,
+    localSaida: fixedProduct.localSaida || sector,
     prepare,
     imprimeCozinha: prepare,
-    status: product.status || 'Ativo',
+    status: fixedProduct.status || 'Ativo',
   }
 }
 
@@ -27,7 +30,7 @@ function syncProductsStorage() {
     const sourceRaw = configRaw || commandRaw
     if (!sourceRaw || sourceRaw === lastProductsPayload) return
 
-    const products = JSON.parse(sourceRaw)
+    const products = repairData(JSON.parse(sourceRaw))
     if (!Array.isArray(products)) return
 
     const normalized = products.map(normalizeSavedProduct)

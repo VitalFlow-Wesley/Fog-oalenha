@@ -10,6 +10,7 @@ import Fechamento from './pages/Fechamento.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
+import { repairData, repairText } from './text-normalizer.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
 const USERS_KEY = 'fogao-users-v1'
@@ -39,7 +40,7 @@ function readStored(key, fallback) {
   try {
     const raw = localStorage.getItem(key)
     if (!raw) return fallback
-    const parsed = JSON.parse(raw)
+    const parsed = repairData(JSON.parse(raw))
     return parsed ?? fallback
   } catch {
     return fallback
@@ -70,7 +71,7 @@ function hasTableMovement(table) {
 }
 
 function getTableWaiter(table) {
-  return table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom'
+  return repairText(table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom')
 }
 
 function buildSalesRecord(table, type, closingDate) {
@@ -88,14 +89,14 @@ function buildSalesRecord(table, type, closingDate) {
     total: tableTotal(table),
     items: (table.items || []).map(item => ({
       id: item.id,
-      name: item.name || 'Produto',
+      name: repairText(item.name || 'Produto'),
       qty: Number(item.qty || 0),
       price: Number(item.price || 0),
-      category: item.category || 'Outros',
-      sector: item.sector || item.localSaida || '',
-      localSaida: item.localSaida || item.sector || '',
+      category: repairText(item.category || 'Outros'),
+      sector: repairText(item.sector || item.localSaida || ''),
+      localSaida: repairText(item.localSaida || item.sector || ''),
       imprimeCozinha: Boolean(item.imprimeCozinha),
-      observation: item.observation || '',
+      observation: repairText(item.observation || ''),
     })),
   }
 }
@@ -119,14 +120,14 @@ function buildClosedTableRecord(table, mode, { closingDate, payments, closedBy, 
       const price = Number(item.price || 0)
       return {
         id: item.id,
-        name: item.name || 'Produto',
+        name: repairText(item.name || 'Produto'),
         qty,
         price,
         total: qty * price,
-        category: item.category || 'Outros',
-        sector: item.sector || item.localSaida || '',
-        localSaida: item.localSaida || item.sector || '',
-        observation: item.observation || '',
+        category: repairText(item.category || 'Outros'),
+        sector: repairText(item.sector || item.localSaida || ''),
+        localSaida: repairText(item.localSaida || item.sector || ''),
+        observation: repairText(item.observation || ''),
       }
     }),
     payments: payments || null,
@@ -259,7 +260,7 @@ export default function App() {
         }
 
         if (remote.settings && Object.keys(remote.settings).length) {
-          const nextSettings = { ...initialSettings, ...remote.settings }
+          const nextSettings = repairData({ ...initialSettings, ...remote.settings })
           setSettings(nextSettings)
           writeStored(SETTINGS_KEY, nextSettings)
         } else {
@@ -267,7 +268,7 @@ export default function App() {
         }
 
         if (Array.isArray(remote.products)) {
-          const products = remote.products.length ? remote.products : localProducts
+          const products = repairData(remote.products.length ? remote.products : localProducts)
           writeStored(PRODUCTS_KEY, products)
           writeStored('fogao-a-lenha-products-settings', products)
           window.dispatchEvent(new Event('fogao-products-updated'))
