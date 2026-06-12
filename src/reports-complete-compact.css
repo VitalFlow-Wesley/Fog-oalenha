@@ -1,0 +1,112 @@
+/* Relatório completo: cards superiores mais compactos */
+.reportsPremiumPage.completeReportPage .completeSummaryGrid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard {
+  min-height: 82px !important;
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryIcon {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryIcon svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard > div:last-child {
+  gap: 2px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard span {
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard strong {
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard small {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Desempenho por setor mais baixo e enxuto */
+.reportsPremiumPage.completeReportPage .sectorPerformancePanel {
+  padding: 14px 16px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformancePanel h2 {
+  margin: 0 0 9px !important;
+  font-size: 19px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+  gap: 9px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard {
+  min-height: 92px !important;
+  padding: 10px 8px !important;
+  gap: 4px !important;
+  border-radius: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard > div {
+  line-height: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard span,
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard small {
+  font-size: 10.5px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard b {
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 1280px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid,
+  .reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
