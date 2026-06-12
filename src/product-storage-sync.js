@@ -1,3 +1,5 @@
+import './encoding-repair-runtime.js'
+
 const PRODUCT_CONFIG_KEY = 'fogao-a-lenha-products-settings'
 const PRODUCT_COMMAND_KEY = 'fogao-products-v1'
 let lastProductsPayload = ''
