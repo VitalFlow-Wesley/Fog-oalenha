@@ -1,0 +1,64 @@
+.authModalOverlay:has(.joinTableModal) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 200000 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 16px !important;
+  background: rgba(45, 24, 16, .62) !important;
+  backdrop-filter: blur(6px) !important;
+  pointer-events: auto !important;
+  touch-action: none !important;
+}
+
+.joinTableModal {
+  position: relative !important;
+  z-index: 200001 !important;
+  width: min(520px, calc(100vw - 24px)) !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow-y: auto !important;
+  pointer-events: auto !important;
+  touch-action: pan-y !important;
+}
+
+.joinTableModal select,
+.joinTableModal button,
+.joinTableModal label {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+.joinTableModal select {
+  width: 100% !important;
+  min-height: 48px !important;
+  font-size: 16px !important;
+}
+
+.joinTableModal .actionsRow {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.joinTableModal .actionsRow button {
+  width: 100% !important;
+  min-height: 44px !important;
+}
+
+@media (max-width: 600px) {
+  .authModalOverlay:has(.joinTableModal) {
+    align-items: end !important;
+    padding: 8px !important;
+  }
+
+  .joinTableModal {
+    width: 100% !important;
+    max-height: calc(100dvh - 16px) !important;
+    padding: 20px 16px !important;
+    border-radius: 22px 22px 14px 14px !important;
+  }
+
+  .joinTableModal .drawerHeader h2 {
+    font-size: 24px !important;
+  }
+}
