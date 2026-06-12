@@ -123,6 +123,17 @@
   width: auto;
   min-width: 0;
   display: block;
+  position: relative;
+}
+
+.productsFilters label svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7a6254;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .productsFilters select {
@@ -136,6 +147,10 @@
   min-height: 52px;
   border-radius: 14px;
   font-size: 15px;
+}
+
+.productsFilters input {
+  padding-left: 44px;
 }
 
 .productsTable {
