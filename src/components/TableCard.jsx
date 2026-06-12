@@ -20,7 +20,6 @@ export default function TableCard({ table, onOpen }) {
       <div className="tableTop restaurantTableTop">
         <div className="restaurantTableIdentification">
           <strong>Mesa {table.number}{joinedNumbers}</strong>
-          {table.customerName ? <span className="tableCustomerBadge">{table.customerName}</span> : null}
         </div>
         <span className="restaurantTableStatus">{statusLabel[table.status] || 'Ocupada'}</span>
       </div>
