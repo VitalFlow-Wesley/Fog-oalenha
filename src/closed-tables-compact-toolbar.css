@@ -4,21 +4,21 @@
   align-items: stretch;
   gap: 0;
   width: 100%;
-  margin: 10px 0 12px;
+  margin: 8px 0 10px;
   border: 1px solid #ead4b7;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #fffaf2;
   overflow: hidden;
 }
 
 .closedTablesCompactItem {
   min-width: 0;
-  min-height: 58px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 7px;
+  padding: 6px 12px;
   border-right: 1px solid #ead4b7;
   background: transparent !important;
 }
@@ -30,7 +30,7 @@
 .closedTablesCompactItem span {
   flex: 0 0 auto;
   color: #7a6458;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -38,7 +38,7 @@
 
 .closedTablesCompactItem strong {
   color: #3b2118;
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -50,12 +50,12 @@
 .closedTablesCompactDate {
   width: 100%;
   min-width: 0;
-  min-height: 36px !important;
-  padding: 0 8px !important;
+  min-height: 32px !important;
+  padding: 0 6px !important;
   border: 0 !important;
   background: transparent !important;
   color: #3b2118;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 900;
   box-shadow: none !important;
 }
@@ -107,18 +107,18 @@
   }
 
   .closedTablesCompactItem {
-    min-height: 54px;
-    padding: 7px 10px;
-    gap: 6px;
+    min-height: 44px;
+    padding: 6px 9px;
+    gap: 5px;
   }
 
   .closedTablesCompactItem span {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .closedTablesCompactItem strong,
   .closedTablesCompactDate {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 }
 
