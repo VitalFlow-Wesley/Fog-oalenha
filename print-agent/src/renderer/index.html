@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agente de Impressão Fogão a Lenha</title>
+  <style>
+    :root { font-family: Inter, Arial, sans-serif; color: #281a12; background: #f7f3ee; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 22px 28px; background: #7d1f14; color: white; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 22px; }
+    header p { margin: 5px 0 0; opacity: .85; }
+    .status-dot { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+    .status-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #5ed17a; }
+    main { padding: 24px; max-width: 980px; margin: auto; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .card { background: white; border: 1px solid #e6ddd4; border-radius: 14px; padding: 20px; box-shadow: 0 8px 22px rgba(75, 40, 20, .06); }
+    .card h2 { margin: 0 0 16px; font-size: 18px; }
+    label { display: grid; gap: 7px; margin-bottom: 14px; font-weight: 700; font-size: 13px; }
+    input, select { width: 100%; padding: 11px 12px; border: 1px solid #cfc1b4; border-radius: 9px; background: white; font: inherit; }
+    .row { display: grid; grid-template-columns: 1fr 130px; gap: 10px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button { border: 0; border-radius: 9px; padding: 11px 15px; font-weight: 800; cursor: pointer; }
+    .primary { background: #8f2618; color: white; }
+    .secondary { background: #efe6dd; color: #5f2a20; }
+    .success { background: #e9f8ed; color: #176b2d; }
+    .warning { background: #fff5d7; color: #795900; padding: 12px; border-radius: 9px; margin-top: 12px; }
+    .log { min-height: 190px; max-height: 280px; overflow: auto; background: #241b17; color: #f9eee7; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 12px; }
+    .log div { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .log .error { color: #ff9d9d; }
+    .log .success { background: transparent; color: #92e6a8; }
+    .full { grid-column: 1 / -1; }
+    .toggle { display: flex; align-items: center; gap: 10px; margin: 8px 0 16px; }
+    .toggle input { width: auto; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Agente de Impressão Fogão a Lenha</h1>
+      <p>Caixa USB + Cozinha via rede</p>
+    </div>
+    <span class="status-dot">Agente ativo</span>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="card full">
+        <h2>Conexão com o sistema</h2>
+        <label>URL da fila de impressão
+          <input id="apiUrl" placeholder="https://seu-sistema.vercel.app/api/print-jobs" />
+        </label>
+        <label>Chave do agente
+          <input id="agentToken" type="password" placeholder="PRINT_AGENT_TOKEN" />
+        </label>
+        <label class="toggle"><input id="simulationMode" type="checkbox" /> Usar modo de simulação</label>
+      </section>
+
+      <section class="card">
+        <h2>Impressora do caixa</h2>
+        <label>Impressora instalada no Windows
+          <select id="cashierPrinterName"></select>
+        </label>
+        <div class="actions">
+          <button id="refreshPrinters" class="secondary">Atualizar lista</button>
+          <button id="testCashier" class="primary">Testar caixa</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Impressora da cozinha</h2>
+        <div class="row">
+          <label>IP da impressora
+            <input id="kitchenPrinterIp" placeholder="192.168.1.50" />
+          </label>
+          <label>Porta
+            <input id="kitchenPrinterPort" type="number" value="9100" />
+          </label>
+        </div>
+        <button id="testKitchen" class="primary">Testar cozinha</button>
+      </section>
+
+      <section class="card full">
+        <h2>Controles</h2>
+        <div class="actions">
+          <button id="save" class="success">Salvar configurações</button>
+          <button id="pollNow" class="secondary">Verificar fila agora</button>
+        </div>
+        <div class="warning">Enquanto o modo de simulação estiver ativo, nenhuma impressão física será enviada.</div>
+      </section>
+
+      <section class="card full">
+        <h2>Atividade</h2>
+        <div id="log" class="log"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
