@@ -1,7 +1,7 @@
 import { saveRemoteState } from './services/appStateApi.js'
 
 const SETTINGS_KEY = 'fogao-settings-v1'
-const CLEARED_FLAG = 'fogao-printers-cleared-v2'
+const MIGRATION_KEY = 'fogao-printers-cleared-v3'
 const KEYS = {
   users: 'fogao-users-v1', tables: 'fogao-tables-v1', products: 'fogao-products-v1',
   salesHistory: 'fogao-sales-history-v1', closings: 'fogao-closings-v1',
@@ -16,6 +16,7 @@ function settings() { return read(SETTINGS_KEY, {}) }
 
 async function save(next) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(next))
+  window.dispatchEvent(new CustomEvent('fogao-settings-force-update', { detail: next }))
   try {
     await saveRemoteState({
       users: read(KEYS.users, []), tables: read(KEYS.tables, []), settings: next,
@@ -29,9 +30,25 @@ function empty(next = settings()) {
   return { ...next, printers: [], cashierPrinterId: '', kitchenPrinterId: '', grillPrinterId: '', juicePrinterId: '' }
 }
 
-if (localStorage.getItem(CLEARED_FLAG) !== '1') {
-  localStorage.setItem(CLEARED_FLAG, '1')
-  save(empty())
+let migrationActive = localStorage.getItem(MIGRATION_KEY) !== '1'
+
+async function forceClearPrinters() {
+  const next = empty()
+  migrationActive = true
+  await save(next)
+  render()
+}
+
+if (migrationActive) {
+  forceClearPrinters()
+  window.setTimeout(forceClearPrinters, 700)
+  window.setTimeout(forceClearPrinters, 1800)
+  window.setTimeout(async () => {
+    await forceClearPrinters()
+    localStorage.setItem(MIGRATION_KEY, '1')
+    migrationActive = false
+    render()
+  }, 3200)
 }
 
 async function addPrinter() {
@@ -88,7 +105,7 @@ async function editReceipt() {
 function render() {
   const tab = document.querySelector('.printSettingsTab')
   if (!tab) return
-  const printers = settings().printers || []
+  const printers = migrationActive ? [] : (settings().printers || [])
   const table = tab.querySelector('.printerTableV2')
   if (!table) return
   const rows = [...table.querySelectorAll('.printerTableRow')]
@@ -102,7 +119,11 @@ function render() {
       notice.textContent = 'Nenhuma impressora cadastrada. Clique em Adicionar impressora.'
       table.appendChild(notice)
     }
-    tab.querySelectorAll('.printRulesSelects select').forEach(select => { select.disabled = true })
+    tab.querySelectorAll('.printRulesSelects select').forEach(select => {
+      select.innerHTML = '<option value="">Nenhuma impressora cadastrada</option>'
+      select.value = ''
+      select.disabled = true
+    })
   } else {
     rows.forEach(row => { row.style.display = '' })
     notice?.remove()
@@ -129,4 +150,6 @@ function click(event) {
 
 document.addEventListener('click', click, true)
 new MutationObserver(render).observe(document.documentElement, { childList: true, subtree: true })
-window.setTimeout(render, 300)
+window.addEventListener('DOMContentLoaded', render)
+window.addEventListener('storage', render)
+window.setInterval(render, 500)
