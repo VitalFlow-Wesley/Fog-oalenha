@@ -15,6 +15,14 @@
   gap: 12px;
 }
 
+.tablesSettingsPage .tableSummaryGrid {
+  display: none !important;
+}
+
+.tablesSettingsPage .tablesSettingsLayout {
+  margin-top: 0 !important;
+}
+
 .tableSummaryGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

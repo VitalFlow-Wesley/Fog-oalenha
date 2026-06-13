@@ -120,6 +120,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [joinModalOpen, setJoinModalOpen] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const isWaiterUser = currentUser?.role === 'garcom'
+  const canCloseTables = ['admin', 'gerente'].includes(currentUser?.role)
 
   const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
   const summary = useMemo(() => {
@@ -393,12 +395,12 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
         </div>
       </div>
 
-      <div className="restaurantSummaryGrid">
+      {!isWaiterUser && <div className="restaurantSummaryGrid">
         <div className="restaurantSummaryCard occupied"><div className="summaryIcon"><Users size={26} /></div><div><span>Mesas ocupadas</span><strong>{summary.occupied}</strong><small>{summary.occupiedPercent}% do salão</small></div></div>
         <div className="restaurantSummaryCard free"><div className="summaryIcon">▱</div><div><span>Mesas livres</span><strong>{summary.free}</strong><small>{summary.freePercent}% do salão</small></div></div>
         <div className="restaurantSummaryCard bill"><div className="summaryIcon"><ReceiptText size={26} /></div><div><span>Contas solicitadas</span><strong>{summary.bill}</strong><small>{summary.billPercent}% do salão</small></div></div>
         <div className="restaurantSummaryCard revenue"><div className="summaryIcon"><DollarSign size={28} /></div><div><span>Faturamento do salão</span><strong>{formatMoney(summary.revenue)}</strong><small>Hoje</small></div></div>
-      </div>
+      </div>}
 
       {tables.length === 0 ? (
         <section className="emptyState restaurantEmptyState">
@@ -436,7 +438,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
                 {table.mergedTableIds?.length > 0 && <button className="commandBtn" onClick={splitTables}><Split size={18} /> Separar mesas</button>}
                 <button className="commandBtn" onClick={sendKitchen}><ChefHat size={18} /> Enviar para cozinha</button>
                 <button className="commandBtn" onClick={requestBill}><ReceiptText size={18} /> Solicitar conta</button>
-                <button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button>
+                {canCloseTables && <button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button>}
               </div>
             </header>
 

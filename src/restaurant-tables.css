@@ -134,8 +134,26 @@
 .headerActions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   padding-top: 38px;
+  flex-wrap: nowrap;
+}
+
+.restaurantTablesPage .updatedPill,
+.restaurantTablesPage .refreshBtn,
+.restaurantTablesPage .mesasSystemStatusCard {
+  display: none !important;
+}
+
+.restaurantTablesPage .headerActions .primaryBtn {
+  width: auto;
+  min-width: 230px;
+  max-width: 250px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 22px;
+  white-space: nowrap;
 }
 
 .updatedPill,
@@ -616,8 +634,10 @@
   .restaurantPageHeader { flex-direction: column; }
   .headerActions { padding-top: 0; flex-wrap: wrap; }
   .secondaryTableBtn,
-  .headerActions .primaryBtn {
+  .restaurantTablesPage .headerActions .primaryBtn {
     flex: 1 1 210px;
+    width: 100%;
+    max-width: none;
   }
   .closedTablesSummary {
     grid-template-columns: 1fr;
