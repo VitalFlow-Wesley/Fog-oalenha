@@ -24,12 +24,11 @@ const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 
 const initialSettings = {
   establishmentName: 'Fogão a Lenha',
-  printers: [
-    { id: 'printer1', label: 'Impressora 1', name: 'Caixa' },
-    { id: 'printer2', label: 'Impressora 2', name: 'Cozinha' }
-  ],
-  kitchenPrinterId: 'printer2',
-  cashierPrinterId: 'printer1',
+  printers: [],
+  kitchenPrinterId: '',
+  cashierPrinterId: '',
+  grillPrinterId: '',
+  juicePrinterId: '',
   printKitchenItems: true,
   printBarItems: false,
   cancelPassword: '1234',

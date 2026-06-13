@@ -301,6 +301,20 @@
 .printerRouteCard strong { color: #2a160e; }
 .printerRouteCard span { grid-column: 2; color: #7d6758; font-size: 12px; line-height: 1.35; }
 .printerRouteCard button { min-height: 34px; border: 1px solid #ead7bf; border-radius: 10px; background: #fffdf8; color: #7a4d37; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; }
+.printerEmptyState {
+  grid-column: 1 / -1;
+  min-height: 132px;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 22px;
+  text-align: center;
+  color: #7a6253;
+  background: #fffaf2;
+}
+.printerEmptyState svg { color: #c24928; }
+.printerEmptyState strong { color: #2a160e; font-size: 17px; }
+.printerEmptyState span { max-width: 360px; line-height: 1.35; }
 
 .establishmentGrid,
 .printRulesGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
