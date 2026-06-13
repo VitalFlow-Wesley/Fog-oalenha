@@ -207,6 +207,20 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     window.setTimeout(() => setIsRefreshing(false), 650)
   }
 
+  function currentWaiterName() {
+    return currentUser?.name || currentUser?.username || 'Garçom'
+  }
+
+  function waiterPatch(table = {}) {
+    const waiterName = currentWaiterName()
+    return {
+      waiterName: table.waiterName || waiterName,
+      openedByName: table.openedByName || waiterName,
+      createdByName: table.createdByName || waiterName,
+      kitchenWaiterName: table.kitchenWaiterName || waiterName,
+    }
+  }
+
   function addTable() {
     const nextId = tables.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
     const newTable = createTable(nextId)
@@ -222,7 +236,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       return
     }
     if (t.status === 'livre') {
-      const updated = { ...t, status: 'ocupada', guests: 2, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
+      const updated = { ...t, ...waiterPatch(t), status: 'ocupada', guests: 2, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
       updateTable(t.id, updated)
       setSelected(updated)
       touch()
@@ -235,10 +249,11 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
     const existing = current.items.find(i => i.id === product.id && i.observation === observation)
+    const waiterName = currentWaiterName()
     const items = existing
       ? current.items.map(i => i.id === product.id && i.observation === observation ? { ...i, qty: i.qty + 1 } : i)
-      : [...current.items, { ...product, qty: 1, observation }]
-    updateTable(current.id, { items, status: current.status === 'livre' ? 'ocupada' : current.status })
+      : [...current.items, { ...product, qty: 1, observation, waiterName, launchedByName: waiterName }]
+    updateTable(current.id, { ...waiterPatch(current), items, status: current.status === 'livre' ? 'ocupada' : current.status })
     setObservation('')
     touch()
   }

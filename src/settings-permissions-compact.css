@@ -81,10 +81,58 @@
   min-width: 100px !important;
 }
 
-.accessActions .runtimeDeleteUserBtn {
-  color: #e14b38 !important;
-  border-color: #ffd1c9 !important;
-  background: #fff1ee !important;
+.settingsDeleteModal {
+  width: min(500px, calc(100vw - 24px)) !important;
+  padding: 20px !important;
+}
+
+.deleteWarningBox {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #ffd0c6;
+  border-radius: 14px;
+  background: #fff2ed;
+  color: #8f2e1d;
+}
+
+.deleteWarningBox strong,
+.deleteWarningBox span {
+  display: block;
+}
+
+.deleteWarningBox span {
+  margin-top: 3px;
+  color: #795d50;
+  font-size: 13px;
+}
+
+.deleteUserSummary {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 8px 12px;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: #fffaf2;
+}
+
+.deleteUserSummary span {
+  color: #806858;
+  font-weight: 800;
+}
+
+.deleteUserSummary strong {
+  color: #2f180f;
+}
+
+.dangerBtn {
+  background: linear-gradient(135deg, #b92718, #ef5634) !important;
+  color: #fff !important;
+  border: 0 !important;
 }
 
 @media (max-width: 760px) {

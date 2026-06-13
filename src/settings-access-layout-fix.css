@@ -73,8 +73,34 @@
     padding: 12px !important;
   }
 
+  .accessListPanel .accessTable {
+    overflow-x: visible !important;
+  }
+
+  .accessListPanel .accessTableHead {
+    display: none !important;
+  }
+
   .accessListPanel .accessTableHead,
   .accessListPanel .accessTableRow {
-    min-width: 700px !important;
+    min-width: 0 !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .accessListPanel .accessTableRow {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    margin: 8px !important;
+  }
+
+  .accessTableRow > span,
+  .accessTableRow > b,
+  .accessTableRow > em {
+    white-space: normal !important;
+  }
+
+  .accessActions {
+    justify-content: flex-end !important;
   }
 }
