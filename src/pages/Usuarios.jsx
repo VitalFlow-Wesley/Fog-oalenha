@@ -1,3 +1,4 @@
+import qz from 'qz-tray'
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, Plus, Printer, ReceiptText, RefreshCw, Save, Search, Settings, ShieldCheck, Store, Trash2, UserCog, Utensils, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
@@ -292,6 +293,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   }
 
   function resetTableNumbers() { const configs = generateTableConfigs(tableQty); applyTableQty(configs) }
+  
   function editTableName(id) {
     const table = tableConfigs.find(item => item.id === id)
     setTextEditModal({
@@ -304,7 +306,36 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       placeholder: 'Ex.: Mesa varanda',
     })
   }
-  function addPrinter() {
+
+  // --- FUNÇÃO ADICIONAR IMPRESSORA COM QZ TRAY ---
+  async function addPrinter() {
+    try {
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect(); 
+      }
+      const nomeDaImpressora = "POS-80";
+      await qz.printers.find(nomeDaImpressora); 
+      
+      const config = qz.configs.create(nomeDaImpressora);
+      const dadosCupom = [
+        '\x1B' + '\x40',          
+        '\x1B' + '\x61' + '\x31', 
+        'FOGAO A LENHA\n',
+        '-------------------------\n',
+        'TESTE DE COMUNICACAO\n',
+        'SITE CONECTADO COM SUCESSO!\n',
+        '-------------------------\n',
+        '\n\n\n',               
+        '\x1D' + '\x56' + '\x41' + '\x00' 
+      ];
+      
+      await qz.print(config, dadosCupom);
+      console.log("Sucesso! Comando enviado para a impressora.");
+    } catch (erro) {
+      console.error("Erro na comunicação com QZ Tray:", erro);
+      alert("Falha ao imprimir o teste. Verifique se o QZ Tray está rodando no computador atual.");
+    }
+
     const id = `printer-${Date.now()}`
     setSystemForm(prev => {
       const nextNumber = prev.printers.length + 1
@@ -321,6 +352,8 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       creating: true,
     })
   }
+  // --- FIM DA NOVA FUNÇÃO ---
+
   function removePrinter(id) {
     setSystemForm(prev => {
       const printers = prev.printers.filter(p => p.id !== id).map((p, i) => ({ ...p, label: `Impressora ${i + 1}` }))
@@ -334,7 +367,9 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       }
     })
   }
+
   function updatePrinterName(id, name) { setSystemForm(prev => ({ ...prev, printers: prev.printers.map(printer => printer.id === id ? { ...printer, name } : printer) })) }
+  
   function editPrinterName(printer) {
     if (!printer) return
     setTextEditModal({
@@ -347,12 +382,14 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       placeholder: 'Ex.: Impressora cozinha',
     })
   }
+
   function closeTextEditModal() {
     if (textEditModal?.type === 'printer' && textEditModal.creating) {
       removePrinter(textEditModal.id)
     }
     setTextEditModal(null)
   }
+
   function saveTextEdit(event) {
     event.preventDefault()
     const value = textEditModal?.value?.trim()
@@ -368,6 +405,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setTextEditModal(null)
     setTimeout(() => setSystemMessage(''), 2500)
   }
+
   function saveSystem(e) {
     e?.preventDefault?.()
     if (!canChangeSensitive) return
@@ -386,8 +424,43 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setSystemMessage('Configurações salvas com sucesso.')
     setTimeout(() => setSystemMessage(''), 2500)
   }
+
   function restoreDefaults() { const defaults = normalizeSettings({ printers: basePrinters }); setSystemForm(defaults); setSystemMessage('Padrões restaurados. Clique em salvar configurações para confirmar.') }
-  function testPrinter(name) { setSystemMessage(`Teste preparado para ${name}. A integração real será ligada na etapa da impressora.`); setTimeout(() => setSystemMessage(''), 3000) }
+  
+  // --- FUNÇÃO DO BOTÃO "TESTAR" NA TABELA ATUALIZADA ---
+  async function testPrinter(name) {
+    try {
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect();
+      }
+      
+      const nomeDaImpressora = "POS-80";
+      await qz.printers.find(nomeDaImpressora);
+      
+      const config = qz.configs.create(nomeDaImpressora);
+      const dadosCupom = [
+        '\x1B' + '\x40',          
+        '\x1B' + '\x61' + '\x31', 
+        'FOGAO A LENHA\n',
+        '-------------------------\n',
+        `TESTE - ${name.toUpperCase()}\n`,
+        'SISTEMA 100% OPERACIONAL!\n',
+        '-------------------------\n',
+        '\n\n\n',               
+        '\x1D' + '\x56' + '\x41' + '\x00' 
+      ];
+      
+      await qz.print(config, dadosCupom);
+      
+      setSystemMessage(`Papel de teste enviado para a ${name}!`);
+      setTimeout(() => setSystemMessage(''), 3000);
+      
+    } catch (erro) {
+      console.error("Erro no teste da impressora:", erro);
+      alert(`Falha ao testar a ${name}. Verifique se o ícone verde do QZ Tray está aberto.`);
+    }
+  }
+  // --- FIM DA FUNÇÃO TESTAR ---
 
   function changeCancelPassword(e) {
     e.preventDefault()
