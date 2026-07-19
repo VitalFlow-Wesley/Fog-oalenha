@@ -102,7 +102,7 @@ function createTable(nextId) {
   }
 }
 
-// --- MOTOR DE IMPRESSÃO ESC/POS BLINDADO COM CRIPTOGRAFIA (SHA-512) ---
+// --- MOTOR DE IMPRESSÃO ESC/POS (DELEGAÇÃO TOTAL PARA O WINDOWS) ---
 async function executeThermalPrint(job) {
   if (!job || !job.printerName) {
     alert("Nenhuma impressora configurada para este setor. Verifique as configurações de impressão.");
@@ -115,99 +115,9 @@ async function executeThermalPrint(job) {
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 
-    // 1. Injeta Certificado
-    qz.security.setCertificatePromise((resolve) => {
-      resolve(
-        "-----BEGIN CERTIFICATE-----\n" +
-        "MIIECzCCAvOgAwIBAgIGAZ969WDiMA0GCSqGSIb3DQEBCwUAMIGiMQswCQYDVQQG\n" +
-        "EwJVUzELMAkGA1UECAwCTlkxEjAQBgNVBAcMCUNhbmFzdG90YTEbMBkGA1UECgwS\n" +
-        "UVogSW5kdXN0cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMx\n" +
-        "HDAaBgkqhkiG9w0BCQEWDXN1cHBvcnRAcXouaW8xGjAYBgNVBAMMEVFaIFRyYXkg\n" +
-        "RGVtbyBDZXJ0MB4XDTI2MDcxODE1MTg0OVoXDTQ2MDcxODE1MTg0OVowgaIxCzAJ\n" +
-        "BgNVBAYTAlVTMQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYD\n" +
-        "VQQKDBJRWiBJbmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMs\n" +
-        "IExMQzEcMBoGCSqGSIb3DQEJARYNc3VwcG9ydEBxei5pbzEaMBgGA1UEAwwRUVog\n" +
-        "VHJheSBEZW1vIENlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCj\n" +
-        "UQrZOCTRYvW1Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xO\n" +
-        "cmSmV+DEW9tu4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0\n" +
-        "QqM+Ktc+yTpOJ1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJF\n" +
-        "ZZYsSmRH/PbQVCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE\n" +
-        "8ALZ7aBDsVvjLoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXK\n" +
-        "WDpvvYKZ0/QocA7Xvt2zAgMBAAGjRTBDMBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYD\n" +
-        "VR0PAQH/BAQDAgEGMB0GA1UdDgQWBBT+rDxjeVufiUCBQZaOiT3eiMi8aTANBgkq\n" +
-        "hkiG9w0BAQsFAAOCAQEAB3MpJfTdBVpDUdbaH73GJebGLdzmgnkvrx1CjkYfa+qU\n" +
-        "MRmucmP0XLxK/6bJwVLmboukwdc0Ya1dhLfUuGymsobWaiO+FYHHci1Dbu4cWepv\n" +
-        "5Q6l1vAk2lCEpl6Czj0X+/Y2IMsBsmaDzGJ+QKKEpcyb1LuE2BIO/sL1MmLhl5QS\n" +
-        "J0vjlmQA6Gm2RxZcp7BHVZS586KXb3xex4ocMzmxLGX03CKD4yYs3KcvozjPPtTW\n" +
-        "KREWKAG2mxKoHUljQJenGXmKfsGBXwclWoiJomSdFlC1lnSKHL+z1tx39nDQC0oZ\n" +
-        "WvIrjBCPmuRGuLQQr0xn2qU0xeiSkmvaJHxVmZonJA==\n" +
-        "-----END CERTIFICATE-----"
-      );
-    });
-
-    // 2. Assinatura Digital Sanitizada (Exige SHA-512 no QZ Tray 2.1+)
-    qz.security.setSignaturePromise((toSign) => {
-      return async (resolve, reject) => {
-        try {
-          const privateKeyPem = 
-            "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCjUQrZOCTRYvW1" +
-            "Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xOcmSmV+DEW9tu" +
-            "4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0QqM+Ktc+yTpO" +
-            "J1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJFZZYsSmRH/PbQ" +
-            "VCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE8ALZ7aBDsVvj" +
-            "LoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXKWDpvvYKZ0/Qo" +
-            "cA7Xvt2zAgMBAAECggEAEVOizALp3REbsl7giXTkjCfJBhqNj3wzLDHJCe/Rt+3k" +
-            "mXWOf4KwW953zWSCr9aDJut6BC/kl9CLCkt0fRb1JX6mpKyAZDsuOctGcPLoipt2" +
-            "1uvEk7i6tmkD7hsDaPIgMIJ1YT4YUf/1YJ9KJOlUBhrLGOrv1JparjmX7aC9OFFd" +
-            "w3dvIMigpjbNwKI22cW5l+egoYpUwGi/N0DlgDdF+cEremuzvhoiod8wgt1k+W0h" +
-            "e03219Db9iZ3aZP1X/GyDkr+0W3ZDzw/eAiRjzV2Abooz7kVN5Xm7/caNJm19IYL" +
-            "SdJHc8dVsznI6N71yYuoWIFkeJdb42vDEgFhB/RDmQKBgQDewd2Rs7nUrVT3FWYG" +
-            "XeSGfkw9z9/AMOQYdkCQUE60Vr9/ao9o0V+m5iY/Tpo7uY9BBu68Y1wc3y5CrX5E" +
-            "Ii2KIUBFqiC8mY5RZdlS2KPDvAzATubdMQKWBIGQcfgIBqJGP/LnSWsrkEO4QTEG" +
-            "/6JJfiUZgSjwuZYS+DaWydd3RQKBgQC7sFORf54iXpYOOZukWJJD1E8LOEMWRj5T" +
-            "sV6VT4OVNPMrzUwc9h9A6x1VIwKWoN9SfYwyDHnbAXJkEI4EPOzF77vGTVdYomTF" +
-            "7EQWg9aseSitsXJhzRQrJr8Q61W5Gt/dt0OjN5ZzUz7Vr4dg8s3DEY6pH+xwMesX" +
-            "32Qahc+0lwKBgEZ+i6QEgJaxk+Xtu6/gHuYBKheVpXWpA0ZKhfwlrgKcQVYNXv0I" +
-            "YBn7UqzkVO9UXx+uSadOxVX+8fWJ9NgDZFdHH3vbRTCc6uG09PIA2t6I37oeV8e" +
-            "l3bqTiZsKtY/YzNgIXrYXTYYHZY960oPtEgVx5/epBoqYTf3nS7zCWERAoGBAK7r" +
-            "OBcDzsbNTB/ZxJo4Cai5dylHuA5MTM4HIdUZk9I81Nxfqq3bG2mPNXkg9cqYB0mD" +
-            "xGLoibB3+roTS6fbd/dI48F+Vwc94ZksBpDNMgbvq9+k3qsTS9ajd7I3AV9QEo85" +
-            "uwmkRs0YKhlQS2UpJGbGOCSaoeo2O5m2Ej89skPlAoGACAqxHh9Cojt3CRi31en0" +
-            "BhlB7Bn1GsBCO8YKxzP50jKYl2JMTEmXQPk2SSweJ+1ZaS0jYn1LWHFRz1Z20/R2" +
-            "/9aOTEGTTMcE1tBqPbs9matZeBwWsHSWzfP8R3uqW1/7mDK/pgrqydNMLndQt0s1" +
-            "5+WnQu7bRD+BKCg/9i4K1YA=";
-
-          const cleanedKey = privateKeyPem.replace(/[^A-Za-z0-9+/=]/g, "");
-          const binaryKey = Uint8Array.from(atob(cleanedKey), c => c.charCodeAt(0));
-          
-          const cryptoKey = await window.crypto.subtle.importKey(
-            "pkcs8",
-            binaryKey.buffer,
-            { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-512" } }, // <- AQUI ESTÁ A CORREÇÃO (SHA-512)
-            false,
-            ["sign"]
-          );
-
-          const encoder = new TextEncoder();
-          const dataBuffer = encoder.encode(toSign);
-          const signatureBuffer = await window.crypto.subtle.sign(
-            "RSASSA-PKCS1-v1_5",
-            cryptoKey,
-            dataBuffer
-          );
-
-          const signatureArray = new Uint8Array(signatureBuffer);
-          let binarySignature = "";
-          for (let i = 0; i < signatureArray.byteLength; i++) {
-            binarySignature += String.fromCharCode(signatureArray[i]);
-          }
-          resolve(btoa(binarySignature));
-        } catch (err) {
-          console.error("Erro interno na assinatura criptográfica:", err);
-          reject(err);
-        }
-      };
-    });
+    // A MÁGICA ESTÁ AQUI: Nós NÃO chamamos as funções qz.security.
+    // Sem promessas, sem certificados, sem chaves e sem null.
+    // Isso força o QZ Tray a ignorar a web e abrir o pop-up nativo de permissão no PC.
 
     if (!qz.websocket.isActive()) {
       await qz.websocket.connect();
