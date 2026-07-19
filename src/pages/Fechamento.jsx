@@ -31,7 +31,6 @@ function getStoredUsers(fallbackUsers = []) {
   } catch {
     return fallbackUsers
   }
-
   return fallbackUsers
 }
 
@@ -83,7 +82,6 @@ function closedRecordToTable(record) {
 
 function buildWaiterSummary(tables = []) {
   const map = new Map()
-
   tables.forEach(table => {
     const waiterName = getTableWaiter(table)
     const current = map.get(waiterName) || { name: waiterName, tables: 0, total: 0 }
@@ -91,7 +89,6 @@ function buildWaiterSummary(tables = []) {
     current.total += getTableTotal(table)
     map.set(waiterName, current)
   })
-
   return Array.from(map.values()).sort((a, b) => b.total - a.total || b.tables - a.tables)
 }
 
@@ -114,7 +111,6 @@ function buildTopProducts(items = []) {
     current.total += Number(item.price || 0) * Number(item.qty || 0)
     map.set(name, current)
   })
-
   const list = Array.from(map.values())
   return {
     byQty: [...list].sort((a, b) => b.qty - a.qty || b.total - a.total).slice(0, 5),
@@ -188,7 +184,122 @@ function CategoryBars({ categories, total }) {
   return <div className="categoryBars">{categories.map(item => { const percent = item.total / base * 100; return <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent.toFixed(1).replace('.', ',')}%</b></div><div className="progress"><span style={{ width: `${Math.min(percent, 100)}%` }} /></div><small>{money(item.total)}</small></div> })}</div>
 }
 
-export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
+// --- MOTOR DE IMPRESSÃO DO RELATÓRIO ESC/POS ---
+async function executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings) {
+  try {
+    const qzModule = await import('qz-tray');
+    const qz = qzModule.default || qzModule;
+
+    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+    // DELEGAÇÃO TOTAL AO SITE MANAGER DO WINDOWS
+    qz.security.setCertificatePromise(null);
+    qz.security.setSignaturePromise(null);
+
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    // Busca a impressora configurada (Caixa)
+    const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {});
+    const printers = systemSettings?.printers || [];
+    const printerId = systemSettings?.cashierPrinterId;
+    const selected = printers.find(p => p.id === printerId);
+    const printerName = selected?.name || selected?.label || 'POS-80'; // Fallback
+
+    await qz.printers.find(printerName);
+    const config = qz.configs.create(printerName);
+
+    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+    let payload = [
+      '\x1B' + '\x40', // Iniciar
+      '\x1B' + '\x61' + '\x31', // Centralizar
+      '================================\n',
+      '       FECHAMENTO DE CAIXA      \n',
+      '          FOGAO A LENHA         \n',
+      '================================\n',
+      '\x1B' + '\x61' + '\x30', // Esquerda
+      `Data:     ${date}\n`,
+      `Operador: ${removeAccents(currentUser?.name || currentUser?.username || 'Operador')}\n`,
+      '--------------------------------\n',
+    ];
+
+    // Helper para alinhar valores monetários na direita
+    const addLine = (label, value) => {
+      payload.push(`${label}\n`);
+      payload.push('\x1B' + '\x61' + '\x32'); // Direita
+      payload.push(`${value}\n`);
+      payload.push('\x1B' + '\x61' + '\x30'); // Volta p/ Esquerda
+    };
+
+    addLine("Faturamento total:", money(data.total));
+    addLine("Total informado no caixa:", money(informedTotal));
+    addLine("Diferenca final:", money(difference));
+    
+    payload.push('--------------------------------\n');
+    payload.push(`Mesas abertas no salao: ${data.openTables}\n`);
+    payload.push(`Mesas fechadas no dia:  ${data.closedTables}\n`);
+    payload.push(`Total de itens:         ${data.totalOrders}\n`);
+    payload.push(`Ticket medio:           ${money(data.ticketAverage)}\n`);
+    payload.push('--------------------------------\n');
+    
+    payload.push('\x1B' + '\x61' + '\x31');
+    payload.push('RECEBIMENTOS INFORMADOS\n');
+    payload.push('\x1B' + '\x61' + '\x30');
+    addLine("Dinheiro:", money(received.dinheiro));
+    addLine("PIX:", money(received.pix));
+    addLine("Cartao:", money(received.cartao));
+    addLine("Outros:", money(received.outros));
+    payload.push('--------------------------------\n');
+
+    if (data.categories.length > 0) {
+      payload.push('\x1B' + '\x61' + '\x31');
+      payload.push('VENDAS POR CATEGORIA\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      data.categories.forEach(c => addLine(removeAccents(c.name) + ":", money(c.total)));
+      payload.push('--------------------------------\n');
+    }
+
+    if (data.topProductsByQty.length > 0) {
+      payload.push('\x1B' + '\x61' + '\x31');
+      payload.push('PRODUTOS MAIS VENDIDOS\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      data.topProductsByQty.forEach((p, i) => addLine(`${i+1}. ${removeAccents(p.name)} (${p.qty}x):`, money(p.total)));
+      payload.push('--------------------------------\n');
+    }
+
+    if (data.waiters.length > 0) {
+      payload.push('\x1B' + '\x61' + '\x31');
+      payload.push('RANKING POR GARCOM\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      data.waiters.forEach(w => addLine(`${removeAccents(w.name)} (${w.tables} mesas):`, money(w.total)));
+      payload.push('--------------------------------\n');
+    }
+
+    if (note) {
+      payload.push(`Observacao:\n${removeAccents(note)}\n`);
+      payload.push('--------------------------------\n');
+    }
+
+    payload.push('\x1B' + '\x61' + '\x31'); // Centralizar
+    payload.push('Relatorio gerado pelo sistema.\n');
+
+    // Cortar papel
+    payload.push('\n\n\n\n');
+    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
+
+    await qz.print(config, payload);
+    return true;
+  } catch (err) {
+    console.error("Falha na impressão do fechamento:", err);
+    alert(`Erro na impressora: ${err.message || err}`);
+    return false;
+  }
+}
+
+// ADICIONEI "settings" AQUI NAS PROPS PARA PEGAR A IMPRESSORA CORRETA DO CAIXA
+export default function Fechamento({ tables = [], currentUser, settings, onCloseCash }) {
   const [date, setDate] = useState(todayInput())
   const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
   const data = useMemo(() => buildClosingData(tables, closedTablesHistory, date), [tables, closedTablesHistory, date])
@@ -216,7 +327,7 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
           setClosedTablesHistory(remoteState.closedTablesHistory)
         }
       } catch {
-        // Mantem a conferência usando o histórico local quando a sincronização remota falhar.
+        // Mantem a conferência usando o histórico local
       }
     }
     syncClosedTables()
@@ -246,8 +357,14 @@ export default function Fechamento({ tables = [], currentUser, onCloseCash }) {
   function setPayment(key, value) {
     setReportedPayments(prev => ({ ...prev, [key]: value }))
   }
-  function handlePrint() { window.print() }
-  function handlePdf() { window.print() }
+
+  // --- NOVA FUNÇÃO CHAMANDO O QZ TRAY ---
+  async function handlePrint() { 
+    await executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings);
+  }
+  
+  function handlePdf() { window.print() } // Mantém o window.print() aqui caso o usuário queira salvar PDF A4 na máquina
+  
   function openCloseModal() {
     if (isClosing || closed) return
     setModalError('')
