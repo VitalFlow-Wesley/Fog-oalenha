@@ -227,6 +227,133 @@ function closingTables(record = {}) {
   return [...activeTables, ...closedTables]
 }
 
+// --- MOTOR DE IMPRESSÃO ESC/POS DOS RELATÓRIOS (QZ TRAY SILENCIOSO) ---
+async function executeThermalPrint(mode, report, selectedClosing, dateLabel) {
+  try {
+    const qzModule = await import('qz-tray');
+    const qz = qzModule.default || qzModule;
+
+    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+    // A MÁGICA: Null nas promessas para forçar o pop-up nativo do Windows (Site Manager)
+    qz.security.setCertificatePromise(null);
+    qz.security.setSignaturePromise(null);
+
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    const systemSettings = readJson('fogao-a-lenha-system-settings-v1', {});
+    const printers = systemSettings?.printers || [];
+    const printerId = systemSettings?.cashierPrinterId;
+    const selected = printers.find(p => p.id === printerId);
+    const printerName = selected?.name || selected?.label || 'POS-80';
+
+    await qz.printers.find(printerName);
+    const config = qz.configs.create(printerName);
+
+    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+    let payload = [
+      '\x1B' + '\x40', // Init
+      '\x1B' + '\x61' + '\x31', // Centralizar
+      '================================\n',
+    ];
+
+    const addLine = (label, value) => {
+      payload.push(`${label}\n`);
+      payload.push('\x1B' + '\x61' + '\x32'); // Direita
+      payload.push(`${value}\n`);
+      payload.push('\x1B' + '\x61' + '\x30'); // Esquerda
+    };
+
+    if (mode === 'fechamentos' && selectedClosing) {
+      // TICKET DE HISTÓRICO DE FECHAMENTO
+      payload.push('       HISTORICO DE CAIXA       \n');
+      payload.push('          FOGAO A LENHA         \n');
+      payload.push('================================\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      payload.push(`Data:     ${dateLabel}\n`);
+      payload.push(`Operador: ${removeAccents(selectedClosing.operatorName || 'Operador')}\n`);
+      payload.push(`Fechado:  ${removeAccents(selectedClosing.closedAtLabel || '-')}\n`);
+      payload.push('--------------------------------\n');
+      
+      const informedTotal = Number(selectedClosing.informedTotal ?? paymentTotal(selectedClosing.payments));
+      const diff = Number(selectedClosing.difference ?? informedTotal - Number(selectedClosing.total || 0));
+
+      addLine("Faturamento total:", money(selectedClosing.total));
+      addLine("Total informado:", money(informedTotal));
+      addLine("Diferenca:", money(diff));
+      payload.push('--------------------------------\n');
+      
+      payload.push('\x1B' + '\x61' + '\x31');
+      payload.push('PAGAMENTOS\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      const payments = selectedClosing.payments || {};
+      Object.entries(payments).forEach(([k, v]) => {
+          if (v > 0) addLine(`${removeAccents(paymentLabel(k))}:`, money(v));
+      });
+      payload.push('--------------------------------\n');
+      
+      if (selectedClosing.note) {
+          payload.push(`Obs: ${removeAccents(selectedClosing.note)}\n`);
+          payload.push('--------------------------------\n');
+      }
+    } else {
+      // TICKET DE RESUMO DE RELATÓRIO DO DIA
+      payload.push('       RELATORIO DE VENDAS      \n');
+      payload.push('          FOGAO A LENHA         \n');
+      payload.push('================================\n');
+      payload.push('\x1B' + '\x61' + '\x30');
+      payload.push(`Data:     ${dateLabel}\n`);
+      payload.push(`Gerado:   ${new Date().toLocaleTimeString('pt-BR')}\n`);
+      payload.push('--------------------------------\n');
+      
+      addLine("Faturamento total:", money(report.total));
+      addLine("Pedidos lancados:", String(report.ordersQty));
+      addLine("Mesas atendidas:", String(report.salesTables.length));
+      addLine("Ticket medio:", money(report.ticket));
+      payload.push('--------------------------------\n');
+
+      if (report.sectors && report.sectors.length > 0) {
+        payload.push('\x1B' + '\x61' + '\x31');
+        payload.push('DESEMPENHO POR SETOR\n');
+        payload.push('\x1B' + '\x61' + '\x30');
+        report.sectors.forEach(s => addLine(`${removeAccents(s.name)} (${s.qty} un):`, money(s.total)));
+        payload.push('--------------------------------\n');
+      }
+
+      if (report.categories && report.categories.length > 0) {
+        payload.push('\x1B' + '\x61' + '\x31');
+        payload.push('VENDAS POR CATEGORIA\n');
+        payload.push('\x1B' + '\x61' + '\x30');
+        report.categories.slice(0, 6).forEach(c => addLine(`${removeAccents(c.name)}:`, money(c.total)));
+        payload.push('--------------------------------\n');
+      }
+
+      if (report.topProductsByQty && report.topProductsByQty.length > 0) {
+        payload.push('\x1B' + '\x61' + '\x31');
+        payload.push('PRODUTOS MAIS VENDIDOS\n');
+        payload.push('\x1B' + '\x61' + '\x30');
+        report.topProductsByQty.slice(0, 5).forEach((p, i) => addLine(`${i+1}. ${removeAccents(p.name)} (${p.qty}x):`, money(p.total)));
+        payload.push('--------------------------------\n');
+      }
+    }
+
+    payload.push('\x1B' + '\x61' + '\x31');
+    payload.push('Relatorio gerado pelo sistema.\n');
+    payload.push('\n\n\n\n');
+    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); // Cortar
+
+    await qz.print(config, payload);
+    return true;
+  } catch (err) {
+    console.error("Falha na impressão do relatório:", err);
+    alert(`Erro na impressora: ${err.message || err}`);
+    return false;
+  }
+}
+
 function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosing, dateLabel }) {
   const selectedPayments = selectedClosing?.payments || {}
   const selectedTables = selectedClosing ? closingTables(selectedClosing) : []
@@ -436,7 +563,12 @@ export default function Relatorios({ tables = [] }) {
     localStorage.setItem('fogao-reports-date-label', formatDateBR(value))
   }
 
-  function handlePrint() { window.print() }
+  // --- O NOVO BOTÃO DE IMPRESSÃO ---
+  async function handlePrint() {
+    await executeThermalPrint(mode, report, selectedClosing, dateLabel);
+  }
+  
+  // Mantive a exportação padrão A4 caso o gerente queira guardar no computador
   function handleExportPdf() { window.print() }
 
   const summaryCards = [
