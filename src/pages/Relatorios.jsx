@@ -228,26 +228,25 @@ function closingTables(record = {}) {
 }
 
 // --- MOTOR DE IMPRESSÃO ESC/POS DOS RELATÓRIOS (QZ TRAY SILENCIOSO) ---
-async function executeThermalPrint(mode, report, selectedClosing, dateLabel) {
+// Removidos os códigos de segurança para usar o "Remember this decision" do Windows
+async function executeThermalPrint(mode, report, selectedClosing, dateLabel, settings) {
   try {
     const qzModule = await import('qz-tray');
     const qz = qzModule.default || qzModule;
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 
-    // A MÁGICA: Null nas promessas para forçar o pop-up nativo do Windows (Site Manager)
-    qz.security.setCertificatePromise(null);
-    qz.security.setSignaturePromise(null);
-
     if (!qz.websocket.isActive()) {
       await qz.websocket.connect();
     }
 
-    const systemSettings = readJson('fogao-a-lenha-system-settings-v1', {});
+    // Busca a impressora configurada para o Caixa/Bar
+    const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {});
     const printers = systemSettings?.printers || [];
     const printerId = systemSettings?.cashierPrinterId;
     const selected = printers.find(p => p.id === printerId);
-    const printerName = selected?.name || selected?.label || 'POS-80';
+    // Se não achar a do caixa, tenta a primeira da lista, se não houver nenhuma usa POS-80
+    const printerName = selected?.name || selected?.label || printers[0]?.name || 'POS-80';
 
     await qz.printers.find(printerName);
     const config = qz.configs.create(printerName);
@@ -439,7 +438,7 @@ function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosi
   )
 }
 
-export default function Relatorios({ tables = [] }) {
+export default function Relatorios({ tables = [], settings }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
   const [selectedDate, setSelectedDate] = useState(initialReportDate)
@@ -563,12 +562,11 @@ export default function Relatorios({ tables = [] }) {
     localStorage.setItem('fogao-reports-date-label', formatDateBR(value))
   }
 
-  // --- O NOVO BOTÃO DE IMPRESSÃO ---
+  // --- BOTÃO DE IMPRESSÃO TÉRMICA (BAR / CAIXA) ---
   async function handlePrint() {
-    await executeThermalPrint(mode, report, selectedClosing, dateLabel);
+    await executeThermalPrint(mode, report, selectedClosing, dateLabel, settings);
   }
   
-  // Mantive a exportação padrão A4 caso o gerente queira guardar no computador
   function handleExportPdf() { window.print() }
 
   const summaryCards = [
