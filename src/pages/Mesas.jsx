@@ -102,7 +102,7 @@ function createTable(nextId) {
   }
 }
 
-// --- MOTOR DE IMPRESSÃO ESC/POS BLINDADO COM CRIPTOGRAFIA ---
+// --- MOTOR DE IMPRESSÃO ESC/POS BLINDADO COM CRIPTOGRAFIA (SHA-512) ---
 async function executeThermalPrint(job) {
   if (!job || !job.printerName) {
     alert("Nenhuma impressora configurada para este setor. Verifique as configurações de impressão.");
@@ -145,7 +145,7 @@ async function executeThermalPrint(job) {
       );
     });
 
-    // 2. Assinatura Digital Sanitizada (Sem erros de Base64)
+    // 2. Assinatura Digital Sanitizada (Exige SHA-512 no QZ Tray 2.1+)
     qz.security.setSignaturePromise((toSign) => {
       return async (resolve, reject) => {
         try {
@@ -177,14 +177,13 @@ async function executeThermalPrint(job) {
             "/9aOTEGTTMcE1tBqPbs9matZeBwWsHSWzfP8R3uqW1/7mDK/pgrqydNMLndQt0s1" +
             "5+WnQu7bRD+BKCg/9i4K1YA=";
 
-          // Esse replace impede o erro "Failed to sign request" limpando formatações ruins
           const cleanedKey = privateKeyPem.replace(/[^A-Za-z0-9+/=]/g, "");
           const binaryKey = Uint8Array.from(atob(cleanedKey), c => c.charCodeAt(0));
           
           const cryptoKey = await window.crypto.subtle.importKey(
             "pkcs8",
             binaryKey.buffer,
-            { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-256" } },
+            { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-512" } }, // <- AQUI ESTÁ A CORREÇÃO (SHA-512)
             false,
             ["sign"]
           );
@@ -221,7 +220,6 @@ async function executeThermalPrint(job) {
     const formattedDate = now.toLocaleDateString('pt-BR');
     const formattedTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    // Remove acentos para evitar quebra de caracteres na impressora
     const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
     let payload = [
