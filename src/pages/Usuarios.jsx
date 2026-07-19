@@ -153,7 +153,18 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [allowJoinTables, setAllowJoinTables] = useState(true)
   const [showOnlyActiveTables, setShowOnlyActiveTables] = useState(false)
   const [tableConfigs, setTableConfigs] = useState(() => buildTableConfig(tables))
-  const [systemForm, setSystemForm] = useState(normalizeSettings(settings))
+  
+  // Estado inicial inteligente lendo as configurações salvas do localStorage
+  const [systemForm, setSystemForm] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fogao-a-lenha-system-settings-v1')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {
+      console.error("Erro ao ler estado das impressoras:", e)
+    }
+    return normalizeSettings(settings)
+  })
+
   const [cancelForm, setCancelForm] = useState({ managerPassword: '', newPassword: '', confirmPassword: '' })
   const [showPasswords, setShowPasswords] = useState({ manager: false, new: false, confirm: false, form: false })
   const [systemMessage, setSystemMessage] = useState('')
@@ -213,6 +224,15 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setTimeout(() => setSystemMessage(''), 2500);
   }
 
+  // Persistência automática das configurações do sistema e impressoras no localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('fogao-a-lenha-system-settings-v1', JSON.stringify(systemForm))
+    } catch (e) {
+      console.error("Falha ao salvar preferências de hardware:", e)
+    }
+  }, [systemForm])
+
   useEffect(() => {
     const normalized = products.map(normalizeProduct)
     writeJson(PRODUCTS_KEY, normalized)
@@ -252,7 +272,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       ...(editingUser.password ? { password: editingUser.password } : {}),
     } : user))
     setEditingUser(null)
-    showMessage('Acesso atualizado com sucesso.')
+    showMessage('Acesso updated.')
   }
 
   function requestDeleteUser(user) {
@@ -306,13 +326,105 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     })
   }
 
-  // --- MOTOR DE IMPRESSÃO ESC/POS COMPACTO LOCAL ---
+  // --- MOTOR DE IMPRESSÃO ESC/POS AUTOMÁTICO (SEM AVISOS) ---
   async function executeThermalPrint(targetPrinterName, logLabel) {
     try {
       const qzModule = await import('qz-tray');
       const qz = qzModule.default || qzModule;
 
       if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+      // 1. Injeta o seu Certificado Digital de Demonstração
+      qz.security.setCertificatePromise((resolve) => {
+        resolve(
+          "-----BEGIN CERTIFICATE-----\n" +
+          "MIIECzCCAvOgAwIBAgIGAZ969WDiMA0GCSqGSIb3DQEBCwUAMIGiMQswCQYDVQQG\n" +
+          "EwJVUzELMAkGA1UECAwCTlkxEjAQBgNVBAcMCUNhbmFzdG90YTEbMBkGA1UECgwS\n" +
+          "UVogSW5kdXN0cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMx\n" +
+          "HDAaBgkqhkiG9w0BCQEWDXN1cHBvcnRAcXouaW8xGjAYBgNVBAMMEVFaIFRyYXkg\n" +
+          "RGVtbyBDZXJ0MB4XDTI2MDcxODE1MTg0OVoXDTQ2MDcxODE1MTg0OVowgaIxCzAJ\n" +
+          "BgNVBAYTAlVTMQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYD\n" +
+          "VQQKDBJRWiBJbmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMs\n" +
+          "IExMQzEcMBoGCSqGSIb3DQEJARYNc3VwcG9ydEBxei5pbzEaMBgGA1UEAwwRUVog\n" +
+          "VHJheSBEZW1vIENlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCj\n" +
+          "UQrZOCTRYvW1Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xO\n" +
+          "cmSmV+DEW9tu4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0\n" +
+          "QqM+Ktc+yTpOJ1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJF\n" +
+          "ZZYsSmRH/PbQVCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE\n" +
+          "8ALZ7aBDsVvjLoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXK\n" +
+          "WDpvvYKZ0/QocA7Xvt2zAgMBAAGjRTBDMBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYD\n" +
+          "VR0PAQH/BAQDAgEGMB0GA1UdDgQWBBT+rDxjeVufiUCBQZaOiT3eiMi8aTANBgkq\n" +
+          "hkiG9w0BAQsFAAOCAQEAB3MpJfTdBVpDUdbaH73GJebGLdzmgnkvrx1CjkYfa+qU\n" +
+          "MRmucmP0XLxK/6bJwVLmboukwdc0Ya1dhLfUuGymsobWaiO+FYHHci1Dbu4cWepv\n" +
+          "5Q6l1vAk2lCEpl6Czj0X+/Y2IMsBsmaDzGJ+QKKEpcyb1LuE2BIO/sL1MmLhl5QS\n" +
+          "J0vjlmQA6Gm2RxZcp7BHVZS586KXb3xex4ocMzmxLGX03CKD4yYs3KcvozjPPtTW\n" +
+          "KREWKAG2mxKoHUljQJenGXmKfsGBXwclWoiJomSdFlC1lnSKHL+z1tx39nDQC0oZ\n" +
+          "WvIrjBCPmuRGuLQQr0xn2qU0xeiSkmvaJHxVmZonJA==\n" +
+          "-----END CERTIFICATE-----"
+        );
+      });
+
+      // 2. Motor de Assinatura Criptográfica RSA Silenciosa via WebCrypto API
+      qz.security.setSignaturePromise((toSign) => {
+        return async (resolve, reject) => {
+          try {
+            const privateKeyPem = 
+              "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCjUQrZOCTRYvW1" +
+              "Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xOcmSmV+DEW9tu" +
+              "4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0QqM+Ktc+yTpO" +
+              "J1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJFZZYsSmRH/PbQ" +
+              "VCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE8ALZ7aBDsVvj" +
+              "LoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXKWDpvvYKZ0/Qo" +
+              "cA7Xvt2zAgMBAAECggEAEVOizALp3REbsl7giXTkjCfJBhqNj3wzLDHJCe/Rt+3k" +
+              "mXWOf4KwW953zWSCr9aDJut6BC/kl9CLCkt0fRb1JX6mpKyAZDsuOctGcPLoipt2" +
+              "1uvEk7i6tmkD7hsDaPIgMIJ1YT4YUf/1YJ9KJOlUBhrLGOrv1JparjmX7aC9OFFd" +
+              "w3dvIMigpjbNwKI22cW5l+egoYpUwGi/N0DlgDdF+cEremuzvhoiod8wgt1k+W0h" +
+              "e03219Db9iZ3aZP1X/GyDkr+0W3ZDzw/eAiRjzV2Abooz7kVN5Xm7/caNJm19IYL" +
+              "SdJHc8dVsznI6N71yYuoWIFkeJdb42vDEgFhB/RDmQKBgQDewd2Rs7nUrVT3FWYG" +
+              "XeSGfkw9z9/AMOQYdkCQUE60Vr9/ao9o0V+m5iY/Tpo7uY9BBu68Y1wc3y5CrX5E" +
+              "Ii2KIUBFqiC8mY5RZdlS2KPDvAzATubdMQKWBIGQcfgIBqJGP/LnSWsrkEO4QTEG" +
+              "/6JJfiUZgSjwuZYS+DaWydd3RQKBgQC7sFORf54iXpYOOZukWJJD1E8LOEMWRj5T" +
+              "sV6VT4OVNPMrzUwc9h9A6x1VIwKWoN9SfYwyDHnbAXJkEI4EPOzF77vGTVdYomTF" +
+              "7EQWg9aseSitsXJhzRQrJr8Q61W5Gt/dt0OjN5ZzUz7Vr4dg8s3DEY6pH+xwMesX" +
+              "32Qahc+0lwKBgEZ+i6QEgJaxk+Xtu6/gHuYBKheVpXWpA0ZKhfwlrgKcQVYNXv0I" +
+              "YBn7UqzkVO9UXx+uSadOxVX+8fWJ9NgDZFdHH3vbRTCc6uG09PIA2t6I37oeV8e" +
+              "l3bqTiZsKtY/YzNgIXrYXTYYHZY960oPtEgVx5/epBoqYTf3nS7zCWERAoGBAK7r" +
+              "OBcDzsbNTB/ZxJo4Cai5dylHuA5MTM4HIdUZk9I81Nxfqq3bG2mPNXkg9cqYB0mD" +
+              "xGLoibB3+roTS6fbd/dI48F+Vwc94ZksBpDNMgbvq9+k3qsTS9ajd7I3AV9QEo85" +
+              "uwmkRs0YKhlQS2UpJGbGOCSaoeo2O5m2Ej89skPlAoGACAqxHh9Cojt3CRi31en0" +
+              "BhlB7Bn1GsBCO8YKxzP50jKYl2JMTEmXQPk2SSweJ+1ZaS0jYn1LWHFRz1Z20/R2" +
+              "/9aOTEGTTMcE1tBqPbs9matZeBwWsHSWzfP8R3uqW1/7mDK/pgrqydNMLndQt0s1" +
+              "5+WnQu7bRD+BKCg/9i4K1YA=";
+
+            const binaryKey = Uint8Array.from(atob(privateKeyPem), c => c.charCodeAt(0));
+            const cryptoKey = await window.crypto.subtle.importKey(
+              "pkcs8",
+              binaryKey.buffer,
+              { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-256" } },
+              false,
+              ["sign"]
+            );
+
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(toSign);
+            const signatureBuffer = await window.crypto.subtle.sign(
+              "RSASSA-PKCS1-v1_5",
+              cryptoKey,
+              dataBuffer
+            );
+
+            const signatureArray = new Uint8Array(signatureBuffer);
+            let binarySignature = "";
+            for (let i = 0; i < signatureArray.byteLength; i++) {
+              binarySignature += String.fromCharCode(signatureArray[i]);
+            }
+            resolve(btoa(binarySignature));
+          } catch (err) {
+            console.error("Erro interno no barramento front-end do QZ:", err);
+            reject(err);
+          }
+        };
+      });
 
       if (!qz.websocket.isActive()) {
         await qz.websocket.connect();
@@ -356,7 +468,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     }
   }
 
-  // --- FUNÇÃO ADICIONAR COM ESCOPO ASSÍNCRONO CORRIGIDO ---
   async function addPrinter() {
     const id = `printer-${Date.now()}`
     setSystemForm(prev => {
@@ -529,7 +640,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
 
     {activeTab === 'mesas' && <div className="tablesSettingsPage"><section className="tableSummaryGrid"><div className="tableSummaryCard"><Utensils size={22} /><span>Mesas cadastradas</span><strong>{tableConfigs.length}</strong></div><div className="tableSummaryCard positive"><CheckCircle2 size={22} /><span>Mesas ativas</span><strong>{activeTables.length}</strong></div><div className="tableSummaryCard join"><KeyRound size={22} /><span>Juntar mesas</span><strong>{allowJoinTables ? 'Permitido' : 'Desativado'}</strong></div></section><div className="tablesSettingsLayout"><div className="tablesLeftColumn"><section className="settingsPanel tableConfigPanel"><div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Configuração das mesas</h2></div><div className="tableConfigGrid"><label><span>Quantidade de mesas do salão</span><input type="number" min="1" max="80" value={tableQty} onChange={e => setTableQty(e.target.value)} /></label><label><span>Prefixo das mesas</span><input value={tablePrefix} onChange={e => setTablePrefix(e.target.value)} /></label><label><span>Numeração inicial</span><input value={tableStart} onChange={e => setTableStart(e.target.value)} /></label></div><div className="tableToggles"><label><input type="checkbox" checked={autoNumberTables} onChange={e => setAutoNumberTables(e.target.checked)} /> Gerar numeração automática</label><label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label><label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label></div><div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div></section><section className="settingsPanel tablePreviewPanel"><div className="settingsPanelTitle"><Eye size={22} /><h2>Prévia das mesas cadastradas</h2></div><div className="tablePreviewGrid">{visibleTableConfigs.slice(0, 24).map(table => <span className={!table.active ? 'inactive' : ''} key={table.id}><Utensils size={14} /> {table.displayName}</span>)}</div></section></div><section className="settingsPanel registeredTablesPanel"><div className="settingsPanelTitle"><Utensils size={22} /><h2>Mesas cadastradas</h2></div><div className="registeredTablesTable"><div className="registeredTablesHead"><span>Mesa</span><span>Nome exibido</span><span>Status</span><span>Pode juntar</span><span>Ações</span></div>{visibleTableConfigs.slice(0, 8).map(table => <div className="registeredTablesRow" key={table.id}><span>{table.number}</span><strong>{table.displayName}</strong><button type="button" className={`miniStatus ${table.active ? 'active' : 'inactive'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, active: !item.active } : item))}>{table.active ? 'Ativa' : 'Inativa'}</button><button type="button" className={`miniStatus ${table.canJoin ? 'active' : 'blocked'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, canJoin: !item.canJoin } : item))}>{table.canJoin ? 'Sim' : 'Não'}</button><div className="tableRowActions"><button type="button" onClick={() => editTableName(table.id)}><Pencil size={15} /> Editar</button>{tableConfigs.length > 1 && <button type="button" className="dangerOutline" onClick={() => setTableConfigs(prev => prev.filter(item => item.id !== table.id))}><Trash2 size={15} /></button>}</div></div>)}</div><div className="tablePaginationHint">Mostrando {Math.min(visibleTableConfigs.length, 8)} de {visibleTableConfigs.length} mesas</div></section></div><div className="tableTipBox"><AlertTriangle size={18} /><span>Dica: organize nomes personalizados para mesas especiais e revise permissões de junção conforme o fluxo do salão.</span></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
 
-    {activeTab === 'impressao' && <div className="printSettingsTab printSettingsTabV2"><section className="settingsPanel printBlock printPrintersBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>1. Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div><div className="printerTableV2"><div className="printerTableHead"><span>Impressora</span><span>Nome</span><span>Status</span><span>Ações</span></div>{printerOptions.length ? printerOptions.map((printer, index) => <div className="printerTableRow" key={printer.id}><span className="sectorCell"><Printer size={16} /> {printer.label || `Impressora ${index + 1}`}</span><strong>{printer.name || 'Sem nome'}</strong><em>• Cadastrada</em><div className="printerTableActions"><button type="button" onClick={() => testPrinter(printer?.name)}><Printer size={15} /> Testar</button><button type="button" onClick={() => editPrinterName(printer)}><Pencil size={15} /></button><button type="button" className="iconDanger" onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div></div>) : <div className="printerEmptyState"><Printer size={18} /><strong>Nenhuma impressora cadastrada</strong><span>Quando instalar uma impressora, clique em adicionar e dê um nome para ela.</span></div>}</div></section><section className="settingsPanel printBlock printRulesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>2. Regras de impressão por setor</h2></div><div className="printRulesLayout"><div className="printRulesSelects">{printerAssignments.filter(row => row.key !== 'caixa').map(row => <label key={row.key}><span>{row.description}</span><select value={systemForm[row.field] || ''} disabled={!printerOptions.length} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}><option value="">{printerOptions.length ? 'Nenhuma impressora' : 'Cadastre uma impressora'}</option>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>)}<label><span>Comanda do cliente sai em</span><select value={systemForm.cashierPrinterId || ''} disabled={!printerOptions.length} onChange={e => setSystemForm({ ...systemForm, cashierPrinterId: e.target.value })}><option value="">{printerOptions.length ? 'Nenhuma impressora' : 'Cadastre uma impressora'}</option>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="currentRulesBox"><CheckCircle2 size={20} /><strong>Regras atuais</strong><ul><li>Pedidos de preparo são enviados para os setores configurados.</li><li>Comanda do cliente é impressa no caixa para conferência.</li><li>Itens do bar permanecem apenas na comanda do cliente.</li></ul></div></div></section><section className="settingsPanel printBlock printTypesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>3. Tipos de impressão</h2></div><div className="printTypeList"><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Pedido de preparo</strong><span>Impressão dos itens enviados para cozinha, churrasco ou sucos.</span></div><ActiveToggle active={systemForm.printKitchenItems} onClick={() => setSystemForm(prev => ({ ...prev, printKitchenItems: !prev.printKitchenItems }))} /></div><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Comanda do cliente</strong><span>Impressão da comanda completa do cliente no caixa.</span></div><ActiveToggle active={systemForm.printFullReceipt} onClick={() => setSystemForm(prev => ({ ...prev, printFullReceipt: !prev.printFullReceipt }))} /></div><div className="printTypeRow"><RefreshCw size={20} /><div><strong>Reimpressão</strong><span>Permitir reimpressão de pedidos e comandas.</span></div><ActiveToggle active={systemForm.allowReprint} onClick={() => setSystemForm(prev => ({ ...prev, allowReprint: !prev.allowReprint }))} /></div></div></section><section className="settingsPanel printBlock receiptModelBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>4. Modelo da comanda do cliente</h2></div><button type="button" className="editReceiptBtn"><Pencil size={15} /> Editar modelo</button></div><div className="receiptPreviewLayout"><div className="receiptPreview"><h3>FOGÃO A LENHA</h3><p>Churrascaria & Restaurante</p><small>CNPJ: {systemForm.cnpj || '12.345.678/0001-90'}</small><hr /><div><span>Mesa: 05</span><span>Data: 25/05/2024 13:45</span></div><p>1x Picanha <b>R$ 85,00</b></p><p>2x Refrigerante <b>R$ 18,00</b></p><p>1x Suco Natural <b>R$ 12,00</b></p><hr /><strong className="receiptTotal">TOTAL <b>R$ 115,00</b></strong>{systemForm.receiptMessage || 'Obrigado pela preferência!\nVolte sempre!'}</div><div className="receiptInfoList"><strong>Informações exibidas</strong>{['Nome do estabelecimento','CNPJ','Mesa','Data e hora','Itens do pedido','Total','Mensagem final'].map(item => <span key={item}><CheckCircle2 size={15} /> {item}</span>)}</div></div></section><div className="printFooterBar"><div><AlertTriangle size={18} /><strong>Dica:</strong><span>Configure corretamente as impressoras e regras para garantir que os pedidos sejam enviados para os setores certos.</span></div><div><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
+    {activeTab === 'impressao' && <div className="printSettingsTab printSettingsTabV2"><section className="settingsPanel printBlock printPrintersBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>1. Impressoras cadastradas</h2></div><button type="button" className="addPrinterBtn solid" onClick={addPrinter}><Plus size={16} /> Adicionar impressora</button></div><div className="printerTableV2"><div className="printerTableHead"><span>Impressora</span><span>Nome</span><span>Status</span><span>Ações</span></div>{printerOptions.length ? printerOptions.map((printer, index) => <div className="printerTableRow" key={printer.id}><span className="sectorCell"><Printer size={16} /> {printer.label || `Impressora ${index + 1}`}</span><strong>{printer.name || 'Sem nome'}</strong>export <em>• Cadastrada</em><div className="printerTableActions"><button type="button" onClick={() => testPrinter(printer?.name)}><Printer size={15} /> Testar</button><button type="button" onClick={() => editPrinterName(printer)}><Pencil size={15} /></button><button type="button" className="iconDanger" onClick={() => removePrinter(printer.id)}><Trash2 size={15} /></button></div></div>) : <div className="printerEmptyState"><Printer size={18} /><strong>Nenhuma impressora cadastrada</strong><span>Quando instalar uma impressora, clique em adicionar e dê um nome para ela.</span></div>}</div></section><section className="settingsPanel printBlock printRulesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>2. Regras de impressão por setor</h2></div><div className="printRulesLayout"><div className="printRulesSelects">{printerAssignments.filter(row => row.key !== 'caixa').map(row => <label key={row.key}><span>{row.description}</span><select value={systemForm[row.field] || ''} disabled={!printerOptions.length} onChange={e => setSystemForm({ ...systemForm, [row.field]: e.target.value })}><option value="">{printerOptions.length ? 'Nenhuma impressora' : 'Cadastre uma impressora'}</option>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>)}<label><span>Comanda do cliente sai em</span><select value={systemForm.cashierPrinterId || ''} disabled={!printerOptions.length} onChange={e => setSystemForm({ ...systemForm, cashierPrinterId: e.target.value })}><option value="">{printerOptions.length ? 'Nenhuma impressora' : 'Cadastre uma impressora'}</option>{printerOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="currentRulesBox"><CheckCircle2 size={20} /><strong>Regras atuais</strong><ul><li>Pedidos de preparo são enviados para os setores configurados.</li><li>Comanda do cliente é impressa no caixa para conferência.</li><li>Itens do bar permanecem apenas na comanda do cliente.</li></ul></div></div></section><section className="settingsPanel printBlock printTypesBlock"><div className="printNumberTitle"><Printer size={21} /><h2>3. Tipos de impressão</h2></div><div className="printTypeList"><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Pedido de preparo</strong><span>Impressão dos itens enviados para cozinha, churrasco ou sucos.</span></div><ActiveToggle active={systemForm.printKitchenItems} onClick={() => setSystemForm(prev => ({ ...prev, printKitchenItems: !prev.printKitchenItems }))} /></div><div className="printTypeRow"><ReceiptText size={20} /><div><strong>Comanda do cliente</strong><span>Impressão da comanda completa do cliente no caixa.</span></div><ActiveToggle active={systemForm.printFullReceipt} onClick={() => setSystemForm(prev => ({ ...prev, printFullReceipt: !prev.printFullReceipt }))} /></div><div className="printTypeRow"><RefreshCw size={20} /><div><strong>Reimpressão</strong><span>Permitir reimpressão de pedidos e comandas.</span></div><ActiveToggle active={systemForm.allowReprint} onClick={() => setSystemForm(prev => ({ ...prev, allowReprint: !prev.allowReprint }))} /></div></div></section><section className="settingsPanel printBlock receiptModelBlock"><div className="printBlockHeader"><div className="printNumberTitle"><Printer size={21} /><h2>4. Modelo da comanda do cliente</h2></div><button type="button" className="editReceiptBtn"><Pencil size={15} /> Editar modelo</button></div><div className="receiptPreviewLayout"><div className="receiptPreview"><h3>FOGÃO A LENHA</h3><p>Churrascaria & Restaurante</p><small>CNPJ: {systemForm.cnpj || '12.345.678/0001-90'}</small><hr /><div><span>Mesa: 05</span><span>Data: 25/05/2024 13:45</span></div><p>1x Picanha <b>R$ 85,00</b></p><p>2x Refrigerante <b>R$ 18,00</b></p><p>1x Suco Natural <b>R$ 12,00</b></p><hr /><strong className="receiptTotal">TOTAL <b>R$ 115,00</b></strong>{systemForm.receiptMessage || 'Obrigado pela preferência!\nVolte sempre!'}</div><div className="receiptInfoList"><strong>Informações exibidas</strong>{['Nome do estabelecimento','CNPJ','Mesa','Data e hora','Itens do pedido','Total','Mensagem final'].map(item => <span key={item}><CheckCircle2 size={15} /> {item}</span>)}</div></div></section><div className="printFooterBar"><div><AlertTriangle size={18} /><strong>Dica:</strong><span>Configure corretamente as impressoras e regras para garantir que os pedidos sejam enviados para os setores certos.</span></div><div><button type="button" className="secondaryBtn" onClick={restoreDefaults}><RefreshCw size={17} /> Restaurar padrões</button><button type="button" className="primaryBtn" disabled={!canChangeSensitive} onClick={saveSystem}><Save size={18} /> Salvar configurações</button></div></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
 
     {activeTab === 'produtos' && <div className="productsSettingsTab"><div className="productsTopGrid"><section className="settingsPanel productCreatePanel"><div className="settingsPanelTitle"><Store size={22} /><h2>Cadastro de produto</h2></div><form className="productForm" onSubmit={addProduct}><label><span>Nome do produto</span><input placeholder="Ex.: Picanha" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} /></label><label><span>Categoria</span><select value={productForm.category} onChange={e => handleProductCategory(e.target.value)}><option value="">Selecione a categoria</option>{productCategoryOptions.map(category => <option key={category}>{category}</option>)}</select></label><label><span>Setor de impressão</span><select value={productForm.sector} onChange={e => setProductForm({ ...productForm, sector: e.target.value })}><option value="">Selecione o setor</option>{productSectors.map(sector => <option key={sector}>{sector}</option>)}</select></label><label><span>Preço (R$)</span><input placeholder="0,00" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} /></label><label><span>Vai para preparo?</span><select value={productForm.prepare} onChange={e => setProductForm({ ...productForm, prepare: e.target.value })}><option value="">Selecione</option><option>Sim</option><option>Não</option></select></label><label><span>Status</span><select value={productForm.status} onChange={e => setProductForm({ ...productForm, status: e.target.value })}><option>Ativo</option><option>Inativo</option></select></label><button className="primaryBtn addProductBtn"><Plus size={18} /> Adicionar produto</button></form></section><aside className="settingsPanel productTipsPanel"><div className="settingsPanelTitle"><CheckCircle2 size={22} /><h2>Dicas rápidas</h2></div><ul><li>Produtos que vão para preparo serão enviados para o setor selecionado.</li><li>Itens do bar normalmente não vão para preparo.</li><li>Mantenha os preços sempre atualizados.</li></ul></aside></div><section className="settingsPanel productsListPanel"><div className="productsListHeader"><div className="settingsPanelTitle"><Store size={22} /><h2>Lista de produtos cadastrados</h2></div><div className="productsFilters"><label><Search size={15} /><input placeholder="Buscar produto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} /></label><select value={productStatusFilter} onChange={e => setProductStatusFilter(e.target.value)}><option>Todos os status</option><option>Ativo</option><option>Inativo</option></select></div></div><div className="productsTable"><div className="productsTableHead"><span>Produto</span><span>Categoria</span><span>Setor</span><span>Preço</span><span>Vai para preparo?</span><span>Status</span><span>Ações</span></div>{paginatedProducts.map(product => <div className="productsTableRow" key={product.id}><span className="productNameCell">{product.name}</span><span>{product.category}</span><span className="productSectorCell"><ProductSectorIcon sector={product.sector} /> {product.sector}</span><span>{formatMoney(product.price)}</span><span><em className={`prepareBadge ${product.prepare ? 'yes' : 'no'}`}>{product.prepare ? 'Sim' : 'Não'}</em></span><span><em className={`statusBadge ${product.status === 'Ativo' ? 'active' : 'inactive'}`}>{product.status}</em></span><span className="productActions"><button type="button" onClick={() => editProduct(product)}><Pencil size={15} /></button><button type="button" onClick={() => deleteProduct(product)}><Trash2 size={15} /></button></span></div>)}</div><footer className="productsPagination"><span>Mostrando {filteredProducts.length ? ((safeProductPage - 1) * productsPerPage) + 1 : 0} a {Math.min(filteredProducts.length, safeProductPage * productsPerPage)} de {filteredProducts.length} produtos</span><div><button type="button" disabled={safeProductPage === 1} onClick={() => setProductPage(page => Math.max(1, page - 1))}>Anterior</button>{Array.from({ length: totalProductPages }, (_, index) => index + 1).slice(0, 6).map(page => <button type="button" key={page} className={safeProductPage === page ? 'active' : ''} onClick={() => setProductPage(page)}>{page}</button>)}<button type="button" disabled={safeProductPage === totalProductPages} onClick={() => setProductPage(page => Math.min(totalProductPages, page + 1))}>Próxima</button></div></footer></section></div>}
 
@@ -557,7 +668,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
         <div className="drawerHeader"><div><span className="eyebrow">Editar acesso</span><h2>{editingUser.name}</h2></div><button type="button" className="iconBtn" onClick={() => setEditingUser(null)}><X size={22} /></button></div>
         <label><span>Nome completo</span><input value={editingUser.name || ''} onChange={event => setEditingUser(prev => ({ ...prev, name: event.target.value }))} autoFocus /></label>
         <label><span>Login</span><input value={editingUser.username || ''} onChange={event => setEditingUser(prev => ({ ...prev, username: event.target.value }))} /></label>
-        <label><span>Função</span><select value={editingUser.role || 'garcom'} onChange={event => setEditingUser(prev => ({ ...prev, role: event.target.value }))}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label>
+        <label><span>Função</span><select value={editingUser.role || 'garcom'} onChange={event => event => setEditingUser(prev => ({ ...prev, role: event.target.value }))}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label>
         <label><span>Nova senha (opcional)</span><input type="password" value={editingUser.password || ''} onChange={event => setEditingUser(prev => ({ ...prev, password: event.target.value }))} placeholder="Deixe em branco para manter a senha atual" /></label>
         <label className="switchRow"><button type="button" className={`fakeSwitch ${editingUser.active !== false ? 'active' : ''}`} onClick={() => setEditingUser(prev => ({ ...prev, active: prev.active === false }))}><span /></button><strong>Usuário ativo</strong></label>
         <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setEditingUser(null)}>Cancelar</button><button className="primaryBtn" type="submit">Salvar alterações</button></div>
@@ -574,7 +685,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
           <label><span>Preço (R$)</span><input value={editingProduct.priceText || ''} onChange={event => setEditingProduct(prev => ({ ...prev, priceText: event.target.value }))} /></label>
           <label><span>Vai para preparo?</span><select value={editingProduct.prepare ? 'Sim' : 'Não'} onChange={event => setEditingProduct(prev => ({ ...prev, prepare: event.target.value === 'Sim' }))}><option>Sim</option><option>Não</option></select></label>
           <label><span>Status</span><select value={editingProduct.status || 'Ativo'} onChange={event => setEditingProduct(prev => ({ ...prev, status: event.target.value }))}><option>Ativo</option><option>Inativo</option></select></label>
-        </>}
+        </>}</}
         <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setEditingProduct(null)}>Cancelar</button><button className={editingProduct.deleteMode ? 'dangerBtn' : 'primaryBtn'} type="submit">{editingProduct.deleteMode ? 'Excluir produto' : 'Salvar alterações'}</button></div>
       </form>
     </div>}
