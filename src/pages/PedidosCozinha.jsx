@@ -75,9 +75,8 @@ async function executeThermalPrint(order, currentUser, settings) {
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 
-    // A MÁGICA: Null nas promessas para forçar o pop-up nativo do Windows (Site Manager)
-    qz.security.setCertificatePromise(null);
-    qz.security.setSignaturePromise(null);
+    // MÁGICA REAL: Removemos qualquer menção a qz.security! 
+    // O QZ Tray vai puxar a permissão que você já salvou no "Remember this decision".
 
     if (!qz.websocket.isActive()) {
       await qz.websocket.connect();
@@ -134,7 +133,6 @@ async function executeThermalPrint(order, currentUser, settings) {
   }
 }
 
-// ADICIONEI "settings" AQUI NAS PROPS PARA PEGAR A IMPRESSORA
 export default function PedidosCozinha({ tables, currentUser, settings }) {
   const [activeSector, setActiveSector] = useState('todos')
   const [search, setSearch] = useState('')
@@ -191,7 +189,6 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
     })
   }, [orders, activeSector, search])
 
-  // Mantido apenas para o "Exportar PDF" que é o relatório gerencial A4
   function handlePrint() {
     window.print()
   }
@@ -206,7 +203,6 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
     setLastUpdate(new Date())
   }
 
-  // --- NOVA FUNÇÃO DE REIMPRESSÃO TÉRMICA ---
   async function reprintOrder(order) {
     await executeThermalPrint(order, currentUser, settings);
   }
