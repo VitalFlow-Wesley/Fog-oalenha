@@ -34,6 +34,15 @@ function currentDateTime() {
   }).format(new Date())
 }
 
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 function buildKitchenOrders(tables, orderTimes) {
   return tables
     .filter(table => table.kitchenSent || table.status === 'enviado')
@@ -58,7 +67,75 @@ function buildKitchenOrders(tables, orderTimes) {
     .filter(order => order.items.length)
 }
 
-export default function PedidosCozinha({ tables, currentUser }) {
+// --- MOTOR DE IMPRESSÃO ESC/POS DA COZINHA (DELEGAÇÃO PARA O WINDOWS) ---
+async function executeThermalPrint(order, currentUser, settings) {
+  try {
+    const qzModule = await import('qz-tray');
+    const qz = qzModule.default || qzModule;
+
+    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+    // A MÁGICA: Null nas promessas para forçar o pop-up nativo do Windows (Site Manager)
+    qz.security.setCertificatePromise(null);
+    qz.security.setSignaturePromise(null);
+
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    // Busca a impressora configurada (Tenta a Cozinha primeiro, depois o Caixa)
+    const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {});
+    const printers = systemSettings?.printers || [];
+    const printerId = systemSettings?.kitchenPrinterId || systemSettings?.cashierPrinterId;
+    const selected = printers.find(p => p.id === printerId);
+    const printerName = selected?.name || selected?.label || 'POS-80';
+
+    await qz.printers.find(printerName);
+    const config = qz.configs.create(printerName);
+
+    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+    let payload = [
+      '\x1B' + '\x40', 
+      '\x1B' + '\x61' + '\x31', 
+      '================================\n',
+      '       PEDIDO DE PREPARO        \n',
+      '         (REIMPRESSAO)          \n',
+      '================================\n',
+      '\x1B' + '\x61' + '\x30', 
+      `Mesa:      ${order.tableNumber}\n`,
+      `Garcom:    ${removeAccents(order.waiterName || currentUser?.name || 'Garcom')}\n`,
+      `Data:      ${currentDateTime()}\n`,
+      '--------------------------------\n',
+    ];
+
+    order.items.forEach(item => {
+       const itemName = removeAccents(item.name).toUpperCase();
+       payload.push(`${item.qty}x ${itemName}\n`);
+       
+       if (item.observation) {
+         payload.push(`   OBS: ${removeAccents(item.observation)}\n`);
+       }
+    });
+
+    payload.push('--------------------------------\n');
+    payload.push('\x1B' + '\x61' + '\x31'); 
+    payload.push('*** BOM PREPARO ***\n');
+
+    payload.push('\n\n\n\n');
+    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
+
+    await qz.print(config, payload);
+    return true;
+  } catch (error) {
+    console.error("Falha na impressão do pedido:", error);
+    alert(`Erro na impressora: ${error.message || error}`);
+    return false;
+  }
+}
+
+// ADICIONEI "settings" AQUI NAS PROPS PARA PEGAR A IMPRESSORA
+export default function PedidosCozinha({ tables, currentUser, settings }) {
   const [activeSector, setActiveSector] = useState('todos')
   const [search, setSearch] = useState('')
   const [period, setPeriod] = useState('Hoje')
@@ -66,7 +143,6 @@ export default function PedidosCozinha({ tables, currentUser }) {
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [details, setDetails] = useState(null)
   const [orderTimes, setOrderTimes] = useState({})
-  const [printJob, setPrintJob] = useState(null)
   const isWaiter = currentUser?.role === 'garcom'
   const canSeeManagementSummary = !isWaiter
 
@@ -85,12 +161,6 @@ export default function PedidosCozinha({ tables, currentUser }) {
   }, [tables])
 
   const orders = useMemo(() => buildKitchenOrders(tables, orderTimes), [tables, orderTimes])
-
-  useEffect(() => {
-    if (!printJob) return undefined
-    const timer = setTimeout(() => window.print(), 120)
-    return () => clearTimeout(timer)
-  }, [printJob])
 
   const summary = useMemo(() => {
     const sentItems = orders.flatMap(order => order.items)
@@ -121,6 +191,7 @@ export default function PedidosCozinha({ tables, currentUser }) {
     })
   }, [orders, activeSector, search])
 
+  // Mantido apenas para o "Exportar PDF" que é o relatório gerencial A4
   function handlePrint() {
     window.print()
   }
@@ -135,8 +206,9 @@ export default function PedidosCozinha({ tables, currentUser }) {
     setLastUpdate(new Date())
   }
 
-  function reprintOrder(order) {
-    setPrintJob({ ...order, printedAt: currentDateTime() })
+  // --- NOVA FUNÇÃO DE REIMPRESSÃO TÉRMICA ---
+  async function reprintOrder(order) {
+    await executeThermalPrint(order, currentUser, settings);
   }
 
   const topCards = [
@@ -305,19 +377,6 @@ export default function PedidosCozinha({ tables, currentUser }) {
           <button className="secondaryBtn" type="button" onClick={() => reprintOrder(details)}><Printer size={17} /> Reimprimir pedido</button>
         </div>
       </div>}
-
-      {printJob && (
-        <div className="printOnly customerBillPrint">
-          <h1>PEDIDO PARA COZINHA</h1>
-          <p><strong>Garçom:</strong> {printJob.waiterName || 'Garçom'}</p>
-          <p><strong>Mesa:</strong> {printJob.tableNumber}</p>
-          {printJob.customerName && <p><strong>Cliente:</strong> {printJob.customerName}</p>}
-          {printJob.guests > 0 && <p><strong>Pessoas:</strong> {printJob.guests} pessoa(s)</p>}
-          <p><strong>Data:</strong> {printJob.printedAt || currentDateTime()}</p>
-          <hr />
-          {printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.observation ? ` (${item.observation})` : ''}</span></div>)}
-        </div>
-      )}
     </div>
   )
 }
