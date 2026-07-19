@@ -102,6 +102,103 @@ function createTable(nextId) {
   }
 }
 
+// --- MOTOR DE IMPRESSÃO ESC/POS SILENCIOSO (QZ TRAY VIA WINDOWS) ---
+async function executeThermalPrint(job) {
+  if (!job || !job.printerName) {
+    alert("Nenhuma impressora configurada para este setor. Verifique as configurações de impressão.");
+    return false;
+  }
+
+  try {
+    const qzModule = await import('qz-tray');
+    const qz = qzModule.default || qzModule;
+
+    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+    // Delega segurança de forma permanente para o Site Manager do Windows (sem erros "Failed to sign")
+    qz.security.setCertificatePromise(null);
+    qz.security.setSignaturePromise(null);
+
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    await qz.printers.find(job.printerName);
+    const config = qz.configs.create(job.printerName);
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('pt-BR');
+    const formattedTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    // Remove acentos para evitar quebra de caracteres no papel da impressora
+    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+    let payload = [
+      '\x1B' + '\x40', // Inicia a impressora
+      '\x1B' + '\x61' + '\x31', // Alinhamento Centralizado
+      '================================\n',
+      '         FOGAO A LENHA          \n',
+      `      ${removeAccents(job.title)}      \n`,
+      '================================\n',
+      '\x1B' + '\x61' + '\x30', // Alinhamento à Esquerda
+      `Mesa:      ${job.table.number}${job.table.mergedTableNumbers?.length ? ` + ${job.table.mergedTableNumbers.join(' + ')}` : ''}\n`,
+      `Garcom:    ${removeAccents(job.waiterName)}\n`,
+      `Data:      ${formattedDate} as ${formattedTime}\n`,
+      '--------------------------------\n',
+    ];
+
+    if (job.items.length === 0) {
+       payload.push('Nenhum item.\n');
+    } else {
+       job.items.forEach(item => {
+         const itemName = removeAccents(item.name).toUpperCase();
+         let line = `${item.qty}x ${itemName}`;
+         if (item.originTable) line += ` (Mesa ${item.originTable})`;
+         
+         if (job.type === 'bill') {
+           const itemTotal = formatMoney(item.price * item.qty);
+           payload.push(`${line}\n`);
+           payload.push('\x1B' + '\x61' + '\x32'); // Alinhamento à Direita
+           payload.push(`${itemTotal}\n`);
+           payload.push('\x1B' + '\x61' + '\x30'); // Volta para a Esquerda
+         } else {
+           payload.push(`${line}\n`);
+         }
+         
+         if (item.observation) {
+           payload.push(`   OBS: ${removeAccents(item.observation)}\n`);
+         }
+       });
+    }
+
+    payload.push('--------------------------------\n');
+
+    if (job.type === 'bill') {
+      payload.push('\x1B' + '\x61' + '\x31'); // Alinhamento Centralizado
+      payload.push('TOTAL DA CONTA\n');
+      payload.push('\x1B' + '\x21' + '\x30'); // Fonte grande
+      payload.push(`${formatMoney(job.total)}\n`);
+      payload.push('\x1B' + '\x21' + '\x00'); // Fonte normal
+      payload.push('--------------------------------\n');
+      payload.push('Obrigado pela preferencia!\n');
+    } else {
+       payload.push('\x1B' + '\x61' + '\x31'); // Alinhamento Centralizado
+       payload.push('*** BOM PREPARO ***\n');
+    }
+
+    // Avanço de papel e Corte
+    payload.push('\n\n\n\n');
+    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
+
+    await qz.print(config, payload);
+    return true;
+  } catch (error) {
+    console.error("Falha na impressão:", error);
+    alert(`Erro na impressora: ${error.message || error}`);
+    return false;
+  }
+}
+
 export default function Mesas({ tables, setTables, users, currentUser, settings, onCloseTable }) {
   const [selected, setSelected] = useState(null)
   const [availableProducts, setAvailableProducts] = useState(() => readProducts())
@@ -115,7 +212,6 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [cancelRequest, setCancelRequest] = useState(null)
   const [cancelPassword, setCancelPassword] = useState('')
   const [cancelError, setCancelError] = useState('')
-  const [printJob, setPrintJob] = useState(null)
   const [joinTargetId, setJoinTargetId] = useState('')
   const [joinModalOpen, setJoinModalOpen] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
@@ -167,12 +263,6 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       clearInterval(timer)
     }
   }, [])
-
-  useEffect(() => {
-    if (!printJob) return undefined
-    const timer = setTimeout(() => window.print(), 150)
-    return () => clearTimeout(timer)
-  }, [printJob])
 
   useEffect(() => {
     async function syncClosedTablesHistory() {
@@ -334,25 +424,32 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     touch()
   }
 
-  function sendKitchen() {
+  // --- FUNÇÕES DE IMPRESSÃO INTEGRADAS COM QZ TRAY ---
+  async function sendKitchen() {
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
     const kitchenPrinterName = getPrinterName(settings, 'kitchen')
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
     const waiterName = currentUser?.name || currentUser?.username || 'Garçom'
     const kitchenSentAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    
     updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, lastKitchenPrinter: kitchenPrinterName })
-    setPrintJob({ type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 })
+    
+    const job = { type: 'kitchen', title: 'PEDIDO PARA COZINHA', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 }
+    await executeThermalPrint(job)
     touch()
   }
 
-  function requestBill() {
+  async function requestBill() {
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
     const cashierPrinterName = getPrinterName(settings, 'cashier')
     const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
+    
     updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
-    setPrintJob({ type: 'bill', title: 'COMANDA PARA CONFERÊNCIA', table: current, items: current.items, printerName: cashierPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Atendente', total: billTotal })
+    
+    const job = { type: 'bill', title: 'COMANDA PARA CONFERENCIA', table: current, items: current.items, printerName: cashierPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Atendente', total: billTotal }
+    await executeThermalPrint(job)
     touch()
   }
 
@@ -578,18 +675,6 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
             </div>
             {selectedClosedTable.observation && <p className="closedConsumptionNote">{selectedClosedTable.observation}</p>}
           </section>
-        </div>
-      )}
-
-      {printJob && (
-        <div className="printOnly customerBillPrint">
-          <h1>{printJob.title}</h1>
-          <p><strong>Garçom:</strong> {printJob.waiterName}</p>
-          <p><strong>Mesa:</strong> {printJob.table.number}{printJob.table.mergedTableNumbers?.length ? ` + ${printJob.table.mergedTableNumbers.join(' + ')}` : ''}</p>
-          <p><strong>Data:</strong> {new Date().toLocaleString('pt-BR')}</p>
-          <hr />
-          {printJob.items.length === 0 ? <p>Nenhum item para impressão.</p> : printJob.items.map((item, index) => <div className="printLine" key={`${item.id}-${index}`}><span>{item.qty}x {item.name}{item.originTable ? ` - Mesa ${item.originTable}` : ''}{item.observation ? ` (${item.observation})` : ''}</span>{printJob.type === 'bill' && <strong>{formatMoney(item.price * item.qty)}</strong>}</div>)}
-          {printJob.type === 'bill' && <><hr /><div className="printTotal"><span>Total</span><strong>{formatMoney(printJob.total)}</strong></div><p className="printFooter">Comanda para conferência do cliente.</p></>}
         </div>
       )}
     </div>
