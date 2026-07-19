@@ -184,7 +184,7 @@ function CategoryBars({ categories, total }) {
   return <div className="categoryBars">{categories.map(item => { const percent = item.total / base * 100; return <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent.toFixed(1).replace('.', ',')}%</b></div><div className="progress"><span style={{ width: `${Math.min(percent, 100)}%` }} /></div><small>{money(item.total)}</small></div> })}</div>
 }
 
-// --- MOTOR DE IMPRESSÃO DO RELATÓRIO ESC/POS ---
+// --- MOTOR DE IMPRESSÃO ESC/POS COM CRIPTOGRAFIA SHA-512 ---
 async function executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings) {
   try {
     const qzModule = await import('qz-tray');
@@ -192,9 +192,99 @@ async function executeThermalPrint(data, received, informedTotal, difference, no
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 
-    // DELEGAÇÃO TOTAL AO SITE MANAGER DO WINDOWS
-    qz.security.setCertificatePromise(null);
-    qz.security.setSignaturePromise(null);
+    // 1. Injeta Certificado
+    qz.security.setCertificatePromise((resolve) => {
+      resolve(
+        "-----BEGIN CERTIFICATE-----\n" +
+        "MIIECzCCAvOgAwIBAgIGAZ969WDiMA0GCSqGSIb3DQEBCwUAMIGiMQswCQYDVQQG\n" +
+        "EwJVUzELMAkGA1UECAwCTlkxEjAQBgNVBAcMCUNhbmFzdG90YTEbMBkGA1UECgwS\n" +
+        "UVogSW5kdXN0cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMx\n" +
+        "HDAaBgkqhkiG9w0BCQEWDXN1cHBvcnRAcXouaW8xGjAYBgNVBAMMEVFaIFRyYXkg\n" +
+        "RGVtbyBDZXJ0MB4XDTI2MDcxODE1MTg0OVoXDTQ2MDcxODE1MTg0OVowgaIxCzAJ\n" +
+        "BgNVBAYTAlVTMQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYD\n" +
+        "VQQKDBJRWiBJbmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMs\n" +
+        "IExMQzEcMBoGCSqGSIb3DQEJARYNc3VwcG9ydEBxei5pbzEaMBgGA1UEAwwRUVog\n" +
+        "VHJheSBEZW1vIENlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCj\n" +
+        "UQrZOCTRYvW1Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xO\n" +
+        "cmSmV+DEW9tu4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0\n" +
+        "QqM+Ktc+yTpOJ1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJF\n" +
+        "ZZYsSmRH/PbQVCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE\n" +
+        "8ALZ7aBDsVvjLoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXK\n" +
+        "WDpvvYKZ0/QocA7Xvt2zAgMBAAGjRTBDMBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYD\n" +
+        "VR0PAQH/BAQDAgEGMB0GA1UdDgQWBBT+rDxjeVufiUCBQZaOiT3eiMi8aTANBgkq\n" +
+        "hkiG9w0BAQsFAAOCAQEAB3MpJfTdBVpDUdbaH73GJebGLdzmgnkvrx1CjkYfa+qU\n" +
+        "MRmucmP0XLxK/6bJwVLmboukwdc0Ya1dhLfUuGymsobWaiO+FYHHci1Dbu4cWepv\n" +
+        "5Q6l1vAk2lCEpl6Czj0X+/Y2IMsBsmaDzGJ+QKKEpcyb1LuE2BIO/sL1MmLhl5QS\n" +
+        "J0vjlmQA6Gm2RxZcp7BHVZS586KXb3xex4ocMzmxLGX03CKD4yYs3KcvozjPPtTW\n" +
+        "KREWKAG2mxKoHUljQJenGXmKfsGBXwclWoiJomSdFlC1lnSKHL+z1tx39nDQC0oZ\n" +
+        "WvIrjBCPmuRGuLQQr0xn2qU0xeiSkmvaJHxVmZonJA==\n" +
+        "-----END CERTIFICATE-----"
+      );
+    });
+
+    // 2. Assinatura Digital Sanitizada (SHA-512)
+    qz.security.setSignaturePromise((toSign) => {
+      return async (resolve, reject) => {
+        try {
+          const privateKeyPem = 
+            "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCjUQrZOCTRYvW1" +
+            "Wll7SN0+tuKBEhDKa4jekS86Y55ZA16148ucC1XYRC0PlfcaS7xOcmSmV+DEW9tu" +
+            "4RB6XWF5wHTDjJNy5S0QqRRxTcdtwa639+GkhFeYwCHXPVvcaoV0QqM+Ktc+yTpO" +
+            "J1m8A2v32znB/6jL6I6VRdnA6txJvR+mVZwe+VH7llYtrzX/RpJFZZYsSmRH/PbQ" +
+            "VCzYSvxf9nXjxTdsCKJgs+15KCygPnNtfCbfKhc14OI+MMSq6jpE8ALZ7aBDsVvj" +
+            "LoRqLPFpUC4LBaphWzg8TQtkJh8G7N7s/5S0byMNK3JQS/ZqvZXKWDpvvYKZ0/Qo" +
+            "cA7Xvt2zAgMBAAECggEAEVOizALp3REbsl7giXTkjCfJBhqNj3wzLDHJCe/Rt+3k" +
+            "mXWOf4KwW953zWSCr9aDJut6BC/kl9CLCkt0fRb1JX6mpKyAZDsuOctGcPLoipt2" +
+            "1uvEk7i6tmkD7hsDaPIgMIJ1YT4YUf/1YJ9KJOlUBhrLGOrv1JparjmX7aC9OFFd" +
+            "w3dvIMigpjbNwKI22cW5l+egoYpUwGi/N0DlgDdF+cEremuzvhoiod8wgt1k+W0h" +
+            "e03219Db9iZ3aZP1X/GyDkr+0W3ZDzw/eAiRjzV2Abooz7kVN5Xm7/caNJm19IYL" +
+            "SdJHc8dVsznI6N71yYuoWIFkeJdb42vDEgFhB/RDmQKBgQDewd2Rs7nUrVT3FWYG" +
+            "XeSGfkw9z9/AMOQYdkCQUE60Vr9/ao9o0V+m5iY/Tpo7uY9BBu68Y1wc3y5CrX5E" +
+            "Ii2KIUBFqiC8mY5RZdlS2KPDvAzATubdMQKWBIGQcfgIBqJGP/LnSWsrkEO4QTEG" +
+            "/6JJfiUZgSjwuZYS+DaWydd3RQKBgQC7sFORf54iXpYOOZukWJJD1E8LOEMWRj5T" +
+            "sV6VT4OVNPMrzUwc9h9A6x1VIwKWoN9SfYwyDHnbAXJkEI4EPOzF77vGTVdYomTF" +
+            "7EQWg9aseSitsXJhzRQrJr8Q61W5Gt/dt0OjN5ZzUz7Vr4dg8s3DEY6pH+xwMesX" +
+            "32Qahc+0lwKBgEZ+i6QEgJaxk+Xtu6/gHuYBKheVpXWpA0ZKhfwlrgKcQVYNXv0I" +
+            "YBn7UqzkVO9UXx+uSadOxVX+8fWJ9NgDZFdHH3vbRTCc6uG09PIA2t6I37oeV8e" +
+            "l3bqTiZsKtY/YzNgIXrYXTYYHZY960oPtEgVx5/epBoqYTf3nS7zCWERAoGBAK7r" +
+            "OBcDzsbNTB/ZxJo4Cai5dylHuA5MTM4HIdUZk9I81Nxfqq3bG2mPNXkg9cqYB0mD" +
+            "xGLoibB3+roTS6fbd/dI48F+Vwc94ZksBpDNMgbvq9+k3qsTS9ajd7I3AV9QEo85" +
+            "uwmkRs0YKhlQS2UpJGbGOCSaoeo2O5m2Ej89skPlAoGACAqxHh9Cojt3CRi31en0" +
+            "BhlB7Bn1GsBCO8YKxzP50jKYl2JMTEmXQPk2SSweJ+1ZaS0jYn1LWHFRz1Z20/R2" +
+            "/9aOTEGTTMcE1tBqPbs9matZeBwWsHSWzfP8R3uqW1/7mDK/pgrqydNMLndQt0s1" +
+            "5+WnQu7bRD+BKCg/9i4K1YA=";
+
+          const cleanedKey = privateKeyPem.replace(/[^A-Za-z0-9+/=]/g, "");
+          const binaryKey = Uint8Array.from(atob(cleanedKey), c => c.charCodeAt(0));
+          
+          const cryptoKey = await window.crypto.subtle.importKey(
+            "pkcs8",
+            binaryKey.buffer,
+            { name: "RSASSA-PKCS1-v1_5", hash: { name: "SHA-512" } },
+            false,
+            ["sign"]
+          );
+
+          const encoder = new TextEncoder();
+          const dataBuffer = encoder.encode(toSign);
+          const signatureBuffer = await window.crypto.subtle.sign(
+            "RSASSA-PKCS1-v1_5",
+            cryptoKey,
+            dataBuffer
+          );
+
+          const signatureArray = new Uint8Array(signatureBuffer);
+          let binarySignature = "";
+          for (let i = 0; i < signatureArray.byteLength; i++) {
+            binarySignature += String.fromCharCode(signatureArray[i]);
+          }
+          resolve(btoa(binarySignature));
+        } catch (err) {
+          console.error("Erro interno na assinatura criptográfica:", err);
+          reject(err);
+        }
+      };
+    });
 
     if (!qz.websocket.isActive()) {
       await qz.websocket.connect();
@@ -205,7 +295,7 @@ async function executeThermalPrint(data, received, informedTotal, difference, no
     const printers = systemSettings?.printers || [];
     const printerId = systemSettings?.cashierPrinterId;
     const selected = printers.find(p => p.id === printerId);
-    const printerName = selected?.name || selected?.label || 'POS-80'; // Fallback
+    const printerName = selected?.name || selected?.label || 'POS-80';
 
     await qz.printers.find(printerName);
     const config = qz.configs.create(printerName);
@@ -213,24 +303,23 @@ async function executeThermalPrint(data, received, informedTotal, difference, no
     const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
     let payload = [
-      '\x1B' + '\x40', // Iniciar
-      '\x1B' + '\x61' + '\x31', // Centralizar
+      '\x1B' + '\x40', 
+      '\x1B' + '\x61' + '\x31', 
       '================================\n',
       '       FECHAMENTO DE CAIXA      \n',
       '          FOGAO A LENHA         \n',
       '================================\n',
-      '\x1B' + '\x61' + '\x30', // Esquerda
+      '\x1B' + '\x61' + '\x30', 
       `Data:     ${date}\n`,
       `Operador: ${removeAccents(currentUser?.name || currentUser?.username || 'Operador')}\n`,
       '--------------------------------\n',
     ];
 
-    // Helper para alinhar valores monetários na direita
     const addLine = (label, value) => {
       payload.push(`${label}\n`);
-      payload.push('\x1B' + '\x61' + '\x32'); // Direita
+      payload.push('\x1B' + '\x61' + '\x32'); 
       payload.push(`${value}\n`);
-      payload.push('\x1B' + '\x61' + '\x30'); // Volta p/ Esquerda
+      payload.push('\x1B' + '\x61' + '\x30'); 
     };
 
     addLine("Faturamento total:", money(data.total));
@@ -282,10 +371,9 @@ async function executeThermalPrint(data, received, informedTotal, difference, no
       payload.push('--------------------------------\n');
     }
 
-    payload.push('\x1B' + '\x61' + '\x31'); // Centralizar
+    payload.push('\x1B' + '\x61' + '\x31'); 
     payload.push('Relatorio gerado pelo sistema.\n');
 
-    // Cortar papel
     payload.push('\n\n\n\n');
     payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
 
@@ -298,7 +386,6 @@ async function executeThermalPrint(data, received, informedTotal, difference, no
   }
 }
 
-// ADICIONEI "settings" AQUI NAS PROPS PARA PEGAR A IMPRESSORA CORRETA DO CAIXA
 export default function Fechamento({ tables = [], currentUser, settings, onCloseCash }) {
   const [date, setDate] = useState(todayInput())
   const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
@@ -327,7 +414,6 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
           setClosedTablesHistory(remoteState.closedTablesHistory)
         }
       } catch {
-        // Mantem a conferência usando o histórico local
       }
     }
     syncClosedTables()
@@ -358,12 +444,11 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
     setReportedPayments(prev => ({ ...prev, [key]: value }))
   }
 
-  // --- NOVA FUNÇÃO CHAMANDO O QZ TRAY ---
   async function handlePrint() { 
     await executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings);
   }
   
-  function handlePdf() { window.print() } // Mantém o window.print() aqui caso o usuário queira salvar PDF A4 na máquina
+  function handlePdf() { window.print() } 
   
   function openCloseModal() {
     if (isClosing || closed) return
