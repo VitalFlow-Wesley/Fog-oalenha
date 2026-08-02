@@ -9,10 +9,9 @@
 
 .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
   display: grid !important;
-  grid-template-columns: 150px 180px 190px !important;
+  grid-template-columns: 150px 180px minmax(260px, 1fr) !important;
   grid-template-areas:
-    "print pdf date"
-    "tabs tabs tabs"
+    "print date tabs"
     "toggle toggle toggle" !important;
   gap: 8px !important;
   width: 100% !important;
@@ -24,10 +23,9 @@
 }
 
 .reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(1) { grid-area: print !important; }
-.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(2) { grid-area: pdf !important; }
-.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(3) { grid-area: date !important; }
-.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(4) { grid-area: tabs !important; }
-.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(5) { grid-area: toggle !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(2) { grid-area: date !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(3) { grid-area: tabs !important; }
+.reportsPremiumPage.completeReportPage .reportsActions.noPrint > :nth-child(4) { grid-area: toggle !important; }
 
 .reportsPremiumPage.completeReportPage .reportActionBtn {
   display: inline-flex !important;
@@ -178,8 +176,7 @@
   .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
     grid-template-columns: 1fr 1fr !important;
     grid-template-areas:
-      "print pdf"
-      "date date"
+      "print date"
       "tabs tabs"
       "toggle toggle" !important;
   }
@@ -194,7 +191,6 @@
     grid-template-columns: 1fr !important;
     grid-template-areas:
       "print"
-      "pdf"
       "date"
       "tabs"
       "toggle" !important;
