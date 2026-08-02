@@ -21,6 +21,8 @@ const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
+const REMOTE_POLL_INTERVAL_MS = 4000
+const LOCAL_EDIT_GRACE_MS = 2500
 
 const initialSettings = {
   establishmentName: 'Fogão a Lenha',
@@ -51,6 +53,14 @@ function writeStored(key, value) {
     localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Mantem o app funcionando mesmo se o navegador bloquear armazenamento.
+  }
+}
+
+function isSameData(current, next) {
+  try {
+    return JSON.stringify(current) === JSON.stringify(next)
+  } catch {
+    return false
   }
 }
 
@@ -234,6 +244,99 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
   const remoteLoadedRef = useRef(false)
   const saveTimerRef = useRef(null)
+  const applyingRemoteRef = useRef(false)
+  const lastLocalChangeRef = useRef(0)
+  const pollingInFlightRef = useRef(false)
+
+  function applyRemoteState(remote, { fillMissing = false } = {}) {
+    const localUsers = readStored(USERS_KEY, initialUsers)
+    const localTables = readStored(TABLES_KEY, null)
+    const localSettings = { ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }
+    const localProducts = readStored(PRODUCTS_KEY, [])
+    const localSalesHistory = readStored(SALES_KEY, [])
+    const localClosings = readStored(CLOSINGS_KEY, [])
+    const localClosedTables = readStored(CLOSED_TABLES_KEY, [])
+    const missingRemoteState = {}
+
+    applyingRemoteRef.current = true
+
+    if (Array.isArray(remote.users)) {
+      const nextUsers = remote.users.length ? remote.users : localUsers
+      if (!isSameData(localUsers, nextUsers)) {
+        setUsers(nextUsers)
+        writeStored(USERS_KEY, nextUsers)
+      }
+      if (fillMissing && !remote.users.length && Array.isArray(localUsers) && localUsers.length) missingRemoteState.users = localUsers
+    } else if (fillMissing && Array.isArray(localUsers) && localUsers.length) {
+      missingRemoteState.users = localUsers
+    }
+
+    if (Array.isArray(remote.tables)) {
+      if (!isSameData(localTables, remote.tables)) {
+        setTables(remote.tables)
+        writeStored(TABLES_KEY, remote.tables)
+        window.dispatchEvent(new Event('fogao-tables-updated'))
+      }
+    } else if (fillMissing && Array.isArray(localTables)) {
+      setTables(localTables)
+      missingRemoteState.tables = localTables
+    }
+
+    if (remote.settings && Object.keys(remote.settings).length) {
+      const nextSettings = repairData({ ...initialSettings, ...remote.settings })
+      if (!isSameData(localSettings, nextSettings)) {
+        setSettings(nextSettings)
+        writeStored(SETTINGS_KEY, nextSettings)
+      }
+    } else if (fillMissing) {
+      missingRemoteState.settings = localSettings
+    }
+
+    if (Array.isArray(remote.products)) {
+      const products = repairData(remote.products.length ? remote.products : localProducts)
+      if (!isSameData(localProducts, products)) {
+        writeStored(PRODUCTS_KEY, products)
+        writeStored('fogao-a-lenha-products-settings', products)
+        window.dispatchEvent(new Event('fogao-products-updated'))
+      }
+      if (fillMissing && !remote.products.length && Array.isArray(localProducts) && localProducts.length) missingRemoteState.products = localProducts
+    } else if (fillMissing && Array.isArray(localProducts) && localProducts.length) {
+      missingRemoteState.products = localProducts
+    }
+
+    if (Array.isArray(remote.salesHistory)) {
+      const salesHistory = remote.salesHistory.length ? remote.salesHistory : localSalesHistory
+      if (!isSameData(localSalesHistory, salesHistory)) writeStored(SALES_KEY, salesHistory)
+      if (fillMissing && !remote.salesHistory.length && Array.isArray(localSalesHistory) && localSalesHistory.length) missingRemoteState.salesHistory = localSalesHistory
+    } else if (fillMissing && Array.isArray(localSalesHistory) && localSalesHistory.length) {
+      missingRemoteState.salesHistory = localSalesHistory
+    }
+
+    if (Array.isArray(remote.closings)) {
+      const closings = remote.closings.length ? remote.closings : localClosings
+      if (!isSameData(localClosings, closings)) writeStored(CLOSINGS_KEY, closings)
+      if (fillMissing && !remote.closings.length && Array.isArray(localClosings) && localClosings.length) missingRemoteState.closings = localClosings
+    } else if (fillMissing && Array.isArray(localClosings) && localClosings.length) {
+      missingRemoteState.closings = localClosings
+    }
+
+    if (Array.isArray(remote.closedTablesHistory)) {
+      const closedTablesHistory = remote.closedTablesHistory.length ? remote.closedTablesHistory : localClosedTables
+      if (!isSameData(localClosedTables, closedTablesHistory)) {
+        writeStored(CLOSED_TABLES_KEY, closedTablesHistory)
+        window.dispatchEvent(new Event('fogao-closed-tables-updated'))
+      }
+      if (fillMissing && !remote.closedTablesHistory.length && Array.isArray(localClosedTables) && localClosedTables.length) missingRemoteState.closedTablesHistory = localClosedTables
+    } else if (fillMissing && Array.isArray(localClosedTables) && localClosedTables.length) {
+      missingRemoteState.closedTablesHistory = localClosedTables
+    }
+
+    window.setTimeout(() => {
+      applyingRemoteRef.current = false
+    }, 150)
+
+    return missingRemoteState
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -243,72 +346,7 @@ export default function App() {
         const remote = await loadRemoteState()
         if (cancelled) return
 
-        const localUsers = readStored(USERS_KEY, initialUsers)
-        const localTables = readStored(TABLES_KEY, null)
-        const localSettings = { ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }
-        const localProducts = readStored(PRODUCTS_KEY, [])
-        const localSalesHistory = readStored(SALES_KEY, [])
-        const localClosings = readStored(CLOSINGS_KEY, [])
-        const localClosedTables = readStored(CLOSED_TABLES_KEY, [])
-        const missingRemoteState = {}
-
-        if (Array.isArray(remote.users)) {
-          setUsers(remote.users.length ? remote.users : localUsers)
-          writeStored(USERS_KEY, remote.users.length ? remote.users : localUsers)
-          if (!remote.users.length && Array.isArray(localUsers) && localUsers.length) missingRemoteState.users = localUsers
-        } else if (Array.isArray(localUsers) && localUsers.length) {
-          missingRemoteState.users = localUsers
-        }
-
-        if (Array.isArray(remote.tables)) {
-          setTables(remote.tables)
-          writeStored(TABLES_KEY, remote.tables)
-        } else if (Array.isArray(localTables)) {
-          setTables(localTables)
-          missingRemoteState.tables = localTables
-        }
-
-        if (remote.settings && Object.keys(remote.settings).length) {
-          const nextSettings = repairData({ ...initialSettings, ...remote.settings })
-          setSettings(nextSettings)
-          writeStored(SETTINGS_KEY, nextSettings)
-        } else {
-          missingRemoteState.settings = localSettings
-        }
-
-        if (Array.isArray(remote.products)) {
-          const products = repairData(remote.products.length ? remote.products : localProducts)
-          writeStored(PRODUCTS_KEY, products)
-          writeStored('fogao-a-lenha-products-settings', products)
-          window.dispatchEvent(new Event('fogao-products-updated'))
-          if (!remote.products.length && Array.isArray(localProducts) && localProducts.length) missingRemoteState.products = localProducts
-        } else if (Array.isArray(localProducts) && localProducts.length) {
-          missingRemoteState.products = localProducts
-        }
-
-        if (Array.isArray(remote.salesHistory)) {
-          const salesHistory = remote.salesHistory.length ? remote.salesHistory : localSalesHistory
-          writeStored(SALES_KEY, salesHistory)
-          if (!remote.salesHistory.length && Array.isArray(localSalesHistory) && localSalesHistory.length) missingRemoteState.salesHistory = localSalesHistory
-        } else if (Array.isArray(localSalesHistory) && localSalesHistory.length) {
-          missingRemoteState.salesHistory = localSalesHistory
-        }
-
-        if (Array.isArray(remote.closings)) {
-          const closings = remote.closings.length ? remote.closings : localClosings
-          writeStored(CLOSINGS_KEY, closings)
-          if (!remote.closings.length && Array.isArray(localClosings) && localClosings.length) missingRemoteState.closings = localClosings
-        } else if (Array.isArray(localClosings) && localClosings.length) {
-          missingRemoteState.closings = localClosings
-        }
-
-        if (Array.isArray(remote.closedTablesHistory)) {
-          const closedTablesHistory = remote.closedTablesHistory.length ? remote.closedTablesHistory : localClosedTables
-          writeStored(CLOSED_TABLES_KEY, closedTablesHistory)
-          if (!remote.closedTablesHistory.length && Array.isArray(localClosedTables) && localClosedTables.length) missingRemoteState.closedTablesHistory = localClosedTables
-        } else if (Array.isArray(localClosedTables) && localClosedTables.length) {
-          missingRemoteState.closedTablesHistory = localClosedTables
-        }
+        const missingRemoteState = applyRemoteState(remote, { fillMissing: true })
 
         if (Object.keys(missingRemoteState).length) {
           await saveRemoteState(missingRemoteState)
@@ -340,7 +378,43 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    let stopped = false
+
+    async function pollRemoteState() {
+      if (stopped || !remoteLoadedRef.current || pollingInFlightRef.current || applyingRemoteRef.current) return
+      if (Date.now() - lastLocalChangeRef.current < LOCAL_EDIT_GRACE_MS) return
+
+      pollingInFlightRef.current = true
+      const startedAt = Date.now()
+
+      try {
+        const remote = await loadRemoteState()
+        if (stopped) return
+        if (lastLocalChangeRef.current > startedAt) return
+        applyRemoteState(remote)
+      } catch (error) {
+        console.warn('Nao foi possivel atualizar dados em tempo real:', error.message)
+      } finally {
+        pollingInFlightRef.current = false
+      }
+    }
+
+    const interval = window.setInterval(pollRemoteState, REMOTE_POLL_INTERVAL_MS)
+    window.addEventListener('focus', pollRemoteState)
+    document.addEventListener('visibilitychange', pollRemoteState)
+
+    return () => {
+      stopped = true
+      window.clearInterval(interval)
+      window.removeEventListener('focus', pollRemoteState)
+      document.removeEventListener('visibilitychange', pollRemoteState)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!remoteLoadedRef.current) return
+    if (applyingRemoteRef.current) return
+    lastLocalChangeRef.current = Date.now()
     clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
       const products = readStored(PRODUCTS_KEY, [])
@@ -358,6 +432,8 @@ export default function App() {
   useEffect(() => {
     if (!remoteLoadedRef.current) return
     const syncProducts = () => {
+      if (applyingRemoteRef.current) return
+      lastLocalChangeRef.current = Date.now()
       const products = readStored(PRODUCTS_KEY, [])
       const salesHistory = readStored(SALES_KEY, [])
       const closings = readStored(CLOSINGS_KEY, [])

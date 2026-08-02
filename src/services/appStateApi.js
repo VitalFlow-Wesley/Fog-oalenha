@@ -32,7 +32,7 @@ export async function loadRemoteState() {
     if (!response.ok) throw new Error('Nao foi possivel carregar dados do servidor.')
     return await readJsonResponse(response)
   } catch (error) {
-    disableRemoteSync(error.message)
+    console.warn('Falha temporaria ao carregar dados remotos:', error.message)
     return {}
   }
 }
@@ -60,7 +60,7 @@ export async function saveRemoteState(state) {
 
     return await readJsonResponse(response)
   } catch (error) {
-    disableRemoteSync(error.message)
+    console.warn('Falha temporaria ao salvar dados remotos:', error.message)
     return null
   }
 }
