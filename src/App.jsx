@@ -80,6 +80,12 @@ function waiterOperationalSettings(settings = {}) {
   }
 }
 
+function publicClientUser(user) {
+  if (!user) return null
+  const { password, senha, ...safeUser } = user
+  return safeUser
+}
+
 function isSameData(current, next) {
   try {
     return JSON.stringify(current) === JSON.stringify(next)
@@ -242,7 +248,7 @@ function getSavedSession(users) {
       return null
     }
 
-    return user
+    return publicClientUser(user)
   } catch {
     localStorage.removeItem(SESSION_KEY)
     return null
@@ -272,6 +278,21 @@ export default function App() {
   const applyingRemoteRef = useRef(false)
   const lastLocalChangeRef = useRef(0)
   const pollingInFlightRef = useRef(false)
+
+  function restrictWaiterLocalData(user, sourceSettings = settings) {
+    const safeUser = publicClientUser(user)
+    const waiterUsers = safeUser ? [safeUser] : []
+    const safeSettings = waiterOperationalSettings(sourceSettings)
+    setUsers(waiterUsers)
+    setSettings(safeSettings)
+    writeStored(USERS_KEY, waiterUsers)
+    writeStored(SETTINGS_KEY, safeSettings)
+    writeStored(SALES_KEY, [])
+    writeStored(CLOSINGS_KEY, [])
+    writeStored(CLOSED_TABLES_KEY, [])
+    window.dispatchEvent(new Event('fogao-closed-tables-updated'))
+    return safeUser
+  }
 
   useEffect(() => {
     if (!currentUser) return
@@ -389,6 +410,7 @@ export default function App() {
 
     async function hydrateFromMongo() {
       try {
+        if (currentUser.role === 'garcom') restrictWaiterLocalData(currentUser)
         const remote = await loadRemoteState()
         if (cancelled) return
 
@@ -516,15 +538,7 @@ export default function App() {
 
   function handleLogin(user) {
     if (user.role === 'garcom') {
-      const waiterUsers = [user]
-      const safeSettings = waiterOperationalSettings(settings)
-      setUsers(waiterUsers)
-      setSettings(safeSettings)
-      writeStored(USERS_KEY, waiterUsers)
-      writeStored(SETTINGS_KEY, safeSettings)
-      writeStored(SALES_KEY, [])
-      writeStored(CLOSINGS_KEY, [])
-      writeStored(CLOSED_TABLES_KEY, [])
+      user = restrictWaiterLocalData(user)
     }
     saveSession(user)
     setCurrentUser(user)
