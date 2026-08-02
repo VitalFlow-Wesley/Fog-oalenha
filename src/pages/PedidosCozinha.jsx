@@ -43,6 +43,10 @@ function readJson(key, fallback) {
   }
 }
 
+function getPeopleCount(table = {}) {
+  return Math.max(1, Number(table.peopleCount ?? table.guests ?? 1) || 1)
+}
+
 function buildKitchenOrders(tables, orderTimes) {
   return tables
     .filter(table => table.kitchenSent || table.status === 'enviado')
@@ -56,7 +60,8 @@ function buildKitchenOrders(tables, orderTimes) {
         id: table.id,
         tableNumber: table.number,
         customerName: String(table.customerName || '').trim(),
-        guests: Number(table.guests || 0),
+        guests: getPeopleCount(table),
+        peopleCount: getPeopleCount(table),
         time: table.kitchenSentAt || orderTimes[table.id] || currentTime(),
         waiterName: table.kitchenWaiterName || table.waiterName || 'Garçom',
         items,
@@ -103,6 +108,7 @@ async function executeThermalPrint(order, currentUser, settings) {
       '================================\n',
       '\x1B' + '\x61' + '\x30', 
       `Mesa:      ${order.tableNumber}\n`,
+      `Pessoas:   ${order.peopleCount || order.guests || 1}\n`,
       `Garcom:    ${removeAccents(order.waiterName || currentUser?.name || 'Garcom')}\n`,
       `Data:      ${currentDateTime()}\n`,
       '--------------------------------\n',

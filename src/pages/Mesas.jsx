@@ -89,12 +89,18 @@ function getClosedTableRecords(history, date = todayKey()) {
     .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
 }
 
-function createTable(nextId) {
+function getPeopleCount(table = {}) {
+  return Math.max(1, Number(table.peopleCount ?? table.guests ?? 1) || 1)
+}
+
+function createTable(nextId, number, peopleCount = 1) {
+  const safePeopleCount = Math.max(1, Number(peopleCount) || 1)
   return {
     id: nextId,
-    number: String(nextId).padStart(2, '0'),
+    number: String(number || nextId).trim(),
     status: 'ocupada',
-    guests: 2,
+    guests: safePeopleCount,
+    peopleCount: safePeopleCount,
     openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     items: [],
     kitchenSent: false,
@@ -141,6 +147,7 @@ async function executeThermalPrint(job) {
       '================================\n',
       '\x1B' + '\x61' + '\x30', 
       `Mesa:      ${job.table.number}${job.table.mergedTableNumbers?.length ? ` + ${job.table.mergedTableNumbers.join(' + ')}` : ''}\n`,
+      ...(job.type === 'kitchen' ? [`Pessoas:   ${job.peopleCount || getPeopleCount(job.table)}\n`] : []),
       `Garcom:    ${removeAccents(job.waiterName)}\n`,
       `Data:      ${formattedDate} as ${formattedTime}\n`,
       '--------------------------------\n',
@@ -212,6 +219,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [cancelError, setCancelError] = useState('')
   const [joinTargetId, setJoinTargetId] = useState('')
   const [joinModalOpen, setJoinModalOpen] = useState(false)
+  const [addTableModalOpen, setAddTableModalOpen] = useState(false)
+  const [newTableForm, setNewTableForm] = useState({ number: '', peopleCount: 1 })
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
   const isWaiterUser = currentUser?.role === 'garcom'
@@ -310,11 +319,22 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     }
   }
 
-  function addTable() {
+  function openAddTableModal() {
+    setNewTableForm({ number: '', peopleCount: 1 })
+    setAddTableModalOpen(true)
+  }
+
+  function addTable(event) {
+    event.preventDefault()
+    const tableNumber = newTableForm.number.trim()
+    if (!tableNumber) return
+    const peopleCount = Math.max(1, Math.min(99, Number(newTableForm.peopleCount) || 1))
     const nextId = tables.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
-    const newTable = createTable(nextId)
+    const newTable = createTable(nextId, tableNumber, peopleCount)
     setTables(prev => [...prev, newTable])
     setSelected(newTable)
+    setAddTableModalOpen(false)
+    setNewTableForm({ number: '', peopleCount: 1 })
     touch()
   }
 
@@ -325,7 +345,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       return
     }
     if (t.status === 'livre') {
-      const updated = { ...t, ...waiterPatch(t), status: 'ocupada', guests: 2, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
+      const peopleCount = getPeopleCount(t)
+      const updated = { ...t, ...waiterPatch(t), status: 'ocupada', guests: peopleCount, peopleCount, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
       updateTable(t.id, updated)
       setSelected(updated)
       touch()
@@ -359,8 +380,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const current = tables.find(t => t.id === selected?.id)
     if (!current) return
     const guests = Math.max(1, Math.min(99, Number(nextValue) || 1))
-    updateTable(current.id, { guests })
-    setSelected(prev => prev ? { ...prev, guests } : prev)
+    updateTable(current.id, { guests, peopleCount: guests })
+    setSelected(prev => prev ? { ...prev, guests, peopleCount: guests } : prev)
     touch()
   }
 
@@ -396,12 +417,13 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const joinedNumbers = [...(table.mergedTableNumbers || []), target.number]
     const mergedItems = [...table.items, ...target.items.map(item => ({ ...item, originTable: target.number }))]
     const nextStatus = table.status === 'conta' || target.status === 'conta' ? 'conta' : 'ocupada'
+    const mergedPeopleCount = getPeopleCount(table) + getPeopleCount(target)
     setTables(prev => prev.map(t => {
-      if (t.id === table.id) return { ...t, status: nextStatus, guests: (t.guests || 0) + (target.guests || 0), items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }
-      if (t.id === target.id) return { ...t, status: 'juntada', items: [], guests: 0, mergedTo: table.id, mergedToNumber: table.number, previousMergeState: target }
+      if (t.id === table.id) return { ...t, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }
+      if (t.id === target.id) return { ...t, status: 'juntada', items: [], guests: 0, peopleCount: 0, mergedTo: table.id, mergedToNumber: table.number, previousMergeState: target }
       return t
     }))
-    setSelected(prev => ({ ...prev, status: nextStatus, guests: (prev.guests || 0) + (target.guests || 0), items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }))
+    setSelected(prev => ({ ...prev, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }))
     setJoinTargetId('')
     setJoinModalOpen(false)
     touch()
@@ -410,14 +432,20 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   function splitTables() {
     if (!table?.mergedTableIds?.length) return
     setTables(prev => prev.map(t => {
-      if (t.id === table.id) return { ...t, guests: Math.max(1, t.guests - table.mergedTableIds.length), items: t.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+      if (t.id === table.id) {
+        const peopleCount = Math.max(1, getPeopleCount(t) - table.mergedTableIds.length)
+        return { ...t, guests: peopleCount, peopleCount, items: t.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+      }
       if (table.mergedTableIds.includes(t.id)) {
         const previous = t.previousMergeState || t
         return { ...previous, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
       }
       return t
     }))
-    setSelected(prev => ({ ...prev, guests: Math.max(1, prev.guests - prev.mergedTableIds.length), items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }))
+    setSelected(prev => {
+      const peopleCount = Math.max(1, getPeopleCount(prev) - prev.mergedTableIds.length)
+      return { ...prev, guests: peopleCount, peopleCount, items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+    })
     touch()
   }
 
@@ -428,10 +456,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const kitchenItems = current.items.filter(i => i.imprimeCozinha || settings?.printBarItems)
     const waiterName = currentUser?.name || currentUser?.username || 'Garçom'
     const kitchenSentAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    
-    updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, lastKitchenPrinter: kitchenPrinterName })
-    
-    const job = { type: 'kitchen', title: 'PEDIDO DE PREPARO', table: current, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 }
+    const peopleCount = getPeopleCount(current)
+    updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, peopleCount, guests: peopleCount, lastKitchenPrinter: kitchenPrinterName })
+
+    const job = { type: 'kitchen', title: 'PEDIDO DE PREPARO', table: { ...current, peopleCount, guests: peopleCount }, peopleCount, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 }
     await executeThermalPrint(job)
     touch()
   }
@@ -454,8 +482,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       await onCloseTable(selected.id)
     } else {
       setTables(prev => prev.map(t => {
-        if (t.id === selected.id) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTableIds: [], mergedTableNumbers: [] }
-        if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
+        if (t.id === selected.id) return { ...t, status: 'livre', guests: 0, peopleCount: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTableIds: [], mergedTableNumbers: [] }
+        if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, peopleCount: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
         return t
       }))
     }
@@ -482,7 +510,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
           <button className="secondaryTableBtn" type="button" onClick={() => setClosedTablesOpen(true)}>
             <History size={18} /> Mesas fechadas <strong>{closedTablesToday.length}</strong>
           </button>
-          <button className="primaryBtn" type="button" onClick={addTable}><Plus size={18} /> Adicionar mesa</button>
+          <button className="primaryBtn" type="button" onClick={openAddTableModal}><Plus size={18} /> Adicionar mesa</button>
           <span className={`updatedPill ${isRefreshing ? 'refreshing' : ''}`}><Clock size={17} /> {updatedLabel}</span>
           <button className={`refreshBtn ${isRefreshing ? 'refreshing' : ''}`} type="button" onClick={touch} title="Atualizar mesas"><RefreshCw size={20} /></button>
         </div>
@@ -500,7 +528,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
           <div className="emptyIcon">🍽️</div>
           <h2>Nenhuma mesa aberta ainda</h2>
           <p>Comece adicionando as mesas conforme os clientes forem chegando no salão.</p>
-          <button className="primaryBtn" type="button" onClick={addTable}><Plus size={18} /> Adicionar primeira mesa</button>
+          <button className="primaryBtn" type="button" onClick={openAddTableModal}><Plus size={18} /> Adicionar primeira mesa</button>
         </section>
       ) : (
         <div className="tablesGrid restaurantTablesGrid">
@@ -519,9 +547,9 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
                   <h2>{tableLabel}</h2>
                   <div className="commandGuestsEditor" aria-label="Quantidade de pessoas na mesa">
                     <Users size={18} />
-                    <button type="button" onClick={() => changeGuests((table.guests || 1) - 1)}><Minus size={13} /></button>
-                    <input type="number" min="1" max="99" value={table.guests || 1} onChange={event => changeGuests(event.target.value)} />
-                    <button type="button" onClick={() => changeGuests((table.guests || 1) + 1)}><Plus size={13} /></button>
+                    <button type="button" onClick={() => changeGuests(getPeopleCount(table) - 1)}><Minus size={13} /></button>
+                    <input type="number" min="1" max="99" value={getPeopleCount(table)} onChange={event => changeGuests(event.target.value)} />
+                    <button type="button" onClick={() => changeGuests(getPeopleCount(table) + 1)}><Plus size={13} /></button>
                     <span>pessoas</span>
                   </div>
                 </div>
@@ -566,6 +594,18 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
               </section>
             </div>
           </aside>
+        </div>
+      )}
+
+      {addTableModalOpen && (
+        <div className="authModalOverlay">
+          <form className="authModal joinTableModal" onSubmit={addTable}>
+            <div className="drawerHeader"><div><span className="eyebrow">Nova mesa</span><h2>Adicionar mesa</h2></div><button type="button" className="iconBtn" onClick={() => setAddTableModalOpen(false)}><X size={22} /></button></div>
+            <p>Informe a identificação da mesa e a quantidade de pessoas.</p>
+            <label><span>Número / Identificação da Mesa</span><input value={newTableForm.number} onChange={e => setNewTableForm(prev => ({ ...prev, number: e.target.value }))} placeholder="Ex.: 14 ou 17 KAROL" autoFocus /></label>
+            <label><span>Quantidade de Pessoas</span><input type="number" min="1" max="99" value={newTableForm.peopleCount} onChange={e => setNewTableForm(prev => ({ ...prev, peopleCount: e.target.value }))} /></label>
+            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={!newTableForm.number.trim()}>Confirmar mesa</button><button className="secondaryBtn" type="button" onClick={() => setAddTableModalOpen(false)}>Cancelar</button></div>
+          </form>
         </div>
       )}
 

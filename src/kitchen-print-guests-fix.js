@@ -26,7 +26,7 @@ function getGuestsForPrint(printArea) {
   if (!printedTableNumber) return 0
 
   const table = readTables().find(item => normalizeTableNumber(item.number) === printedTableNumber || normalizeTableNumber(item.id) === printedTableNumber)
-  return Number(table?.guests || 0)
+  return Math.max(1, Number(table?.peopleCount ?? table?.guests ?? 1) || 1)
 }
 
 function normalizeGuestsInKitchenPrint() {
@@ -38,9 +38,8 @@ function normalizeGuestsInKitchenPrint() {
     const mesaLine = directParagraphs.find(p => /^\s*Mesa\s*:/i.test(p.textContent || ''))
     if (!mesaLine) return
 
-    const customerLine = directParagraphs.find(p => /^\s*Cliente\s*:/i.test(p.textContent || ''))
     const guests = getGuestsForPrint(printArea)
-    const desiredHtml = `<strong>Pessoas:</strong> ${guests || '-'}${guests ? ' pessoa(s)' : ''}`
+    const desiredHtml = `<strong>Pessoas:</strong> ${guests}`
     const guestsLines = directParagraphs.filter(p => /^\s*Pessoas\s*:/i.test(p.textContent || ''))
 
     let guestsLine = guestsLines[0]
@@ -53,9 +52,8 @@ function normalizeGuestsInKitchenPrint() {
 
     if (guestsLine.innerHTML !== desiredHtml) guestsLine.innerHTML = desiredHtml
 
-    const anchor = customerLine || mesaLine
-    if (anchor.nextElementSibling !== guestsLine) {
-      anchor.insertAdjacentElement('afterend', guestsLine)
+    if (mesaLine.nextElementSibling !== guestsLine) {
+      mesaLine.insertAdjacentElement('afterend', guestsLine)
     }
   })
 }

@@ -65,6 +65,10 @@ function tableTotal(table) {
   return (table.items || []).reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
 }
 
+function getPeopleCount(table = {}) {
+  return Math.max(1, Number(table.peopleCount ?? table.guests ?? 1) || 1)
+}
+
 function hasTableMovement(table) {
   return table.status !== 'livre' || tableTotal(table) > 0 || Number(table.guests || 0) > 0 || Boolean(table.items?.length)
 }
@@ -84,7 +88,8 @@ function buildSalesRecord(table, type, closingDate) {
     tableId: table.id,
     tableNumber: table.number,
     customerName: repairText(table.customerName || ''),
-    guests: Number(table.guests || 0),
+    guests: getPeopleCount(table),
+    peopleCount: getPeopleCount(table),
     waiterName: getTableWaiter(table),
     total: tableTotal(table),
     items: (table.items || []).map(item => ({
@@ -113,7 +118,8 @@ function buildClosedTableRecord(table, mode, { closingDate, payments, closedBy, 
     tableNumber: table.number,
     customerName: repairText(table.customerName || ''),
     waiterName: getTableWaiter(table),
-    guests: Number(table.guests || 0),
+    guests: getPeopleCount(table),
+    peopleCount: getPeopleCount(table),
     previousStatus: table.status || 'ocupada',
     total,
     items: (table.items || []).map(item => {
@@ -164,6 +170,7 @@ function resetTableForNewCash(table) {
     status: 'livre',
     customerName: '',
     guests: 0,
+    peopleCount: 0,
     openedAt: null,
     closedAt: null,
     items: [],
