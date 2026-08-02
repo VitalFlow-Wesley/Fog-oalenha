@@ -397,18 +397,35 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     setCancelError('')
   }
 
-  function confirmCancelItem(event) {
+  async function confirmCancelItem(event) {
     event.preventDefault()
-    const authorizationPassword = settings?.cancelPassword || ''
-    const authorizedUser = users.find(user => user.active && ['admin', 'gerente'].includes(user.role) && (user.password === cancelPassword || authorizationPassword === cancelPassword))
-    if (!authorizedUser && cancelPassword !== authorizationPassword) {
+    if (!cancelPassword) {
       setCancelError('Senha inválida. Cancelamento permitido somente com senha cadastrada pelo administrador ou gerente.')
       return
     }
+
+    let authorizedUser = null
+    try {
+      const response = await fetch('/api/auth/authorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: cancelPassword }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload.authorizedBy) {
+        setCancelError(payload.error || 'Senha inválida. Cancelamento permitido somente com autorização da gerência.')
+        return
+      }
+      authorizedUser = payload.authorizedBy
+    } catch {
+      setCancelError('Não foi possível validar a autorização. Tente novamente.')
+      return
+    }
+
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
     const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation && i.originTable === cancelRequest.originTable))
-    updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser?.name || settings?.cancelUpdatedBy || 'Autorizado' })
+    updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser.name || authorizedUser.username || 'Gerência' })
     setCancelRequest(null)
     setCancelPassword('')
     setCancelError('')
@@ -669,7 +686,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
           <form className="authModal" onSubmit={confirmCancelItem}>
             <div className="drawerHeader"><div><span className="eyebrow">Autorização obrigatória</span><h2>Cancelar item</h2></div><button type="button" className="iconBtn" onClick={() => setCancelRequest(null)}><X size={22} /></button></div>
             <p>Para cancelar <strong>{cancelRequest.name}</strong>, informe a senha de autorização.</p>
-            <label><span>Senha de autorização</span><input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoFocus /></label>
+            <label><span>Senha de autorização</span><input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoComplete="off" autoFocus /></label>
             {cancelError && <div className="loginError">{cancelError}</div>}
             <div className="actionsRow"><button className="dangerBtn" type="submit">Confirmar cancelamento</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button></div>
           </form>

@@ -7,10 +7,40 @@ import {
   syncModelCollections,
   updateAppState,
 } from '../lib/mongo.js'
-import { publicUser, requireUser } from '../lib/auth.js'
+import { requireUser } from '../lib/auth.js'
 
 const modelKeys = ['users', 'products', 'tables']
 const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings', 'closedTablesHistory']
+const waiterSettingKeys = [
+  'establishmentName',
+  'printers',
+  'kitchenPrinterId',
+  'cashierPrinterId',
+  'grillPrinterId',
+  'juicePrinterId',
+  'printKitchenItems',
+  'printBarItems',
+  'printFullReceipt',
+  'allowReprint',
+  'receiptMessage',
+]
+
+function waiterSettings(settings = {}) {
+  return {
+    ...Object.fromEntries(waiterSettingKeys.filter(key => key in settings).map(key => [key, settings[key]])),
+    cancelPassword: null,
+    cancelUpdatedBy: null,
+  }
+}
+
+function stateForSession(state, session) {
+  if (session.role !== 'garcom') return state
+  return {
+    tables: Array.isArray(state.tables) ? state.tables : [],
+    products: Array.isArray(state.products) ? state.products : [],
+    settings: waiterSettings(state.settings),
+  }
+}
 
 async function readConsolidatedState(db) {
   const state = await readAppState(db)
@@ -39,8 +69,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const state = await readConsolidatedState(db)
-      if (session.role === 'garcom') state.users = (state.users || []).map(publicUser)
-      res.status(200).json(state)
+      res.status(200).json(stateForSession(state, session))
       return
     }
 
@@ -57,7 +86,7 @@ export default async function handler(req, res) {
       const protectedState = await syncModelCollections(db, nextState)
       await updateAppState(db, protectedState)
 
-      res.status(200).json(await readConsolidatedState(db))
+      res.status(200).json(stateForSession(await readConsolidatedState(db), session))
       return
     }
 

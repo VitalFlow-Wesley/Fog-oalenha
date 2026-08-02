@@ -59,6 +59,27 @@ function writeStored(key, value) {
   }
 }
 
+function waiterOperationalSettings(settings = {}) {
+  const allowed = [
+    'establishmentName',
+    'printers',
+    'kitchenPrinterId',
+    'cashierPrinterId',
+    'grillPrinterId',
+    'juicePrinterId',
+    'printKitchenItems',
+    'printBarItems',
+    'printFullReceipt',
+    'allowReprint',
+    'receiptMessage',
+  ]
+  return {
+    ...Object.fromEntries(allowed.filter(key => key in settings).map(key => [key, settings[key]])),
+    cancelPassword: null,
+    cancelUpdatedBy: null,
+  }
+}
+
 function isSameData(current, next) {
   try {
     return JSON.stringify(current) === JSON.stringify(next)
@@ -494,6 +515,17 @@ export default function App() {
   }, [currentUser, users])
 
   function handleLogin(user) {
+    if (user.role === 'garcom') {
+      const waiterUsers = [user]
+      const safeSettings = waiterOperationalSettings(settings)
+      setUsers(waiterUsers)
+      setSettings(safeSettings)
+      writeStored(USERS_KEY, waiterUsers)
+      writeStored(SETTINGS_KEY, safeSettings)
+      writeStored(SALES_KEY, [])
+      writeStored(CLOSINGS_KEY, [])
+      writeStored(CLOSED_TABLES_KEY, [])
+    }
     saveSession(user)
     setCurrentUser(user)
     setPage('mesas')
