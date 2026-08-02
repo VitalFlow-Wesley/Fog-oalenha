@@ -10,6 +10,8 @@ import Fechamento from './pages/Fechamento.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
+import { fetchPendingPrintJobs, updatePrintJobStatus } from './services/printQueueApi.js'
+import { ensureQzReady, executeThermalPrint } from './services/qzPrintService.js'
 import { repairData, repairText } from './text-normalizer.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
@@ -23,6 +25,7 @@ const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 const REMOTE_POLL_INTERVAL_MS = 4000
 const LOCAL_EDIT_GRACE_MS = 2500
+const PRINT_QUEUE_POLL_INTERVAL_MS = 2000
 
 const initialSettings = {
   establishmentName: 'Fogão a Lenha',
@@ -85,6 +88,13 @@ function hasTableMovement(table) {
 
 function getTableWaiter(table) {
   return repairText(table.waiterName || table.kitchenWaiterName || table.openedByName || table.createdByName || 'Sem garçom')
+}
+
+function getConfiguredPrinterName(settings, type) {
+  const printers = settings?.printers || []
+  const printerId = type === 'kitchen' ? settings?.kitchenPrinterId : settings?.cashierPrinterId
+  const selected = printers.find(printer => printer.id === printerId)
+  return selected?.name || selected?.label || printers[0]?.name || (type === 'kitchen' ? 'Cozinha' : 'Caixa')
 }
 
 function buildSalesRecord(table, type, closingDate) {
@@ -577,6 +587,71 @@ export default function App() {
     return salesRecord
   }
 
+  useEffect(() => {
+    if (!currentUser || currentUser.role === 'garcom') return
+
+    let stopped = false
+    let busy = false
+    let qzUnavailableUntil = 0
+
+    async function runPrintQueue() {
+      if (stopped || busy) return
+      if (document.visibilityState === 'hidden') return
+      if (Date.now() < qzUnavailableUntil) return
+
+      busy = true
+      try {
+        const jobs = await fetchPendingPrintJobs(5)
+        if (!jobs?.length) return
+        await ensureQzReady()
+
+        for (const job of jobs || []) {
+          if (stopped) break
+
+          let claimed = null
+          try {
+            claimed = await updatePrintJobStatus(job._id, 'printing')
+          } catch (error) {
+            if (!String(error.message || '').includes('pendente')) {
+              console.warn('Nao foi possivel reservar job de impressao:', error.message)
+            }
+            continue
+          }
+
+          const printType = claimed.type === 'kitchen' ? 'kitchen' : 'bill'
+          const printJob = {
+            ...claimed,
+            type: printType,
+            table: claimed.table || { number: claimed.tableNumber, peopleCount: claimed.peopleCount, guests: claimed.guests },
+            printerName: claimed.printerName || getConfiguredPrinterName(settings, printType),
+          }
+
+          try {
+            await executeThermalPrint(printJob, { silent: true })
+            await updatePrintJobStatus(claimed._id, 'printed', { printer: printJob.printerName })
+          } catch (error) {
+            await updatePrintJobStatus(claimed._id, 'error', { error: error.message || String(error) }).catch(() => {})
+          }
+        }
+      } catch (error) {
+        qzUnavailableUntil = Date.now() + 30000
+        console.warn('Agente de impressao aguardando QZ Tray local:', error.message)
+      } finally {
+        busy = false
+      }
+    }
+
+    const interval = window.setInterval(runPrintQueue, PRINT_QUEUE_POLL_INTERVAL_MS)
+    window.addEventListener('focus', runPrintQueue)
+    runPrintQueue()
+
+    return () => {
+      stopped = true
+      window.clearInterval(interval)
+      window.removeEventListener('focus', runPrintQueue)
+    }
+  }, [currentUser, settings])
+
   if (!currentUser) return <Login users={users} onLogin={handleLogin} />
 
   return (
@@ -585,7 +660,7 @@ export default function App() {
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} />}
-        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} />}
+        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}

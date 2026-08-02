@@ -4,6 +4,8 @@ import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
 import { loadRemoteState } from '../services/appStateApi.js'
+import { enqueuePrintJob } from '../services/printQueueApi.js'
+import { executeThermalPrint as executeSecureThermalPrint } from '../services/qzPrintService.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -459,8 +461,23 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const peopleCount = getPeopleCount(current)
     updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, peopleCount, guests: peopleCount, lastKitchenPrinter: kitchenPrinterName })
 
-    const job = { type: 'kitchen', title: 'PEDIDO DE PREPARO', table: { ...current, peopleCount, guests: peopleCount }, peopleCount, items: kitchenItems, printerName: kitchenPrinterName, waiterName, total: 0 }
-    await executeThermalPrint(job)
+    const job = {
+      type: 'kitchen',
+      title: 'PEDIDO DE PREPARO',
+      table: { ...current, peopleCount, guests: peopleCount },
+      peopleCount,
+      items: kitchenItems,
+      printerName: kitchenPrinterName,
+      waiterName,
+      total: 0,
+      dedupeKey: `kitchen-${current.id}-${Date.now()}`,
+    }
+    try {
+      await enqueuePrintJob(job)
+    } catch (error) {
+      console.warn('Fila de impressao indisponivel, tentando impressao local:', error.message)
+      await executeSecureThermalPrint(job)
+    }
     touch()
   }
 
@@ -472,8 +489,22 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     
     updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
     
-    const job = { type: 'bill', title: 'COMANDA DO CLIENTE', table: current, items: current.items, printerName: cashierPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Atendente', total: billTotal }
-    await executeThermalPrint(job)
+    const job = {
+      type: 'bill',
+      title: 'COMANDA DO CLIENTE',
+      table: current,
+      items: current.items,
+      printerName: cashierPrinterName,
+      waiterName: currentUser?.name || currentUser?.username || 'Atendente',
+      total: billTotal,
+      dedupeKey: `bill-${current.id}-${Date.now()}`,
+    }
+    try {
+      await enqueuePrintJob(job)
+    } catch (error) {
+      console.warn('Fila de impressao indisponivel, tentando impressao local:', error.message)
+      await executeSecureThermalPrint(job)
+    }
     touch()
   }
 

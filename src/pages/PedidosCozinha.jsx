@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, Eye, FileDown, Flame, PackageCheck, Printer, RefreshCw, Search, Send, Soup, Users, X } from 'lucide-react'
+import { executeThermalPrint as executeSecureThermalPrint } from '../services/qzPrintService.js'
 
 const sectorConfig = {
   cozinha: { label: 'Cozinha', icon: Soup, className: 'kitchen' },
@@ -41,6 +42,14 @@ function readJson(key, fallback) {
   } catch {
     return fallback
   }
+}
+
+function getPrinterName(settings) {
+  const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {})
+  const printers = systemSettings?.printers || []
+  const printerId = systemSettings?.kitchenPrinterId || systemSettings?.cashierPrinterId
+  const selected = printers.find(p => p.id === printerId)
+  return selected?.name || selected?.label || printers[0]?.name || 'POS-80'
 }
 
 function getPeopleCount(table = {}) {
@@ -210,7 +219,19 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
   }
 
   async function reprintOrder(order) {
-    await executeThermalPrint(order, currentUser, settings);
+    await executeSecureThermalPrint({
+      type: 'kitchen',
+      title: 'PEDIDO DE PREPARO',
+      reprint: true,
+      tableNumber: order.tableNumber,
+      customerName: order.customerName,
+      peopleCount: order.peopleCount || order.guests || 1,
+      guests: order.peopleCount || order.guests || 1,
+      waiterName: order.waiterName || currentUser?.name || 'Garcom',
+      items: order.items,
+      printerName: getPrinterName(settings),
+      total: 0,
+    });
   }
 
   const topCards = [

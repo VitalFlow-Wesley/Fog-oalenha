@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
 import { loadRemoteState } from '../services/appStateApi.js'
+import { configureQzSecurity } from '../services/qzPrintService.js'
 
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -233,6 +234,7 @@ async function executeThermalPrint(mode, report, selectedClosing, dateLabel, set
   try {
     const qzModule = await import('qz-tray');
     const qz = qzModule.default || qzModule;
+    configureQzSecurity(qz);
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 

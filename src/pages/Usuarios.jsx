@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CheckCircle2, Eye, EyeOff, KeyRound, Pencil, Plus, Printer, ReceiptText, RefreshCw, Save, Search, Settings, ShieldCheck, Store, Trash2, UserCog, Utensils, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
+import { configureQzSecurity } from '../services/qzPrintService.js'
 
 const roleLabel = { admin: 'Administrador', gerente: 'Gerente', garcom: 'Garçom' }
 const basePrinters = []
@@ -294,6 +295,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     try {
       const qzModule = await import('qz-tray');
       const qz = qzModule.default || qzModule;
+      configureQzSecurity(qz);
 
       if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 

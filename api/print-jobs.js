@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 
 const uri = process.env.MONGODB_URI
 const dbName = process.env.MONGODB_DB || 'fogao_a_lenha'
-const collectionName = process.env.PRINT_JOBS_COLLECTION || 'print_jobs'
+const collectionName = process.env.PRINT_JOBS_COLLECTION || 'print_queue'
 const agentToken = process.env.PRINT_AGENT_TOKEN || ''
 
 let cachedClient = null
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = parseBody(req)
-      const type = body.type === 'cashier' ? 'cashier' : 'kitchen'
+      const allowedTypes = ['kitchen', 'cashier', 'bill']
+      const type = allowedTypes.includes(body.type) ? body.type : 'kitchen'
       const dedupeKey = String(body.dedupeKey || '').trim()
 
       if (!dedupeKey) {
@@ -67,12 +68,18 @@ export default async function handler(req, res) {
         type,
         status: 'pending',
         dedupeKey,
+        title: String(body.title || (type === 'bill' ? 'COMANDA DO CLIENTE' : 'PEDIDO DE PREPARO')),
+        printerName: String(body.printerName || ''),
         tableNumber: String(body.tableNumber || ''),
+        table: body.table && typeof body.table === 'object' ? body.table : null,
         customerName: String(body.customerName || ''),
         waiterName: String(body.waiterName || ''),
-        guests: Number(body.guests || 0),
+        guests: Number(body.guests ?? body.peopleCount ?? 0),
+        peopleCount: Number(body.peopleCount ?? body.guests ?? 0),
         items: Array.isArray(body.items) ? body.items : [],
         total: Number(body.total || 0),
+        reprint: Boolean(body.reprint),
+        sourceDevice: String(body.sourceDevice || ''),
         attempts: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -115,13 +122,23 @@ export default async function handler(req, res) {
         ...(status === 'printed' ? { printedAt: new Date(), printer: String(body.printer || '') } : {}),
       }
 
+      const filter = status === 'printing'
+        ? { _id: new ObjectId(id), status: 'pending' }
+        : { _id: new ObjectId(id) }
+
       const result = await collection.findOneAndUpdate(
-        { _id: new ObjectId(id) },
+        filter,
         { $set: update, $inc: status === 'printing' ? { attempts: 1 } : {} },
         { returnDocument: 'after' }
       )
 
-      res.status(200).json(serialize(result))
+      const updatedJob = result?.value || result
+      if (!updatedJob) {
+        res.status(409).json({ error: 'Job nÃ£o estÃ¡ mais pendente.' })
+        return
+      }
+
+      res.status(200).json(serialize(updatedJob))
       return
     }
 
