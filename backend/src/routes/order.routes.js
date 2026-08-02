@@ -1,105 +1,90 @@
 import { Router } from 'express'
-import { Order } from '../models/Order.js'
-import { Product } from '../models/Product.js'
-import { Table } from '../models/Table.js'
-import { AuditLog } from '../models/AuditLog.js'
 
 const router = Router()
 
-router.get('/', async (req, res, next) => {
+// Memória centralizada de pedidos em tempo real no servidor
+let memoryOrders = []
+
+router.get('/', (req, res) => {
   try {
-    const query = {}
-    if (req.query.tableNumber) query.tableNumber = req.query.tableNumber
-    if (req.query.status) query.status = req.query.status
-    const orders = await Order.find(query).sort({ createdAt: -1 }).limit(300)
+    let orders = [...memoryOrders]
+    if (req.query.tableNumber) {
+      orders = orders.filter(o => String(o.tableNumber) === String(req.query.tableNumber))
+    }
+    if (req.query.status) {
+      orders = orders.filter(o => o.status === req.query.status)
+    }
     res.json(orders)
   } catch (error) {
-    next(error)
+    res.status(500).json({ message: error.message })
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', (req, res) => {
   try {
-    const table = await Table.findById(req.body.tableId)
-    const tableNumber = req.body.tableNumber || table?.number
-    if (!tableNumber) return res.status(400).json({ message: 'Mesa obrigatória' })
-
-    const items = []
-    for (const item of req.body.items || []) {
-      const product = item.productId ? await Product.findById(item.productId) : null
+    const tableNumber = req.body.tableNumber || 1
+    const items = (req.body.items || []).map((item, idx) => {
       const qty = Number(item.qty || 1)
-      const unitPrice = Number(item.unitPrice ?? product?.price ?? 0)
-      items.push({
-        productId: product?._id || item.productId,
-        name: item.name || product?.name,
-        category: item.category || product?.category,
-        sector: item.sector || product?.sector,
+      const unitPrice = Number(item.unitPrice || item.price || 0)
+      return {
+        _id: item._id || `item_${Date.now()}_${idx}`,
+        productId: item.productId,
+        name: item.name,
+        category: item.category,
+        sector: item.sector,
         qty,
         unitPrice,
         total: qty * unitPrice,
-        prepare: item.prepare ?? product?.prepare ?? false,
-      })
-    }
-
-    const order = await Order.create({
-      tableId: req.body.tableId,
-      tableNumber,
-      items,
-      launchedBy: req.body.launchedBy,
+        prepare: item.prepare ?? false,
+        status: item.status || 'pendente'
+      }
     })
 
-    if (table) {
-      table.status = 'ocupada'
-      table.guests = req.body.guests ?? table.guests
-      table.openedAt = table.openedAt || new Date()
-      await table.save()
+    const newOrder = {
+      _id: `ord_${Date.now()}`,
+      tableId: req.body.tableId || `tbl_${tableNumber}`,
+      tableNumber,
+      items,
+      launchedBy: req.body.launchedBy || 'Atendimento',
+      status: 'aberto',
+      createdAt: new Date().toISOString()
     }
 
-    res.status(201).json(order)
+    memoryOrders.unshift(newOrder)
+    res.status(201).json(newOrder)
   } catch (error) {
-    next(error)
+    res.status(500).json({ message: error.message })
   }
 })
 
-router.patch('/:orderId/items/:itemId/cancel', async (req, res, next) => {
+router.patch('/:orderId/items/:itemId/cancel', (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId)
+    const order = memoryOrders.find(o => String(o._id) === String(req.params.orderId))
     if (!order) return res.status(404).json({ message: 'Pedido não encontrado' })
 
-    const item = order.items.id(req.params.itemId)
+    const item = order.items.find(i => String(i._id) === String(req.params.itemId))
     if (!item) return res.status(404).json({ message: 'Item não encontrado' })
 
     item.status = 'cancelado'
-    item.cancelledAt = new Date()
+    item.cancelledAt = new Date().toISOString()
     item.cancelReason = req.body.reason || 'Cancelamento autorizado'
-    await order.save()
 
-    const log = await AuditLog.create({
-      action: 'Item cancelado',
-      type: 'cancelamento_item',
-      tableNumber: order.tableNumber,
-      itemName: item.name,
-      qty: item.qty,
-      value: item.total,
-      requestedBy: req.body.requestedBy,
-      authorizedBy: req.body.authorizedBy,
-      reason: item.cancelReason,
-      metadata: { orderId: order._id, itemId: item._id },
-    })
-
-    res.json({ order, auditLog: log })
+    res.json({ order })
   } catch (error) {
-    next(error)
+    res.status(500).json({ message: error.message })
   }
 })
 
-router.patch('/:orderId/send-to-kitchen', async (req, res, next) => {
+router.patch('/:orderId/send-to-kitchen', (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.orderId, { status: 'enviado', sentToKitchenAt: new Date() }, { new: true })
+    const order = memoryOrders.find(o => String(o._id) === String(req.params.orderId))
     if (!order) return res.status(404).json({ message: 'Pedido não encontrado' })
+
+    order.status = 'enviado'
+    order.sentToKitchenAt = new Date().toISOString()
     res.json(order)
   } catch (error) {
-    next(error)
+    res.status(500).json({ message: error.message })
   }
 })
 
