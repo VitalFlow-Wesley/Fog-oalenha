@@ -83,7 +83,7 @@ function rebuildClosingsPrint() {
 document.addEventListener('click', event => {
   const button = event.target?.closest?.('button')
   const text = button?.textContent || ''
-  if (text.includes('Imprimir') || text.includes('Exportar PDF')) rebuildClosingsPrint()
+  if (text.includes('Imprimir')) rebuildClosingsPrint()
 }, true)
 
 window.addEventListener('beforeprint', rebuildClosingsPrint)

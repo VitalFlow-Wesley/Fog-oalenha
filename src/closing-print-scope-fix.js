@@ -4,7 +4,7 @@ function markClosingPrint(event) {
   if (!document.querySelector('.closingPage')) return
 
   const text = button.textContent.replace(/\s+/g, ' ').trim()
-  if (text.includes('Imprimir fechamento') || text.includes('Exportar PDF')) {
+  if (text.includes('Imprimir fechamento')) {
     document.body.classList.add('print-closing-report')
   }
 }

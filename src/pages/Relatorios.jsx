@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Download, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
 import { loadRemoteState } from '../services/appStateApi.js'
 import { configureQzSecurity } from '../services/qzPrintService.js'
 
@@ -569,8 +569,6 @@ export default function Relatorios({ tables = [], settings }) {
     await executeThermalPrint(mode, report, selectedClosing, dateLabel, settings);
   }
   
-  function handleExportPdf() { window.print() }
-
   const summaryCards = [
     { title: 'Faturamento total', value: money(report.total), detail: `Movimentação de ${dateLabel}`, icon: WalletCards, tone: 'fire' },
     { title: 'Pedidos lançados', value: report.ordersQty, detail: 'Itens vendidos no período', icon: ReceiptText, tone: 'orange' },
@@ -592,7 +590,6 @@ export default function Relatorios({ tables = [], settings }) {
         </div>
         <div className="reportsActions noPrint">
           <button className="reportActionBtn" type="button" onClick={handlePrint}><Printer size={18} /> Imprimir</button>
-          <button className="reportActionBtn" type="button" onClick={handleExportPdf}><Download size={18} /> Exportar PDF</button>
           <label className="reportActionBtn reportDateBtn" style={{ position: 'relative', cursor: 'pointer' }}><CalendarDays size={16} /> {dateLabel}<input type="date" value={selectedDate} onChange={handleDateChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} /></label>
           <div className="reportTabs"><button className={mode === 'simples' ? 'active' : ''} onClick={() => setMode('simples')} type="button">Simples</button><button className={mode === 'completo' ? 'active' : ''} onClick={() => setMode('completo')} type="button">Completo</button><button className={mode === 'fechamentos' ? 'active' : ''} onClick={() => setMode('fechamentos')} type="button">Fechamentos</button></div>
           {mode === 'completo' && <label className="reportClosedToggle"><input type="checkbox" checked={includeClosedTables} onChange={event => setIncludeClosedTables(event.target.checked)} /> Incluir mesas fechadas do dia</label>}

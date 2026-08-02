@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, Eye, FileDown, Flame, PackageCheck, Printer, RefreshCw, Search, Send, Soup, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, Eye, Flame, PackageCheck, Printer, RefreshCw, Search, Send, Soup, Users, X } from 'lucide-react'
 import { executeThermalPrint as executeSecureThermalPrint } from '../services/qzPrintService.js'
 
 const sectorConfig = {
@@ -379,7 +379,6 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
             <strong>{summary.totalItems}</strong>
           </div>
 
-          <button className="exportPdfBtn noPrint" type="button" onClick={handlePrint}><FileDown size={18} /> Exportar PDF</button>
           <div className="kitchenFlowMessage"><CheckCircle2 size={18} /> Fluxo da cozinha sob controle!</div>
         </aside>}
       </div>

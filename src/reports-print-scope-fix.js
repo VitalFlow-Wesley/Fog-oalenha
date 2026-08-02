@@ -75,7 +75,7 @@ function markReportsPrint(event) {
   if (!document.querySelector('.reportsPremiumPage')) return
 
   const text = textOf(button)
-  if (text.includes('Imprimir') || text.includes('Exportar PDF') || text.includes('Gerar PDF')) {
+  if (text.includes('Imprimir')) {
     buildReportsPrintArea()
     document.body.classList.add('print-reports-report')
   }
