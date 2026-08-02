@@ -88,8 +88,20 @@ createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(error => {
-      console.warn('Service worker não registrado:', error.message)
-    })
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+      .catch(error => {
+        console.warn('Service worker nao removido:', error.message)
+      })
+  })
+}
+
+if ('caches' in window) {
+  window.addEventListener('load', () => {
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key.startsWith('fogao-a-lenha')).map(key => caches.delete(key))))
+      .catch(error => {
+        console.warn('Cache local nao limpo:', error.message)
+      })
   })
 }

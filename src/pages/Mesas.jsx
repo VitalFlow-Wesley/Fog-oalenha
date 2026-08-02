@@ -110,6 +110,10 @@ function createTable(nextId, number, peopleCount = 1) {
   }
 }
 
+function canFallbackToLocalQz(currentUser) {
+  return currentUser && currentUser.role !== 'garcom'
+}
+
 // --- MOTOR DE IMPRESSÃO ESC/POS (DELEGAÇÃO TOTAL PARA O WINDOWS) ---
 async function executeThermalPrint(job) {
   if (!job || !job.printerName) {
@@ -475,6 +479,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     try {
       await enqueuePrintJob(job)
     } catch (error) {
+      if (!canFallbackToLocalQz(currentUser)) {
+        alert('Pedido enviado para a cozinha, mas a fila de impressao nao respondeu. Avise o caixa para verificar a conexao.')
+        return
+      }
       console.warn('Fila de impressao indisponivel, tentando impressao local:', error.message)
       await executeSecureThermalPrint(job)
     }
@@ -502,6 +510,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     try {
       await enqueuePrintJob(job)
     } catch (error) {
+      if (!canFallbackToLocalQz(currentUser)) {
+        alert('Conta solicitada, mas a fila de impressao nao respondeu. Avise o caixa para verificar a conexao.')
+        return
+      }
       console.warn('Fila de impressao indisponivel, tentando impressao local:', error.message)
       await executeSecureThermalPrint(job)
     }
