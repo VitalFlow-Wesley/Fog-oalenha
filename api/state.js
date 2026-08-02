@@ -7,13 +7,13 @@ const documentId = process.env.APP_STATE_ID || 'main'
 
 let cachedClient = null
 
-async function getCollection() {
+async function getDb() {
   if (!uri) throw new Error('MONGODB_URI não configurada no ambiente.')
   if (!cachedClient) {
     cachedClient = new MongoClient(uri)
     await cachedClient.connect()
   }
-  return cachedClient.db(dbName).collection(collectionName)
+  return cachedClient.db(dbName)
 }
 
 function allowCors(res) {
@@ -31,7 +31,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const collection = await getCollection()
+    const db = await getDb()
+    const collection = db.collection(collectionName)
 
     if (req.method === 'GET') {
       const doc = await collection.findOne({ _id: documentId })
@@ -50,11 +51,33 @@ export default async function handler(req, res) {
       }
 
       const setPayload = Object.fromEntries(Object.entries(nextState).map(([key, value]) => [`state.${key}`, value]))
+      
+      // 1. Atualiza o documento principal no app_state
       await collection.updateOne(
         { _id: documentId },
         { $set: { ...setPayload, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
         { upsert: true }
       )
+
+      // --- 2. SINCRONIZAÇÃO AUTOMÁTICA NAS COLEÇÕES INDIVIDUAIS DO MONGO ---
+
+      // Sincroniza Usuários na coleção 'users'
+      if (nextState.users && Array.isArray(nextState.users) && nextState.users.length > 0) {
+        await db.collection('users').deleteMany({})
+        await db.collection('users').insertMany(nextState.users)
+      }
+
+      // Sincroniza Produtos na coleção 'products'
+      if (nextState.products && Array.isArray(nextState.products) && nextState.products.length > 0) {
+        await db.collection('products').deleteMany({})
+        await db.collection('products').insertMany(nextState.products)
+      }
+
+      // Sincroniza Mesas na coleção 'tables'
+      if (nextState.tables && Array.isArray(nextState.tables) && nextState.tables.length > 0) {
+        await db.collection('tables').deleteMany({})
+        await db.collection('tables').insertMany(nextState.tables)
+      }
 
       const updated = await collection.findOne({ _id: documentId })
       res.status(200).json(updated?.state || {})
