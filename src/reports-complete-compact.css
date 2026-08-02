@@ -1,5 +1,6 @@
 /* Relatório completo: cards superiores mais compactos */
 .reportsPremiumPage.completeReportPage .completeSummaryGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 10px !important;
   margin-bottom: 12px !important;
 }
@@ -43,7 +44,28 @@
 
 /* Desempenho por setor mais baixo e enxuto */
 .reportsPremiumPage.completeReportPage .sectorPerformancePanel {
+  grid-column: span 6 !important;
   padding: 14px 16px !important;
+}
+
+.reportsPremiumPage.completeReportPage .categoryPanelComplete {
+  grid-column: span 6 !important;
+}
+
+.reportsPremiumPage.completeReportPage .quantityProductsComplete,
+.reportsPremiumPage.completeReportPage .revenueProductsComplete,
+.reportsPremiumPage.completeReportPage .tablePerformanceComplete,
+.reportsPremiumPage.completeReportPage .movementPanel {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .indicatorsPanel {
+  grid-column: span 4 !important;
+}
+
+.reportsPremiumPage.completeReportPage .generalSummaryPanel {
+  grid-column: span 8 !important;
 }
 
 .reportsPremiumPage.completeReportPage .sectorPerformancePanel h2 {
@@ -265,6 +287,15 @@
 @media (max-width: 1280px) {
   .reportsPremiumPage.completeReportPage .completeSummaryGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .reportsPremiumPage.completeReportPage .sectorPerformancePanel,
+  .reportsPremiumPage.completeReportPage .categoryPanelComplete,
+  .reportsPremiumPage.completeReportPage .indicatorsPanel,
+  .reportsPremiumPage.completeReportPage .generalSummaryPanel {
+    grid-column: 1 / -1 !important;
   }
 }
 
