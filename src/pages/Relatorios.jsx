@@ -29,6 +29,36 @@ function formatDateBR(value) {
   return value === todayKey() ? 'Hoje' : `${day}/${month}/${year}`
 }
 
+function dateFromKey(value) {
+  const [year, month, day] = String(value || '').split('-').map(Number)
+  return new Date(year, (month || 1) - 1, day || 1, 12)
+}
+
+function dateToKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function productPeriodBounds(period, selectedDate) {
+  const end = dateFromKey(selectedDate)
+  const start = new Date(end)
+
+  if (period === 'Semana') start.setDate(end.getDate() - 6)
+  if (period === 'Mês') {
+    start.setDate(1)
+    end.setMonth(end.getMonth() + 1, 0)
+  }
+
+  return { start: dateToKey(start), end: dateToKey(end) }
+}
+
+function productPeriodLabel(period, selectedDate, bounds) {
+  if (period === 'Hoje') return formatDateBR(selectedDate)
+  if (period === 'Semana') return `${formatDateBR(bounds.start)} a ${formatDateBR(bounds.end)}`
+  const [year, month] = selectedDate.split('-')
+  const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(Number(year), Number(month) - 1, 1, 12))
+  return `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} de ${year}`
+}
+
 function readJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key)
@@ -507,12 +537,19 @@ export default function Relatorios({ tables = [], settings }) {
     }
   }, [])
 
-  const activeRecords = useMemo(() => {
-    if (selectedDate !== todayKey()) return []
+  const currentActiveRecords = useMemo(() => {
     return (tables || []).filter(hasTableMovement).map(buildActiveRecord).filter(record => record.items.length || record.total > 0)
-  }, [tables, selectedDate])
+  }, [tables])
+  const activeRecords = useMemo(() => selectedDate === todayKey() ? currentActiveRecords : [], [currentActiveRecords, selectedDate])
   const recordsForDate = useMemo(() => [...history.filter(record => record.date === selectedDate), ...activeRecords], [history, selectedDate, activeRecords])
   const report = useMemo(() => buildReportFromHistory(recordsForDate), [recordsForDate])
+  const productBounds = useMemo(() => productPeriodBounds(period, selectedDate), [period, selectedDate])
+  const productRecords = useMemo(() => {
+    const storedRecords = history.filter(record => record.date >= productBounds.start && record.date <= productBounds.end)
+    const includesToday = todayKey() >= productBounds.start && todayKey() <= productBounds.end
+    return includesToday ? [...storedRecords, ...currentActiveRecords] : storedRecords
+  }, [history, currentActiveRecords, productBounds])
+  const productReport = useMemo(() => buildReportFromHistory(productRecords), [productRecords])
   const closedTablesForDate = useMemo(() => {
     return (closedTablesHistory || [])
       .filter(record => record.date === selectedDate)
@@ -554,7 +591,8 @@ export default function Relatorios({ tables = [], settings }) {
   }, [closingsForDate, selectedClosingId])
 
   const dateLabel = formatDateBR(selectedDate)
-  const hasMovement = recordsForDate.length > 0
+  const productPeriodText = productPeriodLabel(period, selectedDate, productBounds)
+  const hasProductMovement = productRecords.length > 0
 
   function handleDateChange(event) {
     const value = event.target.value || todayKey()
@@ -603,7 +641,7 @@ export default function Relatorios({ tables = [], settings }) {
           <div className="reportsSummaryGrid simpleSummaryGrid">{summaryCards.slice(0, 4).map(card => <SummaryCard key={card.title} {...card} />)}</div>
           <section className="reportPanel simpleSectorPanel"><h2><BarChart3 size={22} /> Resumo por setor</h2><div className="simpleSectorGrid">{report.sectors.map(sector => <div className="simpleSectorCard" key={sector.name}><div><SectorIcon name={sector.name} /></div><strong>{sector.name}</strong><span>{sector.qty} itens</span><i /> <b>{money(sector.total)}</b></div>)}</div></section>
           <div className="reportsMainGrid simpleReportGrid">
-            <section className="reportPanel productsPanel"><div className="reportPanelHeader"><div><BarChart3 size={24} /><h2>Produtos mais lançados</h2></div><div className="periodTabs noPrint">{['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>)}</div></div><div className="premiumReportTable simpleProductsTable"><div className="premiumReportRow head"><span>Produto</span><span>Qtd</span><span>Setor</span><span>Total</span></div>{report.topProductsByQty.length ? report.topProductsByQty.slice(0, 5).map(item => { const first = item.items?.[0] || {}; return <div className="premiumReportRow" key={item.name}><span>{item.name}</span><span>{item.qty}</span><span><em>{first.sector || '-'}</em></span><span>{money(item.total)}</span></div> }) : <div className="premiumReportRow"><span>Nenhum produto vendido nessa data</span><span>0</span><span><em>-</em></span><span>{money(0)}</span></div>}</div><div className="liveDataPill"><CheckCircle2 size={15} /> {hasMovement ? `Movimentação carregada de ${dateLabel}` : `Nenhuma movimentação salva em ${dateLabel}`}</div></section>
+            <section className="reportPanel productsPanel"><div className="reportPanelHeader"><div><BarChart3 size={24} /><h2>Produtos mais lançados</h2></div><div className="periodTabs noPrint">{['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>)}</div></div><div className="premiumReportTable simpleProductsTable"><div className="premiumReportRow head"><span>Produto</span><span>Qtd</span><span>Setor</span><span>Total</span></div>{productReport.topProductsByQty.length ? productReport.topProductsByQty.slice(0, 5).map(item => { const first = item.items?.[0] || {}; return <div className="premiumReportRow" key={item.name}><span>{item.name}</span><span>{item.qty}</span><span><em>{first.sector || '-'}</em></span><span>{money(item.total)}</span></div> }) : <div className="premiumReportRow"><span>Nenhum produto vendido nesse período</span><span>0</span><span><em>-</em></span><span>{money(0)}</span></div>}</div><div className="liveDataPill"><CheckCircle2 size={15} /> {hasProductMovement ? `Movimentação carregada de ${productPeriodText}` : `Nenhuma movimentação salva em ${productPeriodText}`}</div></section>
             <aside className="reportPanel reportResumePanel simpleResumePanel"><div className="reportPanelHeader compact"><div><ClipboardList size={24} /><h2>Resumo do relatório</h2></div></div><div className="reportResumeList"><div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div><div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>{report.sectors.map(sector => <div key={sector.name}><span><SectorIcon name={sector.name} /> Itens do {sector.name.toLowerCase()}</span><strong>{sector.qty}</strong></div>)}<div><span><Table2 size={18} /> Mesas atendidas</span><strong>{report.salesTables.length}</strong></div></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório baseado no histórico salvo e mesas abertas.</div></aside>
           </div>
         </>
