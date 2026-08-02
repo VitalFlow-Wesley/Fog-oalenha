@@ -15,12 +15,6 @@ const productCategoryOptions = productCategories.includes('Petiscos')
 const noPrepareCategories = ['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas']
 const PRODUCTS_KEY = 'fogao-products-v1'
 const PRODUCT_SETTINGS_KEY = 'fogao-a-lenha-products-settings'
-const PERMISSIONS_KEY = 'fogao-role-permissions-v1'
-const defaultPermissions = {
-  admin: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
-  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
-  garcom: ['Lançar pedidos', 'Solicitar conta'],
-}
 const initialProducts = [
   { id: 1, name: 'Galinha caipira', category: 'Refeições', sector: 'Cozinha', price: 55, prepare: true, status: 'Ativo' },
   { id: 2, name: 'Picanha', category: 'Churrasco', sector: 'Churrasco', price: 85, prepare: true, status: 'Ativo' },
@@ -68,11 +62,6 @@ function normalizeProduct(product) {
 function loadProducts() {
   const saved = readJson(PRODUCTS_KEY, null) || readJson(PRODUCT_SETTINGS_KEY, null)
   return Array.isArray(saved) && saved.length ? saved.map(normalizeProduct) : initialProducts.map(normalizeProduct)
-}
-
-function loadPermissions() {
-  const saved = readJson(PERMISSIONS_KEY, {})
-  return { ...defaultPermissions, ...saved }
 }
 
 function normalizeSettings(settings) {
@@ -177,8 +166,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [editingProduct, setEditingProduct] = useState(null)
   const [editingUser, setEditingUser] = useState(null)
   const [deletingUser, setDeletingUser] = useState(null)
-  const [permissionsOpen, setPermissionsOpen] = useState(false)
-  const [permissions, setPermissions] = useState(loadPermissions)
   const [textEditModal, setTextEditModal] = useState(null)
 
   const canManage = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
@@ -217,8 +204,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     ['requireReprintPassword', 'Exigir senha para reimpressão de comanda'],
   ]
 
-  const permissionOptions = ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários']
-
   function showMessage(text) {
     setSystemMessage(text);
     setTimeout(() => setSystemMessage(''), 2500);
@@ -242,10 +227,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   useEffect(() => {
     setProductPage(1)
   }, [productSearch, productStatusFilter])
-
-  useEffect(() => {
-    writeJson(PERMISSIONS_KEY, permissions)
-  }, [permissions])
 
   function addUser(e) {
     e.preventDefault()
@@ -532,13 +513,6 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setEditingProduct(null)
   }
 
-  function savePermissions(event) {
-    event.preventDefault()
-    writeJson(PERMISSIONS_KEY, permissions)
-    setPermissionsOpen(false)
-    showMessage('Permissões salvas com sucesso.')
-  }
-
   return <div className="page settingsPremiumPage compactSettingsPage refinedSettingsPage">
     <header className="settingsTopHeader"><div><span className="eyebrow settingsEyebrow">CONTROLE DO SISTEMA</span><h1>Configurações</h1><p>Gerencie acessos, mesas, impressões, produtos e preferências do sistema.</p></div><div className="systemActiveCard"><ShieldCheck size={24} /><div><strong>Sistema ativo</strong><span>Última atualização: agora <b /></span></div></div></header>
 
@@ -550,7 +524,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       <button className={activeTab === 'sistema' ? 'active' : ''} onClick={() => setActiveTab('sistema')}><Settings size={18} /> Sistema</button>
     </nav>
 
-    {activeTab === 'colaboradores' && <div className="accessSettingsTab"><section className="accessSummaryGrid"><div className="accessSummaryCard"><UserCog size={22} /><div><span>Total de usuários</span><strong>{totalUsers}</strong><small>Usuários cadastrados</small></div></div><div className="accessSummaryCard"><ShieldCheck size={22} /><div><span>Administradores</span><strong>{totalAdmins}</strong><small>Acesso total ao sistema</small></div></div><div className="accessSummaryCard"><Utensils size={22} /><div><span>Garçons</span><strong>{totalWaiters}</strong><small>Acessos de atendimento</small></div></div></section><div className="accessMainGrid">{canManage && <section className="settingsPanel accessCreatePanel"><div className="settingsPanelTitle"><Plus size={22} /><h2>Criar novo acesso</h2></div><form className="settingsForm accessCreateForm" onSubmit={addUser} autoComplete="off"><label><span>Nome completo</span><input placeholder="Ex.: João da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label><span>Login</span><input placeholder="Ex.: joao.silva" autoComplete="off" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label><label className="span2"><span>Senha</span><div className="passwordInputWrap"><input type={showPasswords.form ? 'text' : 'password'} placeholder="Digite uma senha" autoComplete="new-password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, form: !prev.form }))}>{showPasswords.form ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label><label className="span2"><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label><div className="permissionsChecklist"><strong>Permissões</strong>{permissionOptions.map((item, index) => <label key={item}><input type="checkbox" defaultChecked={index < 2 || form.role === 'admin'} /> {item}</label>)}</div><button className="primaryBtn"><Plus size={18} /> Criar acesso</button></form></section>}<section className="settingsPanel accessListPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div><div className="accessTable"><div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>{users.map(user => <div className="accessTableRow" key={user.id}><div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div><span>{user.username}</span><b>{roleLabel[user.role]}</b><em>{user.active === false ? '● Inativo' : '● Ativo'}</em><div className="accessActions"><button type="button" onClick={() => setEditingUser({ ...user, password: '' })}><Pencil size={16} /></button>{canDeleteAccess && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => requestDeleteUser(user)}><Trash2 size={16} /></button>}</div></div>)}</div><div className="permissionsInfoBox"><ShieldCheck size={20} /><div><strong>Permissões por função</strong><span>As permissões definem o que cada função pode executar.</span></div><button type="button" onClick={() => setPermissionsOpen(true)}>Gerenciar permissões</button></div></section></div><div className="settingsTipBar"><AlertTriangle size={18} /><strong>Dica</strong><span>Mantenha os acessos organizados e revise as permissões periodicamente.</span></div></div>}
+    {activeTab === 'colaboradores' && <div className="accessSettingsTab"><section className="accessSummaryGrid"><div className="accessSummaryCard"><UserCog size={22} /><div><span>Total de usuários</span><strong>{totalUsers}</strong><small>Usuários cadastrados</small></div></div><div className="accessSummaryCard"><ShieldCheck size={22} /><div><span>Administradores</span><strong>{totalAdmins}</strong><small>Acesso total ao sistema</small></div></div><div className="accessSummaryCard"><Utensils size={22} /><div><span>Garçons</span><strong>{totalWaiters}</strong><small>Acessos de atendimento</small></div></div></section><div className="accessMainGrid">{canManage && <section className="settingsPanel accessCreatePanel"><div className="settingsPanelTitle"><Plus size={22} /><h2>Criar novo acesso</h2></div><form className="settingsForm accessCreateForm" onSubmit={addUser} autoComplete="off"><label><span>Nome completo</span><input placeholder="Ex.: João da Silva" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label><span>Login</span><input placeholder="Ex.: joao.silva" autoComplete="off" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label><label className="span2"><span>Senha</span><div className="passwordInputWrap"><input type={showPasswords.form ? 'text' : 'password'} placeholder="Digite uma senha" autoComplete="new-password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, form: !prev.form }))}>{showPasswords.form ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label><label className="span2"><span>Função</span><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">Administrador</option><option value="gerente">Gerente</option><option value="garcom">Garçom</option></select></label><button className="primaryBtn"><Plus size={18} /> Criar acesso</button></form></section>}<section className="settingsPanel accessListPanel"><div className="settingsPanelTitle"><UserCog size={22} /><h2>Acessos cadastrados</h2></div><div className="accessTable"><div className="accessTableHead"><span>Nome</span><span>Login</span><span>Função</span><span>Status</span><span>Ações</span></div>{users.map(user => <div className="accessTableRow" key={user.id}><div className="accessNameCell"><div className="settingsUserAvatar">{user.name.slice(0, 2).toUpperCase()}</div><strong>{user.name}</strong></div><span>{user.username}</span><b>{roleLabel[user.role]}</b><em>{user.active === false ? '● Inativo' : '● Ativo'}</em><div className="accessActions"><button type="button" onClick={() => setEditingUser({ ...user, password: '' })}><Pencil size={16} /></button>{canDeleteAccess && user.id !== currentUser?.id && <button type="button" className="iconDanger" onClick={() => requestDeleteUser(user)}><Trash2 size={16} /></button>}</div></div>)}</div></section></div><div className="settingsTipBar"><AlertTriangle size={18} /><strong>Dica</strong><span>Garçons têm acesso ao atendimento básico; gerentes e administradores acessam as áreas de gestão.</span></div></div>}
 
     {activeTab === 'mesas' && <div className="tablesSettingsPage"><section className="tableSummaryGrid"><div className="tableSummaryCard"><Utensils size={22} /><span>Mesas cadastradas</span><strong>{tableConfigs.length}</strong></div><div className="tableSummaryCard positive"><CheckCircle2 size={22} /><span>Mesas ativas</span><strong>{activeTables.length}</strong></div><div className="tableSummaryCard join"><KeyRound size={22} /><span>Juntar mesas</span><strong>{allowJoinTables ? 'Permitido' : 'Desativado'}</strong></div></section><div className="tablesSettingsLayout"><div className="tablesLeftColumn"><section className="settingsPanel tableConfigPanel"><div className="settingsPanelTitle"><ReceiptText size={22} /><h2>Configuração das mesas</h2></div><div className="tableConfigGrid"><label><span>Quantidade de mesas do salão</span><input type="number" min="1" max="80" value={tableQty} onChange={e => setTableQty(e.target.value)} /></label><label><span>Prefixo das mesas</span><input value={tablePrefix} onChange={e => setTablePrefix(e.target.value)} /></label><label><span>Numeração inicial</span><input value={tableStart} onChange={e => setTableStart(e.target.value)} /></label></div><div className="tableToggles"><label><input type="checkbox" checked={autoNumberTables} onChange={e => setAutoNumberTables(e.target.checked)} /> Gerar numeração automática</label><label><input type="checkbox" checked={allowJoinTables} onChange={e => { setAllowJoinTables(e.target.checked); setTableConfigs(prev => prev.map(table => ({ ...table, canJoin: e.target.checked }))) }} /> Permitir juntar mesas</label><label><input type="checkbox" checked={showOnlyActiveTables} onChange={e => setShowOnlyActiveTables(e.target.checked)} /> Exibir apenas mesas ativas</label></div><div className="tableConfigActions"><button className="primaryBtn" onClick={() => applyTableQty()}><Save size={17} /> Salvar configuração das mesas</button><button className="secondaryBtn" onClick={() => generateTableConfigs()}><Plus size={17} /> Gerar mesas</button><button className="secondaryBtn" onClick={resetTableNumbers}><RefreshCw size={17} /> Resetar numeração</button></div></section><section className="settingsPanel tablePreviewPanel"><div className="settingsPanelTitle"><Eye size={22} /><h2>Prévia das mesas cadastradas</h2></div><div className="tablePreviewGrid">{visibleTableConfigs.slice(0, 24).map(table => <span className={!table.active ? 'inactive' : ''} key={table.id}><Utensils size={14} /> {table.displayName}</span>)}</div></section></div><section className="settingsPanel registeredTablesPanel"><div className="settingsPanelTitle"><Utensils size={22} /><h2>Mesas cadastradas</h2></div><div className="registeredTablesTable"><div className="registeredTablesHead"><span>Mesa</span><span>Nome exibido</span><span>Status</span><span>Pode juntar</span><span>Ações</span></div>{visibleTableConfigs.slice(0, 8).map(table => <div className="registeredTablesRow" key={table.id}><span>{table.number}</span><strong>{table.displayName}</strong><button type="button" className={`miniStatus ${table.active ? 'active' : 'inactive'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, active: !item.active } : item))}>{table.active ? 'Ativa' : 'Inativa'}</button><button type="button" className={`miniStatus ${table.canJoin ? 'active' : 'blocked'}`} onClick={() => setTableConfigs(prev => prev.map(item => item.id === table.id ? { ...item, canJoin: !item.canJoin } : item))}>{table.canJoin ? 'Sim' : 'Não'}</button><div className="tableRowActions"><button type="button" onClick={() => editTableName(table.id)}><Pencil size={15} /> Editar</button>{tableConfigs.length > 1 && <button type="button" className="dangerOutline" onClick={() => setTableConfigs(prev => prev.filter(item => item.id !== table.id))}><Trash2 size={15} /></button>}</div></div>)}</div><div className="tablePaginationHint">Mostrando {Math.min(visibleTableConfigs.length, 8)} de {visibleTableConfigs.length} mesas</div></section></div><div className="tableTipBox"><AlertTriangle size={18} /><span>Dica: organize nomes personalizados para mesas conforme o fluxo do salão.</span></div>{systemMessage && <div className="settingsSuccess fullSystemMessage"><CheckCircle2 size={17} /> {systemMessage}</div>}</div>}
 
@@ -609,18 +583,5 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
       </form>
     </div>}
 
-    {permissionsOpen && <div className="authModalOverlay">
-      <form className="authModal permissionsReactModal" onSubmit={savePermissions}>
-        <div className="drawerHeader"><div><span className="eyebrow">Permissões</span><h2>Gerenciar permissões</h2></div><button type="button" className="iconBtn" onClick={() => setPermissionsOpen(false)}><X size={22} /></button></div>
-        <div className="permissionsRoleGrid">
-          {Object.entries(roleLabel).map(([role, label]) => <section className="permissionsRoleCard" key={role}>
-            <h4>{label}</h4>
-            <div className="permissionsChecks">{permissionOptions.map(permission => <label key={permission}><input type="checkbox" disabled={role === 'admin'} checked={(permissions[role] || []).includes(permission)} onChange={event => setPermissions(prev => ({ ...prev, [role]: event.target.checked ? [...(prev[role] || []), permission] : (prev[role] || []).filter(item => item !== permission) }))} /> <span>{permission}</span></label>)}</div>
-            {role === 'admin' && <small>Administrador mantém acesso total.</small>}
-          </section>)}
-        </div>
-        <div className="actionsRow"><button className="secondaryBtn" type="button" onClick={() => setPermissionsOpen(false)}>Cancelar</button><button className="primaryBtn" type="submit">Salvar permissões</button></div>
-      </form>
-    </div>}
   </div>
 }
