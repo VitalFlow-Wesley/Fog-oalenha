@@ -14,6 +14,15 @@
   grid-column: 1 / -1 !important;
 }
 
+.accessMainGrid {
+  align-items: start !important;
+}
+
+.accessCreatePanel,
+.accessListPanel {
+  align-self: start !important;
+}
+
 .accessListPanel .accessTable {
   width: 100% !important;
   max-width: none !important;
@@ -23,14 +32,14 @@
 .accessListPanel .accessTableHead,
 .accessListPanel .accessTableRow {
   width: 100% !important;
-  min-width: 760px !important;
+  min-width: 0 !important;
   grid-template-columns:
-    minmax(230px, 1.7fr)
-    minmax(150px, 1fr)
-    minmax(150px, .95fr)
-    minmax(110px, .7fr)
-    minmax(100px, .6fr) !important;
-  gap: 14px !important;
+    minmax(150px, 1.45fr)
+    minmax(90px, .85fr)
+    minmax(92px, .85fr)
+    minmax(74px, .7fr)
+    minmax(70px, .55fr) !important;
+  gap: 8px !important;
 }
 
 .accessNameCell {
@@ -60,7 +69,7 @@
 
 @media (min-width: 1025px) {
   .accessMainGrid {
-    grid-template-columns: minmax(320px, .72fr) minmax(650px, 1.65fr) !important;
+    grid-template-columns: minmax(290px, .62fr) minmax(0, 1.55fr) !important;
   }
 
   .accessMainGrid:has(> .accessListPanel:only-child) {

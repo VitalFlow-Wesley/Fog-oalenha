@@ -1,11 +1,11 @@
 /* Correção das abas de Configurações
    Mantém Acessos / Mesas / Impressão / Sistema em linha, sem quebrar em bloco vertical. */
 .settingsPremiumPage .settingsTabs.settingsTabsLarge {
-  width: fit-content !important;
+  width: 100% !important;
   min-width: 0 !important;
   max-width: 100% !important;
-  display: inline-flex !important;
-  flex-direction: row !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 4px !important;
@@ -15,10 +15,9 @@
 }
 
 .settingsPremiumPage .settingsTabs.settingsTabsLarge button {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  min-width: 128px !important;
-  max-width: 170px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
   min-height: 38px !important;
   padding: 0 16px !important;
   border-radius: 10px !important;
@@ -36,11 +35,12 @@
 @media (max-width: 900px) {
   .settingsPremiumPage .settingsTabs.settingsTabsLarge {
     width: 100% !important;
-    overflow-x: auto !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
   }
 
   .settingsPremiumPage .settingsTabs.settingsTabsLarge button {
-    min-width: 116px !important;
+    min-width: 0 !important;
   }
 }
 
