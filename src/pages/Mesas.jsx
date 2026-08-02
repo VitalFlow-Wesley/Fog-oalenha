@@ -86,7 +86,7 @@ function getClosedTableRecords(history, date = todayKey()) {
     .map(record => ({
       ...record,
       itemsQty: getItemsQty(record),
-      sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+      sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : record.closedByMode === 'mesa_parcial' ? 'Pagamento parcial' : 'Fechada pela mesa',
     }))
     .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
 }
@@ -210,7 +210,7 @@ async function executeThermalPrint(job) {
   }
 }
 
-export default function Mesas({ tables, setTables, users, currentUser, settings, onCloseTable }) {
+export default function Mesas({ tables, setTables, users, currentUser, settings, onCloseTable, onPartialCloseTable }) {
   const [selected, setSelected] = useState(null)
   const [availableProducts, setAvailableProducts] = useState(() => readProducts())
   const [closedTablesOpen, setClosedTablesOpen] = useState(false)
@@ -229,6 +229,11 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [newTableForm, setNewTableForm] = useState({ number: '', peopleCount: 1 })
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [partialCloseOpen, setPartialCloseOpen] = useState(false)
+  const [partialSelection, setPartialSelection] = useState({})
+  const [partialGuests, setPartialGuests] = useState(1)
+  const [partialPayment, setPartialPayment] = useState('dinheiro')
+  const [partialSaving, setPartialSaving] = useState(false)
   const isWaiterUser = currentUser?.role === 'garcom'
   const canCloseTables = ['admin', 'gerente'].includes(currentUser?.role)
 
@@ -364,11 +369,12 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   function addItem(product) {
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
-    const existing = current.items.find(i => i.id === product.id && i.observation === observation)
     const waiterName = currentWaiterName()
+    const existing = current.items.find(i => i.id === product.id && i.observation === observation && (i.launchedByName || i.waiterName || current.waiterName) === waiterName)
+    const launchedAt = new Date().toISOString()
     const items = existing
-      ? current.items.map(i => i.id === product.id && i.observation === observation ? { ...i, qty: i.qty + 1 } : i)
-      : [...current.items, { ...product, qty: 1, observation, waiterName, launchedByName: waiterName }]
+      ? current.items.map(i => i === existing ? { ...i, qty: i.qty + 1, lastLaunchedAt: launchedAt } : i)
+      : [...current.items, { ...product, lineId: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, qty: 1, observation, waiterName, launchedByName: waiterName, launchedAt, lastLaunchedAt: launchedAt }]
     updateTable(current.id, { ...waiterPatch(current), items, status: current.status === 'livre' ? 'ocupada' : current.status })
     setObservation('')
     touch()
@@ -377,7 +383,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   function changeQty(item, delta) {
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
-    const items = current.items.map(i => i.id === item.id && i.observation === item.observation && i.originTable === item.originTable ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
+    const items = current.items.map(i => (item.lineId ? i.lineId === item.lineId : i.id === item.id && i.observation === item.observation && i.originTable === item.originTable && i.launchedByName === item.launchedByName) ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
     updateTable(current.id, { items })
     touch()
   }
@@ -424,7 +430,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
 
     const current = tables.find(t => t.id === selected.id)
     if (!current) return
-    const items = current.items.filter(i => !(i.id === cancelRequest.id && i.observation === cancelRequest.observation && i.originTable === cancelRequest.originTable))
+    const items = current.items.filter(i => !(cancelRequest.lineId ? i.lineId === cancelRequest.lineId : i.id === cancelRequest.id && i.observation === cancelRequest.observation && i.originTable === cancelRequest.originTable && i.launchedByName === cancelRequest.launchedByName))
     updateTable(current.id, { items, lastCancelAuthorizedBy: authorizedUser.name || authorizedUser.username || 'Gerência' })
     setCancelRequest(null)
     setCancelPassword('')
@@ -552,6 +558,42 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     touch()
   }
 
+  function openPartialClose() {
+    if (!table?.items?.length) return
+    setPartialSelection({})
+    setPartialGuests(1)
+    setPartialPayment('dinheiro')
+    setPartialCloseOpen(true)
+  }
+
+  function setPartialItemQty(item, value) {
+    const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+    const qty = Math.max(0, Math.min(Number(item.qty || 0), Number(value) || 0))
+    setPartialSelection(prev => ({ ...prev, [key]: qty }))
+  }
+
+  async function confirmPartialClose(event) {
+    event.preventDefault()
+    if (!table || !onPartialCloseTable) return
+    const selectedItems = table.items.map(item => {
+      const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+      return { ...item, qty: Number(partialSelection[key] || 0) }
+    }).filter(item => item.qty > 0)
+    if (!selectedItems.length) return
+    setPartialSaving(true)
+    try {
+      await onPartialCloseTable(table.id, {
+        items: selectedItems,
+        guests: Math.max(1, Math.min(Math.max(1, getPeopleCount(table) - 1), Number(partialGuests) || 1)),
+        paymentMethod: partialPayment,
+      })
+      setPartialCloseOpen(false)
+      touch()
+    } finally {
+      setPartialSaving(false)
+    }
+  }
+
   const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
   const filteredProducts = availableProducts.filter(p => p.status !== 'Inativo' && p.category === activeCategory)
   const tableLabel = table ? `Mesa ${table.number}${table.mergedTableNumbers?.length ? ` + ${table.mergedTableNumbers.join(' + ')}` : ''}` : ''
@@ -619,6 +661,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
                 {table.mergedTableIds?.length > 0 && <button className="commandBtn" onClick={splitTables}><Split size={18} /> Separar mesas</button>}
                 <button className="commandBtn" onClick={sendKitchen}><ChefHat size={18} /> Enviar para cozinha</button>
                 <button className="commandBtn" onClick={requestBill}><ReceiptText size={18} /> Solicitar conta</button>
+                {canCloseTables && table.items.length > 0 && getPeopleCount(table) > 1 && <button className="commandBtn" onClick={openPartialClose}><Split size={18} /> Fechar parcialmente</button>}
                 {canCloseTables && <button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button>}
               </div>
             </header>
@@ -632,6 +675,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
                     <div className="commandItem" key={`${item.id}-${index}-${item.observation}-${item.originTable || ''}`}>
                       <div className="commandItemInfo">
                         <strong>{item.name}</strong>
+                        <small>Lançado por: {item.launchedByName || item.waiterName || table.waiterName || 'Não identificado'}{item.launchedAt ? ` às ${new Date(item.launchedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</small>
                         {item.originTable && <small>Origem: Mesa {item.originTable}</small>}
                         {item.observation && <small>Obs.: {item.observation}</small>}
                       </div>
@@ -654,6 +698,19 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
               </section>
             </div>
           </aside>
+        </div>
+      )}
+
+      {partialCloseOpen && table && (
+        <div className="authModalOverlay">
+          <form className="authModal partialCloseModal" onSubmit={confirmPartialClose}>
+            <div className="drawerHeader"><div><span className="eyebrow">Pagamento parcial</span><h2>Fechar parte da {tableLabel}</h2></div><button type="button" className="iconBtn" onClick={() => setPartialCloseOpen(false)}><X size={22} /></button></div>
+            <p>Informe quantos itens serão pagos agora. O restante continuará na mesa.</p>
+            <div className="partialItemsList">{table.items.map((item, index) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; const selectedQty = Number(partialSelection[key] || 0); return <label className="partialItemRow" key={`${key}-${index}`}><div><strong>{item.name}</strong><small>{item.launchedByName || item.waiterName || 'Não identificado'} · {formatMoney(item.price)} cada</small></div><input aria-label={`Quantidade de ${item.name}`} type="number" min="0" max={item.qty} value={selectedQty} onChange={event => setPartialItemQty(item, event.target.value)} /><span>de {item.qty}</span><b>{formatMoney(item.price * selectedQty)}</b></label> })}</div>
+            <div className="partialCloseFields"><label><span>Pessoas saindo</span><input type="number" min="1" max={Math.max(1, getPeopleCount(table) - 1)} value={partialGuests} onChange={event => setPartialGuests(event.target.value)} /></label><label><span>Forma de pagamento</span><select value={partialPayment} onChange={event => setPartialPayment(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Crédito</option><option value="debito">Débito</option><option value="outros">Outros</option></select></label></div>
+            <div className="partialTotal"><span>Total desta parte</span><strong>{formatMoney(table.items.reduce((sum, item) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; return sum + Number(item.price || 0) * Number(partialSelection[key] || 0) }, 0))}</strong></div>
+            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={partialSaving || !Object.values(partialSelection).some(Number)}>{partialSaving ? 'Salvando...' : 'Confirmar pagamento parcial'}</button><button className="secondaryBtn" type="button" onClick={() => setPartialCloseOpen(false)}>Cancelar</button></div>
+          </form>
         </div>
       )}
 
@@ -763,7 +820,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
                 <div className="closedConsumptionRow" key={`${selectedClosedTable.id}-${item.id}-${index}`}>
                   <span>{Number(item.qty || 0)}x</span>
                   <strong>{item.name}</strong>
-                  <em>{item.category || item.sector || '-'}</em>
+                  <em>{item.category || item.sector || '-'}{item.launchedByName ? ` · ${item.launchedByName}` : ''}</em>
                   <b>{formatMoney(item.price)}</b>
                   <b>{formatMoney(item.total ?? Number(item.price || 0) * Number(item.qty || 0))}</b>
                 </div>

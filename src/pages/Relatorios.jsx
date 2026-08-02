@@ -230,7 +230,7 @@ function SectorIcon({ name }) {
 }
 
 function paymentLabel(key) {
-  const labels = { dinheiro: 'Dinheiro', pix: 'PIX', cartao: 'Cartão', outros: 'Outros' }
+  const labels = { dinheiro: 'Dinheiro', pix: 'PIX', cartao: 'Cartão', credito: 'Crédito', debito: 'Débito', outros: 'Outros' }
   return labels[key] || key
 }
 
@@ -253,7 +253,7 @@ function closingTables(record = {}) {
     waiterName: table.waiterName || 'Sem garçom',
     total: Number(table.total || 0),
     itemsQty: (table.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
-    origin: table.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+    origin: table.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : table.closedByMode === 'mesa_parcial' ? 'Pagamento parcial' : 'Fechada pela mesa',
   }))
   return [...activeTables, ...closedTables]
 }
@@ -556,7 +556,7 @@ export default function Relatorios({ tables = [], settings }) {
       .map(record => ({
         ...record,
         itemsQty: (record.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
-        sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : 'Fechada pela mesa',
+        sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : record.closedByMode === 'mesa_parcial' ? 'Pagamento parcial' : 'Fechada pela mesa',
       }))
       .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
   }, [closedTablesHistory, selectedDate])

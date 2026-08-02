@@ -149,6 +149,9 @@ function buildSalesRecord(table, type, closingDate) {
       localSaida: repairText(item.localSaida || item.sector || ''),
       imprimeCozinha: Boolean(item.imprimeCozinha),
       observation: repairText(item.observation || ''),
+      lineId: item.lineId,
+      launchedByName: repairText(item.launchedByName || item.waiterName || table.waiterName || ''),
+      launchedAt: item.launchedAt || null,
     })),
   }
 }
@@ -182,6 +185,9 @@ function buildClosedTableRecord(table, mode, { closingDate, payments, closedBy, 
         sector: repairText(item.sector || item.localSaida || ''),
         localSaida: repairText(item.localSaida || item.sector || ''),
         observation: repairText(item.observation || ''),
+        lineId: item.lineId,
+        launchedByName: repairText(item.launchedByName || item.waiterName || table.waiterName || ''),
+        launchedAt: item.launchedAt || null,
       }
     }),
     payments: payments || null,
@@ -649,6 +655,71 @@ export default function App() {
     return salesRecord
   }
 
+  async function handlePartialCloseTable(tableId, { items, guests, paymentMethod }) {
+    const table = tables.find(item => item.id === tableId)
+    if (!table || !Array.isArray(items) || !items.length) return null
+
+    const selectedByLine = new Map(items.map(item => [item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`, Number(item.qty || 0)]))
+    const paidItems = table.items.map(item => {
+      const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+      const qty = Math.max(0, Math.min(Number(item.qty || 0), Number(selectedByLine.get(key) || 0)))
+      return { ...item, qty }
+    }).filter(item => item.qty > 0)
+    if (!paidItems.length) return null
+
+    const paidTotal = paidItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0)
+    const remainingItems = table.items.map(item => {
+      const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+      return { ...item, qty: Number(item.qty || 0) - Number(selectedByLine.get(key) || 0) }
+    }).filter(item => item.qty > 0)
+    const leavingGuests = Math.max(1, Math.min(getPeopleCount(table), Number(guests) || 1))
+    const remainingGuests = Math.max(1, getPeopleCount(table) - leavingGuests)
+    const partialTable = { ...table, items: paidItems, guests: leavingGuests, peopleCount: leavingGuests }
+    const payments = { [paymentMethod || 'outros']: paidTotal }
+    const salesRecord = buildSalesRecord(partialTable, 'mesa_parcial', new Date())
+    const closedTableRecord = buildClosedTableRecord(partialTable, 'mesa_parcial', {
+      payments,
+      closedBy: currentUser?.name || currentUser?.username || 'Operador',
+      observation: `Pagamento parcial; ${leavingGuests} pessoa(s) saíram.`,
+    })
+    const nextTable = {
+      ...table,
+      items: remainingItems,
+      guests: remainingGuests,
+      peopleCount: remainingGuests,
+      status: remainingItems.length ? 'ocupada' : 'ocupada',
+      billRequested: false,
+      partialPayments: [...(table.partialPayments || []), {
+        id: closedTableRecord.id,
+        date: closedTableRecord.closedAt,
+        total: paidTotal,
+        paymentMethod: paymentMethod || 'outros',
+        guests: leavingGuests,
+        closedBy: closedTableRecord.closedBy,
+      }],
+    }
+    const nextTables = tables.map(item => item.id === tableId ? nextTable : item)
+    const nextSalesHistory = [salesRecord, ...readStored(SALES_KEY, [])].slice(0, 2000)
+    const nextClosedTablesHistory = mergeClosedTableHistory([closedTableRecord], readStored(CLOSED_TABLES_KEY, []))
+
+    writeStored(TABLES_KEY, nextTables)
+    writeStored(SALES_KEY, nextSalesHistory)
+    writeStored(CLOSED_TABLES_KEY, nextClosedTablesHistory)
+    setTables(nextTables)
+    window.dispatchEvent(new Event('fogao-sales-history-updated'))
+    window.dispatchEvent(new Event('fogao-closed-tables-updated'))
+    await saveRemoteState({
+      users,
+      tables: nextTables,
+      settings,
+      products: readStored(PRODUCTS_KEY, []),
+      salesHistory: nextSalesHistory,
+      closings: readStored(CLOSINGS_KEY, []),
+      closedTablesHistory: nextClosedTablesHistory,
+    })
+    return closedTableRecord
+  }
+
   useEffect(() => {
     if (!currentUser || currentUser.role === 'garcom') return
 
@@ -721,7 +792,7 @@ export default function App() {
       <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={handleLogout} />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
-        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} />}
+        {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}
         {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}
