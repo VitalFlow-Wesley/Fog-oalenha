@@ -7,6 +7,7 @@ import {
   syncModelCollections,
   updateAppState,
 } from '../lib/mongo.js'
+import { publicUser, requireUser } from '../lib/auth.js'
 
 const modelKeys = ['users', 'products', 'tables']
 const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings', 'closedTablesHistory']
@@ -32,16 +33,21 @@ export default async function handler(req, res) {
   }
 
   try {
+    const session = await requireUser(req, res)
+    if (!session) return
     const db = await getDb()
 
     if (req.method === 'GET') {
-      res.status(200).json(await readConsolidatedState(db))
+      const state = await readConsolidatedState(db)
+      if (session.role === 'garcom') state.users = (state.users || []).map(publicUser)
+      res.status(200).json(state)
       return
     }
 
     if (req.method === 'PUT') {
       const body = parseBody(req)
-      const nextState = Object.fromEntries(Object.entries(body).filter(([key]) => allowedKeys.includes(key)))
+      const roleKeys = session.role === 'garcom' ? ['tables'] : allowedKeys
+      const nextState = Object.fromEntries(Object.entries(body).filter(([key]) => roleKeys.includes(key)))
 
       if (!Object.keys(nextState).length) {
         res.status(400).json({ error: 'Nenhum dado valido para salvar.' })

@@ -252,6 +252,21 @@ export default function App() {
   const lastLocalChangeRef = useRef(0)
   const pollingInFlightRef = useRef(false)
 
+  useEffect(() => {
+    if (!currentUser) return
+    let cancelled = false
+    fetch('/api/auth/session', { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok && !cancelled) {
+          clearSession()
+          setCurrentUser(null)
+          setPage('mesas')
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [currentUser?.id])
+
   function applyRemoteState(remote, { fillMissing = false } = {}) {
     const localUsers = readStored(USERS_KEY, initialUsers)
     const localTables = cleanSalonTables(readStored(TABLES_KEY, []))
@@ -345,6 +360,10 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (!currentUser) {
+      remoteLoadedRef.current = false
+      return
+    }
     let cancelled = false
 
     async function hydrateFromMongo() {
@@ -366,7 +385,7 @@ export default function App() {
 
     hydrateFromMongo()
     return () => { cancelled = true }
-  }, [])
+  }, [currentUser?.id])
 
   useEffect(() => writeStored(TABLES_KEY, tables), [tables])
   useEffect(() => writeStored(USERS_KEY, users), [users])
@@ -481,6 +500,7 @@ export default function App() {
   }
 
   function handleLogout() {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
     clearSession()
     setCurrentUser(null)
     setPage('mesas')
@@ -648,7 +668,7 @@ export default function App() {
     }
   }, [currentUser, settings])
 
-  if (!currentUser) return <Login users={users} onLogin={handleLogin} />
+  if (!currentUser) return <Login onLogin={handleLogin} />
 
   return (
     <div className="appShell">

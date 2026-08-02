@@ -1,4 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb'
+import { readSession } from '../lib/auth.js'
 
 const uri = process.env.MONGODB_URI
 const dbName = process.env.MONGODB_DB || 'fogao_a_lenha'
@@ -17,14 +18,16 @@ async function getCollection() {
 }
 
 function allowCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  res.setHeader('Cache-Control', 'no-store, max-age=0')
+  res.setHeader('Pragma', 'no-cache')
 }
 
-function authorized(req) {
-  if (!agentToken) return true
-  return req.headers.authorization === `Bearer ${agentToken}`
+function authorized(req, roles = []) {
+  if (agentToken && req.headers.authorization === `Bearer ${agentToken}`) return true
+  const session = readSession(req)
+  return Boolean(session && (!roles.length || roles.includes(session.role)))
 }
 
 function parseBody(req) {
@@ -48,6 +51,7 @@ export default async function handler(req, res) {
     const collection = await getCollection()
 
     if (req.method === 'POST') {
+      if (!authorized(req)) return res.status(401).json({ error: 'Sessao invalida ou expirada.' })
       const body = parseBody(req)
       const allowedTypes = ['kitchen', 'cashier', 'bill']
       const type = allowedTypes.includes(body.type) ? body.type : 'kitchen'
@@ -90,7 +94,7 @@ export default async function handler(req, res) {
       return
     }
 
-    if (!authorized(req)) {
+    if (!authorized(req, ['admin', 'gerente'])) {
       res.status(401).json({ error: 'Agente de impressão não autorizado.' })
       return
     }

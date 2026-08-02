@@ -1,10 +1,13 @@
+import { requireUser } from '../lib/auth.js'
+
 function allowCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  res.setHeader('Cache-Control', 'no-store, max-age=0')
+  res.setHeader('Pragma', 'no-cache')
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   allowCors(res)
 
   if (req.method === 'OPTIONS') {
@@ -17,6 +20,8 @@ export default function handler(req, res) {
     res.status(405).send('Metodo nao permitido.')
     return
   }
+
+  if (!await requireUser(req, res, ['admin', 'gerente'])) return
 
   const certificate = (process.env.QZ_CERTIFICATE_PEM || process.env.VITE_QZ_CERTIFICATE_PEM || '').replace(/\\n/g, '\n').trim()
   res.setHeader('Content-Type', 'text/plain; charset=utf-8')

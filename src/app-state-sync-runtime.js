@@ -89,6 +89,12 @@ async function syncNow() {
       return
     }
 
+    if (response.status === 401 || response.status === 403) {
+      pending = false
+      setStatus('auth')
+      return
+    }
+
     if (!response.ok) throw new Error(`Falha ao sincronizar: ${response.status}`)
 
     lastPayload = payload

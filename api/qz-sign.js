@@ -1,16 +1,18 @@
 import crypto from 'crypto'
+import { requireUser } from '../lib/auth.js'
 
 function allowCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  res.setHeader('Cache-Control', 'no-store, max-age=0')
+  res.setHeader('Pragma', 'no-cache')
 }
 
 function parseBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   allowCors(res)
 
   if (req.method === 'OPTIONS') {
@@ -23,6 +25,8 @@ export default function handler(req, res) {
     res.status(405).json({ error: 'Metodo nao permitido.' })
     return
   }
+
+  if (!await requireUser(req, res, ['admin', 'gerente'])) return
 
   const privateKey = (process.env.QZ_PRIVATE_KEY_PEM || '').replace(/\\n/g, '\n').trim()
   if (!privateKey) {
