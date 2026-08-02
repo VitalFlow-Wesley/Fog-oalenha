@@ -1,4 +1,4 @@
-let qzSecurityConfigured = false
+let qzSecuritySetupPromise = null
 let qzConnectionAvailableUntil = 0
 
 function removeAccents(str) {
@@ -25,35 +25,62 @@ async function loadQz() {
   const qzModule = await import('qz-tray')
   const qz = qzModule.default || qzModule
   if (!qz) throw new Error('Modulo QZ Tray indisponivel localmente.')
-  configureQzSecurity(qz)
+  await configureQzSecurity(qz)
   return qz
 }
 
-export function configureQzSecurity(qz) {
-  if (qzSecurityConfigured || !qz?.security) return
-  qzSecurityConfigured = true
-
-  qz.security.setCertificatePromise((resolve) => {
-    fetch('/api/qz-certificate')
-      .then(response => response.ok ? response.text() : '')
-      .then(certificate => resolve(certificate || ''))
-      .catch(() => resolve(''))
-  })
-
-  qz.security.setSignaturePromise(toSign => (resolve) => {
-    fetch('/api/qz-sign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request: toSign }),
-    })
-      .then(response => response.ok ? response.json() : null)
-      .then(data => resolve(data?.signature || ''))
-      .catch(() => resolve(''))
-  })
-
-  if (qz.security.setSignatureAlgorithm) {
-    qz.security.setSignatureAlgorithm('SHA512')
+async function fetchQzCertificate() {
+  try {
+    const response = await fetch('/api/qz-certificate', { cache: 'no-store' })
+    if (!response.ok || response.status === 204) return ''
+    return (await response.text()).trim()
+  } catch (error) {
+    console.warn('Certificado QZ indisponivel:', error.message)
+    return ''
   }
+}
+
+export async function configureQzSecurity(qz) {
+  if (!qz?.security) return false
+  if (qzSecuritySetupPromise) return qzSecuritySetupPromise
+
+  qzSecuritySetupPromise = fetchQzCertificate().then(certificate => {
+    if (!certificate) {
+      console.warn('Certificado QZ nao configurado; impressao seguira como solicitacao anonima.')
+      return false
+    }
+
+    qz.security.setCertificatePromise((resolve) => {
+      resolve(certificate)
+    })
+
+    qz.security.setSignaturePromise(toSign => (resolve, reject) => {
+      fetch('/api/qz-sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request: toSign }),
+      })
+        .then(response => {
+          if (!response.ok || response.status === 204) {
+            throw new Error('Assinatura QZ indisponivel no servidor.')
+          }
+          return response.json()
+        })
+        .then(data => {
+          if (!data?.signature) throw new Error('Assinatura QZ vazia.')
+          resolve(data.signature)
+        })
+        .catch(reject)
+    })
+
+    if (qz.security.setSignatureAlgorithm) {
+      qz.security.setSignatureAlgorithm('SHA512')
+    }
+
+    return true
+  })
+
+  return qzSecuritySetupPromise
 }
 
 export function buildThermalPayload(job) {

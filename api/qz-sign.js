@@ -24,7 +24,7 @@ export default function handler(req, res) {
     return
   }
 
-  const privateKey = process.env.QZ_PRIVATE_KEY_PEM || ''
+  const privateKey = (process.env.QZ_PRIVATE_KEY_PEM || '').replace(/\\n/g, '\n').trim()
   if (!privateKey) {
     res.status(204).end()
     return

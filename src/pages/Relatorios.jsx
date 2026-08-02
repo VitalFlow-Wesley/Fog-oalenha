@@ -234,7 +234,7 @@ async function executeThermalPrint(mode, report, selectedClosing, dateLabel, set
   try {
     const qzModule = await import('qz-tray');
     const qz = qzModule.default || qzModule;
-    configureQzSecurity(qz);
+    await configureQzSecurity(qz);
 
     if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
 

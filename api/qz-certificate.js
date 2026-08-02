@@ -18,7 +18,7 @@ export default function handler(req, res) {
     return
   }
 
-  const certificate = process.env.QZ_CERTIFICATE_PEM || process.env.VITE_QZ_CERTIFICATE_PEM || ''
+  const certificate = (process.env.QZ_CERTIFICATE_PEM || process.env.VITE_QZ_CERTIFICATE_PEM || '').replace(/\\n/g, '\n').trim()
   res.setHeader('Content-Type', 'text/plain; charset=utf-8')
   res.status(certificate ? 200 : 204).send(certificate)
 }
