@@ -23,9 +23,18 @@ const productIcons = {
   Outros: '🍽️',
 }
 
+const categoryLabels = { Churrasco: 'Churrascos' }
+
+function normalizeCategory(value) {
+  const category = repairText(value || 'Outros').trim()
+  if (category === 'Churrascos') return 'Churrasco'
+  if (category === 'Refeiçõeses' || category === 'Refeicoeses') return 'Refeições'
+  return category || 'Outros'
+}
+
 function normalizeProduct(product) {
   const fixedProduct = repairData(product)
-  const category = fixedProduct.category || 'Outros'
+  const category = normalizeCategory(fixedProduct.category)
   const sector = fixedProduct.sector || fixedProduct.localSaida || 'Bar / Caixa'
   return {
     ...fixedProduct,
@@ -693,7 +702,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
               <section className="commandPanel commandProductsPanel">
                 <h3>Adicionar pedido</h3>
                 <label className="commandObs"><Search size={20} /><input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex.: sem cebola" /></label>
-                <div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{cat}</button>)}</div>
+                <div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{categoryLabels[cat] || cat}</button>)}</div>
                 <div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}</div>
               </section>
             </div>
