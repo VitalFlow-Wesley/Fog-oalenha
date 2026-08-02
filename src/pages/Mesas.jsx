@@ -24,6 +24,7 @@ const productIcons = {
 }
 
 const categoryLabels = { Churrasco: 'Churrascos' }
+const categoryOrder = ['Refeições', 'Churrasco', 'Sucos', 'Bebidas', 'Petiscos', 'Salgadinhos', 'Sorvetes', 'Sobremesas', 'Bombons', 'Outros']
 
 function normalizeCategory(value) {
   const category = repairText(value || 'Outros').trim()
@@ -226,7 +227,11 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [closedTablesDate, setClosedTablesDate] = useState(todayKey())
   const [selectedClosedTable, setSelectedClosedTable] = useState(null)
   const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
-  const categories = useMemo(() => [...new Set(availableProducts.filter(p => p.status !== 'Inativo').map(p => p.category))], [availableProducts])
+  const categories = useMemo(() => [...new Set(availableProducts.filter(p => p.status !== 'Inativo').map(p => p.category))].sort((a, b) => {
+    const aIndex = categoryOrder.indexOf(a)
+    const bIndex = categoryOrder.indexOf(b)
+    return (aIndex < 0 ? categoryOrder.length : aIndex) - (bIndex < 0 ? categoryOrder.length : bIndex) || a.localeCompare(b, 'pt-BR')
+  }), [availableProducts])
   const [activeCategory, setActiveCategory] = useState(categories[0] || 'Refeições')
   const [observation, setObservation] = useState('')
   const [cancelRequest, setCancelRequest] = useState(null)
