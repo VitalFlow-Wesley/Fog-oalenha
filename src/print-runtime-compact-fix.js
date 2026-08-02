@@ -1,3 +1,6 @@
+// src/print-runtime-compact-fix.js
+
+// 1. Injeta o CSS de layout compacto no cabeçalho do site
 const compactPrintStyle = document.createElement('style')
 compactPrintStyle.textContent = `
   .print-runtime-active,
@@ -290,3 +293,24 @@ compactPrintStyle.textContent = `
   }
 `
 document.head.appendChild(compactPrintStyle)
+
+// 2. Trava de proteção contra erro de WebSocket do QZ Tray em celulares
+;(function () {
+  try {
+    const originalAlert = window.alert
+    window.alert = function (msg) {
+      if (
+        msg &&
+        (msg.includes('sendData is not a function') ||
+          msg.includes('Erro na impressora') ||
+          msg.includes('websocket'))
+      ) {
+        console.warn('Alerta de impressão ignorado no dispositivo móvel:', msg)
+        return
+      }
+      originalAlert.apply(window, arguments)
+    }
+  } catch (err) {
+    console.error('Erro ao aplicar proteção de alertas:', err)
+  }
+})()
