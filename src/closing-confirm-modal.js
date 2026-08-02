@@ -62,28 +62,6 @@ function getOpenCashTables(tables = readStored(TABLES_KEY, [])) {
     : []
 }
 
-function resetTableForNewCash(table) {
-  return {
-    ...table,
-    status: 'livre',
-    guests: 0,
-    openedAt: null,
-    closedAt: null,
-    items: [],
-    kitchenSent: false,
-    kitchenSentAt: null,
-    kitchenWaiterName: null,
-    billRequested: false,
-    lastKitchenPrinter: null,
-    lastCashierPrinter: null,
-    mergedTableIds: [],
-    mergedTableNumbers: [],
-    mergedTo: undefined,
-    mergedToNumber: undefined,
-    previousMergeState: undefined,
-  }
-}
-
 function getClosingSnapshot() {
   const tables = readStored(TABLES_KEY, [])
   const openTables = getOpenCashTables(tables)

@@ -359,8 +359,8 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   function applyTableQty(configs = tableConfigs) {
     if (!canManage) return
     const source = configs.length ? configs : generateTableConfigs()
-    setTables(prev => source.map((config, index) => ({ ...(prev[index] || {}), id: config.id || index + 1, number: config.number, displayName: config.displayName, active: config.active, canJoin: config.canJoin, status: prev[index]?.status || 'livre', guests: prev[index]?.guests || 0, openedAt: prev[index]?.openedAt || null, items: prev[index]?.items || [], kitchenSent: prev[index]?.kitchenSent || false, billRequested: prev[index]?.billRequested || false })))
-    showMessage('Configurações das mesas salvas com sucesso.')
+    setTableConfigs(source)
+    showMessage('Configurações salvas. As mesas serão abertas somente pelo botão Adicionar mesa.')
   }
 
   function resetTableNumbers() { const configs = generateTableConfigs(tableQty); applyTableQty(configs) }

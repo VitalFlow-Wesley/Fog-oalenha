@@ -349,6 +349,8 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
   const difference = informedTotal - data.total
   const differenceOk = Math.abs(difference) < 0.01
   const hasDivergence = !differenceOk
+  const hasOpenTables = data.openTables > 0
+  const requiresAttention = hasDivergence || hasOpenTables
   const receivedData = { ...data, payments: received, total: informedTotal }
 
   function setPayment(key, value) {
@@ -462,17 +464,17 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
 
     {modalOpen && <style>{`.closingModalOverlay{position:fixed;inset:0;z-index:80;background:rgba(31,16,10,.62);display:grid;place-items:center;padding:18px;backdrop-filter:blur(3px)}.closingModalCard{width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid #ead7bf;background:linear-gradient(135deg,#fffdf8,#fff4e4);box-shadow:0 28px 70px rgba(31,16,10,.32);padding:24px;position:relative;color:#351b12}.closingModalCard.hasDivergence{border-color:#e7b18d}.closingModalClose{position:absolute;right:16px;top:16px;width:38px;height:38px;border:1px solid #ead7bf;border-radius:999px;background:#fffaf2;color:#5a2d1f;display:grid;place-items:center;cursor:pointer}.closingModalHeader{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;align-items:center;margin-right:34px}.closingModalHeader>span{width:48px;height:48px;border-radius:16px;background:#f8e8d8;color:#bd381d;display:grid;place-items:center}.closingModalHeader h2{margin:0;font-family:Georgia,serif;font-size:28px;line-height:1.05;color:#32180f}.closingModalHeader p{margin:6px 0 0;color:#7b6253;font-weight:700}.closingModalAlert{margin-top:18px;border:1px solid #f1b38e;border-radius:16px;background:#fff0e6;color:#9d2e1c;padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-weight:900}.closingModalSummary{margin-top:18px;display:grid;gap:10px}.closingModalSummary p{margin:0;display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid #ead7bf;border-radius:14px;background:#fffaf2;padding:12px 14px}.closingModalSummary span{font-weight:850;color:#5a4033}.closingModalSummary strong{font-size:18px;color:#2f1a12;text-align:right}.closingModalSummary strong.negative{color:#d2472b}.closingModalSummary strong.positive{color:#52740f}.closingModalFields{display:grid;gap:12px;margin-top:18px}.closingModalFields label{display:grid;gap:7px;font-weight:900;color:#3b261d}.closingModalFields input,.closingModalFields textarea{width:100%;border:1px solid #e2cdb3;border-radius:13px;background:#fffaf4;color:#32180f;padding:12px 13px;font-size:15px}.closingModalFields textarea{min-height:96px;resize:vertical}.closingModalNote{margin-top:16px;border-radius:14px;background:#fffaf2;border:1px solid #ead7bf;padding:12px 14px;display:grid;gap:4px}.closingModalError{margin-top:14px;border:1px solid #efb3a0;border-radius:14px;background:#fff0eb;color:#a93420;padding:12px 14px;display:flex;gap:9px;align-items:center;font-weight:900}.closingModalActions{margin-top:20px;display:grid;grid-template-columns:1fr 1.35fr;gap:12px}.closingModalActions button{height:50px;border-radius:14px;font-weight:950;font-size:15px;cursor:pointer}.closingCancelBtn{border:1px solid #e2cdb3;background:#fffaf4;color:#4a2b1f}.closingConfirmBtn{border:0;background:linear-gradient(135deg,#bd381d,#f05a36);color:#fff;box-shadow:0 12px 24px rgba(199,65,35,.22)}@media(max-width:640px){.closingModalOverlay{padding:10px;place-items:end center}.closingModalCard{border-radius:20px 20px 0 0;padding:20px 16px}.closingModalHeader{grid-template-columns:40px minmax(0,1fr);gap:11px}.closingModalHeader>span{width:40px;height:40px;border-radius:13px}.closingModalHeader h2{font-size:24px}.closingModalSummary p{display:grid;gap:4px}.closingModalSummary strong{text-align:left}.closingModalActions{grid-template-columns:1fr}}`}</style>}
     {modalOpen && <div className="closingModalOverlay" role="dialog" aria-modal="true" aria-labelledby="closingModalTitle">
-      <div className={`closingModalCard ${hasDivergence ? 'hasDivergence' : ''}`}>
+      <div className={`closingModalCard ${requiresAttention ? 'hasDivergence' : ''}`}>
         <button type="button" className="closingModalClose" onClick={closeModal} aria-label="Fechar"><X size={20} /></button>
         <div className="closingModalHeader">
-          <span>{hasDivergence ? <ShieldCheck size={24} /> : <CheckCircle2 size={24} />}</span>
+          <span>{requiresAttention ? <ShieldCheck size={24} /> : <CheckCircle2 size={24} />}</span>
           <div>
             <h2 id="closingModalTitle">{hasDivergence ? 'Autorização necessária' : 'Confirmar fechamento'}</h2>
-            <p>{hasDivergence ? 'Existe diferença no caixa. Confirme os valores e autorize o fechamento.' : 'Revise o resumo antes de fechar o caixa do dia.'}</p>
+            <p>{hasOpenTables ? 'Existem mesas abertas. Ao confirmar, todas serão fechadas e removidas do salão.' : hasDivergence ? 'Existe diferença no caixa. Confirme os valores e autorize o fechamento.' : 'Revise o resumo antes de fechar o caixa do dia.'}</p>
           </div>
         </div>
 
-        {hasDivergence && <div className="closingModalAlert"><AlertCircle size={20} /> As mesas serão fechadas, pedidos limpos e o salão será zerado ao confirmar.</div>}
+        {requiresAttention && <div className="closingModalAlert"><AlertCircle size={20} /> {hasOpenTables ? `${data.openTables} mesa${data.openTables === 1 ? '' : 's'} aberta${data.openTables === 1 ? '' : 's'} serão fechadas e apagadas do salão ao confirmar.` : 'As mesas serão fechadas, pedidos limpos e o salão será zerado ao confirmar.'}</div>}
 
         <div className="closingModalSummary">
           <p><span>Total lançado nas mesas</span><strong>{money(data.total)}</strong></p>

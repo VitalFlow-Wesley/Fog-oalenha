@@ -184,28 +184,22 @@ function closedTableItemsQty(record) {
   return (record?.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)
 }
 
-function resetTableForNewCash(table) {
-  return {
-    ...table,
-    status: 'livre',
-    customerName: '',
-    guests: 0,
-    peopleCount: 0,
-    openedAt: null,
-    closedAt: null,
-    items: [],
-    kitchenSent: false,
-    kitchenSentAt: null,
-    kitchenWaiterName: null,
-    billRequested: false,
-    lastKitchenPrinter: null,
-    lastCashierPrinter: null,
-    mergedTableIds: [],
-    mergedTableNumbers: [],
-    mergedTo: undefined,
-    mergedToNumber: undefined,
-    previousMergeState: undefined,
-  }
+function isEmptyFreeTable(table = {}) {
+  return (
+    table.status === 'livre' &&
+    tableTotal(table) === 0 &&
+    Number(table.guests || 0) === 0 &&
+    Number(table.peopleCount || 0) === 0 &&
+    !table.items?.length &&
+    !table.kitchenSent &&
+    !table.billRequested &&
+    !table.mergedTo &&
+    !table.mergedTableIds?.length
+  )
+}
+
+function cleanSalonTables(value) {
+  return Array.isArray(value) ? value.filter(table => !isEmptyFreeTable(table)) : []
 }
 
 function getSavedSession(users) {
@@ -248,7 +242,7 @@ function clearSession() {
 
 export default function App() {
   const [page, setPage] = useState('mesas')
-  const [tables, setTables] = useState(() => readStored(TABLES_KEY, initialTables))
+  const [tables, setTables] = useState(() => cleanSalonTables(readStored(TABLES_KEY, initialTables)))
   const [users, setUsers] = useState(() => readStored(USERS_KEY, initialUsers))
   const [settings, setSettings] = useState(() => ({ ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }))
   const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
@@ -260,7 +254,7 @@ export default function App() {
 
   function applyRemoteState(remote, { fillMissing = false } = {}) {
     const localUsers = readStored(USERS_KEY, initialUsers)
-    const localTables = readStored(TABLES_KEY, null)
+    const localTables = cleanSalonTables(readStored(TABLES_KEY, []))
     const localSettings = { ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }
     const localProducts = readStored(PRODUCTS_KEY, [])
     const localSalesHistory = readStored(SALES_KEY, [])
@@ -282,12 +276,14 @@ export default function App() {
     }
 
     if (Array.isArray(remote.tables)) {
-      if (!isSameData(localTables, remote.tables)) {
-        setTables(remote.tables)
-        writeStored(TABLES_KEY, remote.tables)
+      const nextTables = cleanSalonTables(remote.tables)
+      if (!isSameData(remote.tables, nextTables)) missingRemoteState.tables = nextTables
+      if (!isSameData(localTables, nextTables)) {
+        setTables(nextTables)
+        writeStored(TABLES_KEY, nextTables)
         window.dispatchEvent(new Event('fogao-tables-updated'))
       }
-    } else if (fillMissing && Array.isArray(localTables)) {
+    } else if (fillMissing && localTables.length) {
       setTables(localTables)
       missingRemoteState.tables = localTables
     }
@@ -378,7 +374,7 @@ export default function App() {
 
   useEffect(() => {
     const syncTablesFromStorage = () => {
-      const storedTables = readStored(TABLES_KEY, null)
+      const storedTables = cleanSalonTables(readStored(TABLES_KEY, []))
       if (!Array.isArray(storedTables)) return
       setTables(storedTables)
     }
@@ -502,7 +498,7 @@ export default function App() {
     const closedTablesTotal = closedTablesAlreadyInDay.reduce((sum, record) => sum + closedTableTotal(record), 0)
     const total = activeTotal + closedTablesTotal
     const informedTotal = Object.values(payments || {}).reduce((sum, value) => sum + Number(value || 0), 0)
-    const nextTables = tables.map(resetTableForNewCash)
+    const nextTables = []
     const nextSalesHistory = [...salesRecords, ...readStored(SALES_KEY, [])].slice(0, 2000)
     const closedTableRecords = activeTables
       .map(table => buildClosedTableRecord(table, 'fechamento_caixa', {
@@ -562,7 +558,7 @@ export default function App() {
       closedBy: currentUser?.name || currentUser?.username || 'Operador',
     }) : null
     const resetIds = new Set([table.id, ...(table.mergedTableIds || [])])
-    const nextTables = tables.map(item => resetIds.has(item.id) ? resetTableForNewCash(item) : item)
+    const nextTables = tables.filter(item => !resetIds.has(item.id))
     const currentSalesHistory = readStored(SALES_KEY, [])
     const nextSalesHistory = salesRecord ? [salesRecord, ...currentSalesHistory].slice(0, 2000) : currentSalesHistory
     const nextClosedTablesHistory = closedTableRecord ? mergeClosedTableHistory([closedTableRecord], readStored(CLOSED_TABLES_KEY, [])) : readStored(CLOSED_TABLES_KEY, [])
