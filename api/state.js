@@ -22,6 +22,21 @@ async function readConsolidatedState(db) {
   return { ...state, ...collectionState }
 }
 
+async function readDebugInfo(db) {
+  const collections = await db.listCollections({}, { nameOnly: true }).toArray()
+  const counts = {}
+
+  for (const key of ['app_state', ...modelKeys]) {
+    counts[key] = await db.collection(key).countDocuments({})
+  }
+
+  return {
+    dbName: db.databaseName,
+    collections: collections.map((collection) => collection.name).sort(),
+    counts,
+  }
+}
+
 export default async function handler(req, res) {
   allowCors(res, 'GET,PUT,OPTIONS')
 
@@ -34,6 +49,11 @@ export default async function handler(req, res) {
     const db = await getDb()
 
     if (req.method === 'GET') {
+      if (req.query?.debug === '1') {
+        res.status(200).json(await readDebugInfo(db))
+        return
+      }
+
       res.status(200).json(await readConsolidatedState(db))
       return
     }
