@@ -294,23 +294,67 @@ compactPrintStyle.textContent = `
 `
 document.head.appendChild(compactPrintStyle)
 
-// 2. Trava de proteção contra erro de WebSocket do QZ Tray em celulares
+// 2. Trava de proteção e autorização do QZ Tray
 ;(function () {
   try {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+    // Silencia alertas de erro de impressão
     const originalAlert = window.alert
     window.alert = function (msg) {
       if (
         msg &&
-        (msg.includes('sendData is not a function') ||
+        (msg.includes('sendData') ||
           msg.includes('Erro na impressora') ||
-          msg.includes('websocket'))
+          msg.includes('websocket') ||
+          msg.includes('qz'))
       ) {
-        console.warn('Alerta de impressão ignorado no dispositivo móvel:', msg)
+        console.warn('Alerta de impressão bloqueado:', msg)
         return
       }
       originalAlert.apply(window, arguments)
     }
+
+    if (isMobile) {
+      // No celular desativa chamadas do QZ
+      window.qz = window.qz || {}
+      window.qz.websocket = {
+        connect: () => Promise.reject(new Error('Móvel: conexão desativada')),
+        isActive: () => false,
+        disconnect: () => Promise.resolve(),
+        connection: { sendData: () => Promise.resolve() }
+      }
+      window.qz.print = () => Promise.resolve()
+    } else if (window.qz && window.qz.security) {
+      // No computador do caixa, injeta o Certificado para assinar a requisição
+      window.qz.security.setCertificatePromise(function (resolve) {
+        resolve(`-----BEGIN CERTIFICATE-----
+MIIECzCCAvOgAwIBAgIGAZ/CrrLWMA0GCSqGSIb3DQEBCwUAMIGiMQswCQYDVQQG
+EwJVUzELMAkGA1UECAwCTlkxEjAQBgNVBAcMCUNhbmFzdG90YTEbMBkGA1UECgwS
+UVogSW5kdXN0cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMx
+HDAaBgkqhkiG9w0BCQEWDXN1cHBvcnRAcXouaW8xGjAYBgNVBAMMEVFaIFRyYXkg
+RGVtbyBDZXJ0MB4XDTI2MDgwMTEzMzQxNloXDTQ2MDgwMTEzMzQxNlowgaIxCzAJ
+BgNVBAYTAlVTMQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYD
+VQQKDBJRWiBJbmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMs
+IExMQzEcMBoGCSqGSIb3DQEJARYNc3VwcG9ydEBxei5pbzEaMBgGA1UEAwwRUVog
+VHJheSBEZW1vIENlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDQ
+yxWiPJnyxCIQ47LLnk8RpozZpnOm1lXV7XQ79fpEPoDIAObpxMBT1Y0m8tmyrXzm
+BBjfYCedMo3AmRhqK1K/W9s5TMN4JFJZ0Oxa3UOmQSXXR5xXvy7Kk6xxtC5P7UJA
+JAt8ylwxRGXoI0b6sbW5bmk/TZpOC+/U46jFi2CUW5DlyLg38a0+Bjkyqrb3XkDz
+0nKtFxIMubRHjQ1VsOqsXGYq6CtKYrxMtYZi3q6ckvny+PIwEDWtTAeTBOwG624n
+vPSGVpieN4d0bsL4DUb+86XZNErUjsc3FqsKRUvfu9QmuqTPsP8alhWN+EtvF73/
+Ny86hz7epbBSBLoZkAvhAgMBAAGjRTBDMBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYD
+VR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQUZOPIAUNrNB2LV+NzSHWkB7En/zANBgkq
+hkiG9w0BAQsFAAOCAQEAenNBDw5B2mUxQJQMsBPRLUmQq49J9m1W/pmRvxdaLdy/
+ZHrluPKQwP8dg1zpPGpzUrzmTwa8en6dd4sdAd1Zskw3uCScjkYeKXMxCSddh9Gl
+sQFvP4bphcg8ZsQj1VFBsPjHHE4hvnl2QV5ghw/1IRcVzU+WeiRXpNzjfHUH77Gs
+ldr3F0qih0CaD+aaSBGtBFoEtzf6H6KBdfM6xcP7YYq413SnGdbrrVyy00m9yEFh
+WslP3kzVyDy9kkB/okMOBpconJWSqJzXnxluvNNUXtniOeHjQRNopP5UV5XbuvPe
+RYicgp8E3XodFLi0kmF+KCX+O2h6P2jlF7grzyd6gw==
+-----END CERTIFICATE-----`)
+      })
+    }
   } catch (err) {
-    console.error('Erro ao aplicar proteção de alertas:', err)
+    console.error('Erro ao aplicar trava de impressão:', err)
   }
 })()
