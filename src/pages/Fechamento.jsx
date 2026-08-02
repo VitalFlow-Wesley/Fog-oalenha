@@ -322,7 +322,10 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
         if (cancelled || !Array.isArray(remoteState?.closedTablesHistory)) return
         if (remoteState.closedTablesHistory.length) {
           localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remoteState.closedTablesHistory))
-          setClosedTablesHistory(remoteState.closedTablesHistory)
+          // A leitura desta chave aplica o recorte do ciclo de caixa atual.
+          // Usar o array remoto diretamente alternava entre o histórico completo
+          // e o ciclo atual, fazendo os cards encolherem e a página saltar para cima.
+          setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
         }
       } catch {
       }
