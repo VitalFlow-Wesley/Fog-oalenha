@@ -283,8 +283,13 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
     setDeletingUser(user)
   }
 
-  function confirmDeleteUser() {
+  async function confirmDeleteUser() {
     if (!deletingUser || !canDeleteAccess) return
+    const response = await fetch(`/api/users?id=${encodeURIComponent(deletingUser.id)}`, { method: 'DELETE' })
+    if (!response.ok) {
+      showMessage('Nao foi possivel excluir o acesso no servidor.')
+      return
+    }
     setUsers(prev => prev.filter(user => String(user.id) !== String(deletingUser.id)))
     setDeletingUser(null)
     showMessage('Acesso excluído com sucesso.')
@@ -503,10 +508,15 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   function editProduct(product) { setEditingProduct({ ...normalizeProduct(product), priceText: String(product.price || '').replace('.', ','), deleteMode: false }) }
   function deleteProduct(product) { setEditingProduct({ ...normalizeProduct(product), priceText: String(product.price || '').replace('.', ','), deleteMode: true }) }
 
-  function saveEditedProduct(event) {
+  async function saveEditedProduct(event) {
     event.preventDefault()
     if (!editingProduct) return
     if (editingProduct.deleteMode) {
+      const response = await fetch(`/api/products?id=${encodeURIComponent(editingProduct.id)}`, { method: 'DELETE' })
+      if (!response.ok) {
+        showMessage('Nao foi possivel excluir o produto no servidor.')
+        return
+      }
       setProducts(prev => prev.filter(item => item.id !== editingProduct.id))
       setEditingProduct(null)
       return
