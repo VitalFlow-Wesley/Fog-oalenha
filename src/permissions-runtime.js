@@ -1,7 +1,7 @@
 const PERMISSIONS_KEY = 'fogao-role-permissions-v1'
 const defaultPermissions = {
   admin: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
-  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios'],
+  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
   garcom: ['Lançar pedidos', 'Solicitar conta'],
 }
 const permissionLabels = ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários']

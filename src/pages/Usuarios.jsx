@@ -17,7 +17,7 @@ const PRODUCT_SETTINGS_KEY = 'fogao-a-lenha-products-settings'
 const PERMISSIONS_KEY = 'fogao-role-permissions-v1'
 const defaultPermissions = {
   admin: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
-  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios'],
+  gerente: ['Lançar pedidos', 'Solicitar conta', 'Cancelar itens', 'Fechar mesa', 'Ver relatórios', 'Gerenciar usuários'],
   garcom: ['Lançar pedidos', 'Solicitar conta'],
 }
 const initialProducts = [
@@ -180,7 +180,7 @@ export default function Usuarios({ users, setUsers, tables, setTables, currentUs
   const [permissions, setPermissions] = useState(loadPermissions)
   const [textEditModal, setTextEditModal] = useState(null)
 
-  const canManage = currentUser?.role === 'admin'
+  const canManage = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
   const canDeleteAccess = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
   const canChangeSensitive = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
   const printerOptions = useMemo(() => systemForm.printers || [], [systemForm.printers])
