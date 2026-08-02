@@ -15,7 +15,7 @@ export const ROLE_PERMISSIONS = {
     cancelItems: true,
     closeTable: true,
     viewReports: true,
-    manageUsers: false,
+    manageUsers: true, // 👈 Liberado para criar/editar/excluir usuários!
     manageSettings: true,
     closeCash: true,
   },
