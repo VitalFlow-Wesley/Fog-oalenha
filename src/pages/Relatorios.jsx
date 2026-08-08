@@ -182,6 +182,7 @@ function buildReportFromHistory(records = []) {
   const total = salesTables.reduce((sum, table) => sum + Number(table.total || 0), 0)
   const ordersQty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
   const tableNumbers = new Set(salesTables.map(table => table.tableNumber))
+  const attendedTables = tableNumbers.size
   const ticket = tableNumbers.size ? total / tableNumbers.size : 0
   const productGroups = groupProducts(items)
   const topProductsByRevenue = productGroups.byRevenue.slice(0, 8)
@@ -198,11 +199,11 @@ function buildReportFromHistory(records = []) {
   }).sort((a, b) => b.total - a.total)
   const waiterRanking = Object.values(salesByTable.reduce((acc, table) => {
     const name = table.waiterName
-    acc[name] = acc[name] || { name, tables: 0, total: 0 }
-    acc[name].tables += 1
+    acc[name] = acc[name] || { name, tableNumbers: new Set(), total: 0 }
+    acc[name].tableNumbers.add(table.number)
     acc[name].total += table.total
     return acc
-  }, {})).sort((a, b) => b.total - a.total)
+  }, {})).map(waiter => ({ name: waiter.name, tables: waiter.tableNumbers.size, total: waiter.total })).sort((a, b) => b.total - a.total)
   const hours = Array.from({ length: 12 }, (_, index) => {
     const hour = 11 + index
     const count = salesTables.filter(table => Number(String(table.closedAtLabel || '').slice(11, 13)) === hour || Number(String(table.closedAt || '').slice(11, 13)) === hour).length
@@ -211,7 +212,7 @@ function buildReportFromHistory(records = []) {
   const closedTables = salesTables.filter(table => table.status === 'fechada')
   const openTables = salesTables.filter(table => table.status === 'aberta')
 
-  return { salesTables, sentTables: salesTables, closedTables, openTables, items, total, ordersQty, ticket, topProductsByRevenue, topProductsByQty, categories, sectors, salesByTable, waiterRanking, topWaiter: waiterRanking[0], topTable: salesByTable[0], topProductByRevenue: topProductsByRevenue[0], topProductByQty: topProductsByQty[0], hours }
+  return { salesTables, attendedTables, sentTables: salesTables, closedTables, openTables, items, total, ordersQty, ticket, topProductsByRevenue, topProductsByQty, categories, sectors, salesByTable, waiterRanking, topWaiter: waiterRanking[0], topTable: salesByTable[0], topProductByRevenue: topProductsByRevenue[0], topProductByQty: topProductsByQty[0], hours }
 }
 
 function SummaryCard({ icon: Icon, title, value, detail, tone = 'fire' }) {
@@ -256,6 +257,10 @@ function closingTables(record = {}) {
     origin: table.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : table.closedByMode === 'mesa_parcial' ? 'Pagamento parcial' : 'Fechada pela mesa',
   }))
   return [...activeTables, ...closedTables]
+}
+
+function closingTableCount(record = {}) {
+  return Number(record.tableCount || closingTables(record).length || 0)
 }
 
 // --- MOTOR DE IMPRESSÃO ESC/POS DOS RELATÓRIOS (QZ TRAY SILENCIOSO) ---
@@ -342,7 +347,7 @@ async function executeThermalPrint(mode, report, selectedClosing, dateLabel, set
       
       addLine("Faturamento total:", money(report.total));
       addLine("Pedidos lancados:", String(report.ordersQty));
-      addLine("Mesas atendidas:", String(report.salesTables.length));
+      addLine("Mesas atendidas:", String(report.attendedTables));
       addLine("Ticket medio:", money(report.ticket));
       payload.push('--------------------------------\n');
 
@@ -413,7 +418,7 @@ function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosi
                   <button className={`closingHistoryItem ${selectedClosing?.id === record.id ? 'active' : ''}`} key={record.id} type="button" onClick={() => onSelectClosing(record.id)}>
                     <span>
                       <strong>{record.closedAtLabel || formatDateBR(record.date)}</strong>
-                      <small>{record.operatorName || 'Operador'} · {record.tableCount || closingTables(record).length || 0} mesas</small>
+                      <small>{record.operatorName || 'Operador'} · {closingTableCount(record)} mesa{closingTableCount(record) === 1 ? '' : 's'}</small>
                     </span>
                     <b>{money(record.total)}</b>
                     <em className={Math.abs(difference) < 0.01 ? 'success' : 'warning'}>{Math.abs(difference) < 0.01 ? 'Sem diferença' : money(difference)}</em>
@@ -610,7 +615,7 @@ export default function Relatorios({ tables = [], settings }) {
   const summaryCards = [
     { title: 'Faturamento total', value: money(report.total), detail: `Movimentação de ${dateLabel}`, icon: WalletCards, tone: 'fire' },
     { title: 'Pedidos lançados', value: report.ordersQty, detail: 'Itens vendidos no período', icon: ReceiptText, tone: 'orange' },
-    { title: 'Mesas atendidas', value: report.salesTables.length, detail: 'Mesas com movimento no período', icon: Table2, tone: 'green' },
+    { title: 'Mesas atendidas', value: report.attendedTables, detail: 'Mesas com movimento no período', icon: Table2, tone: 'green' },
     { title: 'Ticket médio', value: money(report.ticket), detail: 'Por mesa atendida', icon: ClipboardList, tone: 'gold' },
     { title: 'Maior valor de mesa', value: money(report.topTable?.total || 0), detail: report.topTable ? `Mesa ${report.topTable.number} · ${report.topTable.guests || 0} pessoas` : 'Sem mesa', icon: Star, tone: 'fire' },
     { title: 'Produto mais vendido', value: report.topProductByQty?.name || '-', detail: report.topProductByQty ? `${report.topProductByQty.qty} unidades · ${money(report.topProductByQty.total)}` : 'Sem vendas', icon: PackageCheck, tone: 'orange' },
@@ -642,7 +647,7 @@ export default function Relatorios({ tables = [], settings }) {
           <section className="reportPanel simpleSectorPanel"><h2><BarChart3 size={22} /> Resumo por setor</h2><div className="simpleSectorGrid">{report.sectors.map(sector => <div className="simpleSectorCard" key={sector.name}><div><SectorIcon name={sector.name} /></div><strong>{sector.name}</strong><span>{sector.qty} itens</span><i /> <b>{money(sector.total)}</b></div>)}</div></section>
           <div className="reportsMainGrid simpleReportGrid">
             <section className="reportPanel productsPanel"><div className="reportPanelHeader"><div><BarChart3 size={24} /><h2>Produtos mais lançados</h2></div><div className="periodTabs noPrint">{['Hoje', 'Semana', 'Mês'].map(item => <button type="button" key={item} className={period === item ? 'active' : ''} onClick={() => setPeriod(item)}>{item}</button>)}</div></div><div className="premiumReportTable simpleProductsTable"><div className="premiumReportRow head"><span>Produto</span><span>Qtd</span><span>Setor</span><span>Total</span></div>{productReport.topProductsByQty.length ? productReport.topProductsByQty.slice(0, 5).map(item => { const first = item.items?.[0] || {}; return <div className="premiumReportRow" key={item.name}><span>{item.name}</span><span>{item.qty}</span><span><em>{first.sector || '-'}</em></span><span>{money(item.total)}</span></div> }) : <div className="premiumReportRow"><span>Nenhum produto vendido nesse período</span><span>0</span><span><em>-</em></span><span>{money(0)}</span></div>}</div><div className="liveDataPill"><CheckCircle2 size={15} /> {hasProductMovement ? `Movimentação carregada de ${productPeriodText}` : `Nenhuma movimentação salva em ${productPeriodText}`}</div></section>
-            <aside className="reportPanel reportResumePanel simpleResumePanel"><div className="reportPanelHeader compact"><div><ClipboardList size={24} /><h2>Resumo do relatório</h2></div></div><div className="reportResumeList"><div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div><div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>{report.sectors.map(sector => <div key={sector.name}><span><SectorIcon name={sector.name} /> Itens do {sector.name.toLowerCase()}</span><strong>{sector.qty}</strong></div>)}<div><span><Table2 size={18} /> Mesas atendidas</span><strong>{report.salesTables.length}</strong></div></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório baseado no histórico salvo e mesas abertas.</div></aside>
+            <aside className="reportPanel reportResumePanel simpleResumePanel"><div className="reportPanelHeader compact"><div><ClipboardList size={24} /><h2>Resumo do relatório</h2></div></div><div className="reportResumeList"><div><span><TrendingUp size={18} /> Faturamento do dia</span><strong>{money(report.total)}</strong></div><div><span><PackageCheck size={18} /> Pedidos lançados</span><strong>{report.ordersQty}</strong></div>{report.sectors.map(sector => <div key={sector.name}><span><SectorIcon name={sector.name} /> Itens do {sector.name.toLowerCase()}</span><strong>{sector.qty}</strong></div>)}<div><span><Table2 size={18} /> Mesas atendidas</span><strong>{report.attendedTables}</strong></div></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório baseado no histórico salvo e mesas abertas.</div></aside>
           </div>
         </>
       ) : (
@@ -656,7 +661,7 @@ export default function Relatorios({ tables = [], settings }) {
             <section className="reportPanel tablePerformanceComplete"><h2>Desempenho das mesas</h2><div className="completeTable tablesCompleteTable"><div className="completeTableRow head"><span>Mesa</span><span>Total consumido</span><span>Itens</span><span>Pedidos</span><span>Setores</span><span>Garçom</span><span>Situação</span></div>{report.salesByTable.length ? report.salesByTable.slice(0, 7).map(table => <div className="completeTableRow" key={`${table.number}-${table.status}-${table.closedAtLabel}`}><span>Mesa {table.number}</span><span>{money(table.total)}</span><span>{table.items}</span><span>{table.orders}</span><span>{table.sectorsText}</span><span>{table.waiterName}</span><span><em className={table.status === 'aberta' ? 'warning' : 'success'}>{table.status === 'aberta' ? 'Aberta' : 'Fechada'}</em></span></div>) : <div className="completeTableRow"><span>-</span><span>{money(0)}</span><span>0</span><span>0</span><span>-</span><span>-</span><span><em>Sem venda</em></span></div>}</div></section>
             {includeClosedTables && <section className="reportPanel closedTablesReportPanel"><div className="reportPanelTitleRow"><h2>Mesas fechadas do dia</h2><span>{closedTablesForDate.length} mesas em {dateLabel}</span></div><div className="completeTable closedTablesReportTable"><div className="completeTableRow head"><span>Mesa</span><span>Garçom</span><span>Horário</span><span>Itens</span><span>Origem</span><span>Total</span></div>{closedTablesForDate.length ? closedTablesForDate.map(record => <div className="completeTableRow" key={record.id}><span>Mesa {record.tableNumber}</span><span>{record.waiterName || 'Sem garçom'}</span><span>{record.closedAtLabel || '-'}</span><span>{record.itemsQty}</span><span>{record.sourceLabel}</span><span>{money(record.total)}</span></div>) : <div className="completeTableRow"><span>-</span><span>Nenhuma mesa fechada nessa data</span><span>-</span><span>0</span><span>-</span><span>{money(0)}</span></div>}</div></section>}
             <section className="reportPanel movementPanel"><h2>Horários de maior movimento</h2><div className="movementChart">{report.hours.map(hour => <div key={hour.label}><span style={{ height: `${Math.max(8, hour.count * 24)}px` }} /><small>{hour.label}</small></div>)}</div></section>
-            <section className="reportPanel indicatorsPanel"><h2>Indicadores gerais</h2><div className="indicatorRows"><p><span>Total de comandas com movimento</span><strong>{report.salesTables.length}</strong></p><p><span>Total de itens vendidos</span><strong>{report.ordersQty}</strong></p><p><span>Ticket médio por mesa</span><strong>{money(report.ticket)}</strong></p><p><span>Média de itens por mesa</span><strong>{report.salesTables.length ? (report.ordersQty / report.salesTables.length).toFixed(1).replace('.', ',') : '0,0'}</strong></p></div></section>
+            <section className="reportPanel indicatorsPanel"><h2>Indicadores gerais</h2><div className="indicatorRows"><p><span>Total de comandas com movimento</span><strong>{report.attendedTables}</strong></p><p><span>Total de itens vendidos</span><strong>{report.ordersQty}</strong></p><p><span>Ticket médio por mesa</span><strong>{money(report.ticket)}</strong></p><p><span>Média de itens por mesa</span><strong>{report.attendedTables ? (report.ordersQty / report.attendedTables).toFixed(1).replace('.', ',') : '0,0'}</strong></p></div></section>
             <section className="reportPanel generalSummaryPanel"><h2>Resumo geral</h2><div className="indicatorRows"><p><span>Faturamento total</span><strong>{money(report.total)}</strong></p><p><span>Mesa destaque</span><strong>{report.topTable ? `Mesa ${report.topTable.number} · ${money(report.topTable.total)}` : '-'}</strong></p><p><span>Mais vendido em quantidade</span><strong>{report.topProductByQty ? `${report.topProductByQty.name} · ${report.topProductByQty.qty} un.` : '-'}</strong></p><p><span>Maior faturamento</span><strong>{report.topProductByRevenue ? `${report.topProductByRevenue.name} · ${money(report.topProductByRevenue.total)}` : '-'}</strong></p><p><span>Garçom destaque</span><strong>{report.topWaiter ? `${report.topWaiter.name} · ${report.topWaiter.tables} mesas · ${money(report.topWaiter.total)}` : '-'}</strong></p></div><div className="readyMessage"><CheckCircle2 size={17} /> Relatório gerado com histórico salvo e mesas abertas de {dateLabel}.</div></section>
           </div>
         </>

@@ -85,12 +85,12 @@ function buildWaiterSummary(tables = []) {
   const map = new Map()
   tables.forEach(table => {
     const waiterName = getTableWaiter(table)
-    const current = map.get(waiterName) || { name: waiterName, tables: 0, total: 0 }
-    current.tables += 1
+    const current = map.get(waiterName) || { name: waiterName, tableNumbers: new Set(), total: 0 }
+    current.tableNumbers.add(String(table.number || table.id || ''))
     current.total += getTableTotal(table)
     map.set(waiterName, current)
   })
-  return Array.from(map.values()).sort((a, b) => b.total - a.total || b.tables - a.tables)
+  return Array.from(map.values()).map(waiter => ({ name: waiter.name, tables: waiter.tableNumbers.size, total: waiter.total })).sort((a, b) => b.total - a.total || b.tables - a.tables)
 }
 
 function buildCategorySummary(items = []) {
@@ -124,6 +124,8 @@ function buildClosingData(tables = [], closedTablesHistory = [], selectedDate = 
   const closedTableRecords = getClosedTablesForDate(closedTablesHistory, selectedDate)
   const closedTables = closedTableRecords.map(closedRecordToTable)
   const conferenceTables = [...activeTables, ...closedTables]
+  const closedTableCount = new Set(closedTables.map(table => String(table.number || table.id || ''))).size
+  const conferenceTableCount = new Set(conferenceTables.map(table => String(table.number || table.id || ''))).size
   const items = getTableItems(conferenceTables)
   const total = conferenceTables.reduce((sum, table) => sum + getTableTotal(table), 0)
   const totalItems = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
@@ -137,9 +139,9 @@ function buildClosingData(tables = [], closedTablesHistory = [], selectedDate = 
     date: selectedDate,
     total,
     payments: { dinheiro: 0, pix: 0, cartao: 0, outros: 0 },
-    closedTables: closedTableRecords.length,
+    closedTables: closedTableCount,
     openTables: activeTables.length,
-    conferenceTables: conferenceTables.length,
+    conferenceTables: conferenceTableCount,
     totalOrders: totalItems,
     cancelledItems: { qty: 0, total: 0 },
     discounts: { qty: 0, total: 0 },
@@ -151,7 +153,7 @@ function buildClosingData(tables = [], closedTablesHistory = [], selectedDate = 
     topProductsByRevenue: topProducts.byRevenue,
     waiters,
     topWaiter,
-    ticketAverage: conferenceTables.length ? total / conferenceTables.length : 0,
+    ticketAverage: conferenceTableCount ? total / conferenceTableCount : 0,
   }
 }
 

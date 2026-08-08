@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, Clock, Eye, Flame, PackageCheck, Printer, RefreshCw, Search, Send, Soup, Users, X } from 'lucide-react'
-import { executeThermalPrint as executeSecureThermalPrint } from '../services/qzPrintService.js'
+import { enqueuePrintJob } from '../services/printQueueApi.js'
 
 const sectorConfig = {
   cozinha: { label: 'Cozinha', icon: Soup, className: 'kitchen' },
@@ -219,10 +219,11 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
   }
 
   async function reprintOrder(order) {
-    await executeSecureThermalPrint({
+    await enqueuePrintJob({
       type: 'kitchen',
       title: 'PEDIDO DE PREPARO',
       reprint: true,
+      dedupeKey: `kitchen-reprint-${order.id || order.tableNumber}-${Date.now()}`,
       tableNumber: order.tableNumber,
       customerName: order.customerName,
       peopleCount: order.peopleCount || order.guests || 1,

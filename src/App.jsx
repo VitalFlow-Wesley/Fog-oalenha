@@ -588,6 +588,10 @@ export default function App() {
         observation: note,
       }))
     const nextClosedTablesHistory = mergeClosedTableHistory(closedTableRecords, readStored(CLOSED_TABLES_KEY, []))
+    const attendedTableCount = new Set([
+      ...activeTables.map(table => String(table.number || table.id || '')),
+      ...closedTablesAlreadyInDay.map(record => String(record.tableNumber || record.tableId || record.id || '')),
+    ]).size
     const closingRecord = {
       id: `closing-${Date.now()}`,
       date: closingDate,
@@ -599,7 +603,7 @@ export default function App() {
       difference: informedTotal - total,
       payments: payments || {},
       note: note || '',
-      tableCount: activeTables.length + closedTablesAlreadyInDay.length,
+      tableCount: attendedTableCount,
       itemCount: salesRecords.reduce((sum, record) => sum + record.items.reduce((itemSum, item) => itemSum + Number(item.qty || 0), 0), 0) + closedTablesAlreadyInDay.reduce((sum, record) => sum + closedTableItemsQty(record), 0),
       tables: activeTables,
       closedTables: closedTablesAlreadyInDay,
