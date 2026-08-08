@@ -55,3 +55,21 @@ Configurações:
 - Framework: Vite
 - Build Command: npm run build
 - Output Directory: dist
+
+## Modo híbrido online/local
+
+A implementação híbrida está documentada em:
+
+- `docs/ARQUITETURA-HIBRIDA.md`
+- `docs/INSTALACAO-LOCAL-WINDOWS.md`
+- `docs/OPERACAO-E-RECUPERACAO.md`
+
+Comandos principais:
+
+```bash
+npm run local:build
+npm run local:start
+npm run local:check
+```
+
+O servidor local reutiliza as mesmas APIs da versão online e conecta ao MongoDB Community Edition do computador do caixa.

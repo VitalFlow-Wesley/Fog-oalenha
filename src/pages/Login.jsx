@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Flame, Lock, User } from 'lucide-react'
 import loginBackground from '../assets/login-bg.png'
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, runtimeConfig }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -42,6 +42,7 @@ export default function Login({ onLogin }) {
           <button className="primaryBtn premiumLoginBtn" type="submit" disabled={busy}>{busy ? 'Entrando...' : 'Acessar sistema'}</button>
         </form>
         <div className="systemInternalBadge"><Lock size={14} />Sistema interno</div>
+        <div className={`loginEnvironmentBadge ${runtimeConfig?.mode === 'local' ? 'local' : 'online'}`}>{runtimeConfig?.mode === 'local' ? 'Servidor local — funciona sem internet' : 'Sistema online'}</div>
       </section>
     </main>
   )

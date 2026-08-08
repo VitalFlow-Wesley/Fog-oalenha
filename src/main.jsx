@@ -76,6 +76,7 @@ import './command-mobile-layout-runtime.js'
 import './command-mobile-compact.css'
 import './command-mobile-title-row.css'
 import './partial-close.css'
+import './hybrid-mode.css'
 import './reports-mobile-final-override.css'
 
 createRoot(document.getElementById('root')).render(

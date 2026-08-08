@@ -9,6 +9,9 @@ dist/
 .env
 .env.local
 .env.*.local
+local-server/.env
+.local-runtime/
+backups/
 
 # Logs
 npm-debug.log*

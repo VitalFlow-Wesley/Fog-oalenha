@@ -13,6 +13,7 @@ import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
 import { fetchPendingPrintJobs, updatePrintJobStatus } from './services/printQueueApi.js'
 import { ensureQzReady, executeThermalPrint } from './services/qzPrintService.js'
 import { repairData, repairText } from './text-normalizer.js'
+import { loadRuntimeConfig } from './services/runtimeConfig.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
 const USERS_KEY = 'fogao-users-v1'
@@ -279,11 +280,18 @@ export default function App() {
   const [users, setUsers] = useState(() => readStored(USERS_KEY, initialUsers))
   const [settings, setSettings] = useState(() => ({ ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }))
   const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
+  const [runtimeConfig, setRuntimeConfig] = useState({ mode: 'online', label: 'Sistema online', onlineUrl: window.location.origin, localUrl: '' })
   const remoteLoadedRef = useRef(false)
   const saveTimerRef = useRef(null)
   const applyingRemoteRef = useRef(false)
   const lastLocalChangeRef = useRef(0)
   const pollingInFlightRef = useRef(false)
+
+  useEffect(() => {
+    let active = true
+    loadRuntimeConfig().then(config => { if (active) setRuntimeConfig(config) })
+    return () => { active = false }
+  }, [])
 
   function restrictWaiterLocalData(user, sourceSettings = settings) {
     const safeUser = publicClientUser(user)
@@ -785,11 +793,11 @@ export default function App() {
     }
   }, [currentUser, settings])
 
-  if (!currentUser) return <Login onLogin={handleLogin} />
+  if (!currentUser) return <Login onLogin={handleLogin} runtimeConfig={runtimeConfig} />
 
   return (
     <div className="appShell">
-      <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={handleLogout} />
+      <Sidebar page={page} setPage={setPage} currentUser={currentUser} onLogout={handleLogout} runtimeConfig={runtimeConfig} />
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}

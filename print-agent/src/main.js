@@ -4,7 +4,7 @@ import net from 'node:net'
 
 const store = new Store({
   defaults: {
-    apiUrl: 'https://project-c6vsh.vercel.app/api/print-jobs',
+    apiUrl: process.env.FOGAO_PRINT_API_URL || 'https://project-c6vsh.vercel.app/api/print-jobs',
     agentToken: '',
     cashierPrinterName: '',
     kitchenPrinterIp: '',
@@ -13,6 +13,9 @@ const store = new Store({
     pollingIntervalMs: 2500,
   },
 })
+
+if (process.env.FOGAO_PRINT_API_URL) store.set('apiUrl', process.env.FOGAO_PRINT_API_URL)
+if (process.env.FOGAO_PRINT_AGENT_TOKEN) store.set('agentToken', process.env.FOGAO_PRINT_AGENT_TOKEN)
 
 let mainWindow
 let pollingTimer

@@ -1,4 +1,4 @@
-import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator, Flame } from 'lucide-react'
+import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator, Flame, Cloud, Server } from 'lucide-react'
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
@@ -13,7 +13,7 @@ const managerMenu = [
   { key: 'usuarios', label: 'Configurações', icon: Settings },
 ]
 
-export default function Sidebar({ page, setPage, onLogout, currentUser }) {
+export default function Sidebar({ page, setPage, onLogout, currentUser, runtimeConfig }) {
   const canSeeManagement = currentUser?.role === 'admin' || currentUser?.role === 'gerente'
   const menu = canSeeManagement ? managerMenu : waiterMenu
 
@@ -54,6 +54,13 @@ export default function Sidebar({ page, setPage, onLogout, currentUser }) {
           )
         })}
       </nav>
+
+      <div className={`environmentCard ${runtimeConfig?.mode === 'local' ? 'local' : 'online'}`}>
+        {runtimeConfig?.mode === 'local' ? <Server size={17} /> : <Cloud size={17} />}
+        <div><strong>{runtimeConfig?.mode === 'local' ? 'Modo local' : 'Modo online'}</strong><span>{runtimeConfig?.label}</span></div>
+        {runtimeConfig?.mode === 'local' && runtimeConfig?.onlineUrl && <a href={runtimeConfig.onlineUrl} target="_blank" rel="noreferrer">Abrir online</a>}
+        {runtimeConfig?.mode === 'online' && runtimeConfig?.localUrl && <a href={runtimeConfig.localUrl} target="_blank" rel="noreferrer">Abrir local</a>}
+      </div>
 
       <div className="sidebarLogoutArea">
         <button className="logoutBtn" onClick={onLogout}>
