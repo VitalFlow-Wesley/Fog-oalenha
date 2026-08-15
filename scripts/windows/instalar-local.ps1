@@ -24,6 +24,11 @@ try {
   npm run local:build
 } finally { Pop-Location }
 
+Push-Location (Join-Path $ProjectRoot 'print-agent')
+try {
+  npm install
+} finally { Pop-Location }
+
 $ruleName = 'Fogao a Lenha - Servidor Local'
 if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) {
   try { New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private | Out-Null }

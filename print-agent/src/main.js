@@ -4,18 +4,22 @@ import net from 'node:net'
 
 const store = new Store({
   defaults: {
-    apiUrl: process.env.FOGAO_PRINT_API_URL || 'https://project-c6vsh.vercel.app/api/print-jobs',
+    // O agente é sempre local. A fila e a impressão não dependem da internet.
+    apiUrl: process.env.FOGAO_PRINT_API_URL || 'http://127.0.0.1:3000/api/print-jobs',
     agentToken: '',
     cashierPrinterName: '',
-    kitchenPrinterIp: '',
+    kitchenPrinterIp: process.env.FOGAO_KITCHEN_PRINTER_IP || '192.168.1.110',
     kitchenPrinterPort: 9100,
-    simulationMode: true,
+    simulationMode: process.env.FOGAO_PRINT_SIMULATION_MODE === 'true',
     pollingIntervalMs: 2500,
   },
 })
 
 if (process.env.FOGAO_PRINT_API_URL) store.set('apiUrl', process.env.FOGAO_PRINT_API_URL)
 if (process.env.FOGAO_PRINT_AGENT_TOKEN) store.set('agentToken', process.env.FOGAO_PRINT_AGENT_TOKEN)
+if (process.env.FOGAO_KITCHEN_PRINTER_IP) store.set('kitchenPrinterIp', process.env.FOGAO_KITCHEN_PRINTER_IP)
+if (process.env.FOGAO_KITCHEN_PRINTER_PORT) store.set('kitchenPrinterPort', Number(process.env.FOGAO_KITCHEN_PRINTER_PORT))
+if (process.env.FOGAO_PRINT_SIMULATION_MODE) store.set('simulationMode', process.env.FOGAO_PRINT_SIMULATION_MODE === 'true')
 
 let mainWindow
 let pollingTimer
@@ -38,6 +42,7 @@ function createWindow() {
 }
 
 function emitStatus(message, level = 'info') {
+  process.stdout.write(`[PRINT] ${message}\n`)
   mainWindow?.webContents.send('agent:status', {
     message,
     level,
@@ -195,6 +200,8 @@ async function printKitchen(job) {
   if (!host) throw new Error('IP da impressora da cozinha não configurado.')
 
   const payload = buildKitchenText(job)
+  emitStatus(`Setor: cozinha | Impressora: ${host}:${port}`)
+  emitStatus('Conectando')
 
   await new Promise((resolve, reject) => {
     const socket = net.createConnection({ host, port })
@@ -204,6 +211,7 @@ async function printKitchen(job) {
     }, 5000)
 
     socket.on('connect', () => {
+      emitStatus('Enviando ESC/POS')
       socket.write(payload, error => {
         clearTimeout(timeout)
         socket.end()
@@ -222,7 +230,8 @@ async function printKitchen(job) {
 }
 
 async function processJob(job) {
-  await apiRequest('PATCH', { id: job._id, status: 'printing' })
+  emitStatus(`Job recebido: ${job._id} | Setor: ${job.type === 'cashier' ? 'caixa' : 'cozinha'}`)
+  await apiRequest('PATCH', { id: job._id, status: 'printing', agentId: 'fogao-a-lenha-local' })
 
   try {
     const printer = job.type === 'cashier'
@@ -234,14 +243,14 @@ async function processJob(job) {
       status: 'printed',
       printer,
     })
-    emitStatus(`${job.type === 'cashier' ? 'Conta' : 'Pedido'} da mesa ${job.tableNumber} impresso com sucesso.`, 'success')
+    emitStatus(`Sucesso | ${job.type === 'cashier' ? 'Conta' : 'Pedido'} da mesa ${job.tableNumber} impresso com sucesso.`, 'success')
   } catch (error) {
     await apiRequest('PATCH', {
       id: job._id,
       status: 'error',
       error: error.message,
     }).catch(() => {})
-    emitStatus(`Erro na impressão da mesa ${job.tableNumber}: ${error.message}`, 'error')
+    emitStatus(`Falha: ${error.message} | Mesa ${job.tableNumber}`, 'error')
   }
 }
 
