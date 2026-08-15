@@ -77,10 +77,10 @@ async function apiRequest(method, body, query = '') {
 }
 
 function money(value) {
-  return Number(value || 0).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  // ESC/POS thermal printers do not reliably decode the non-breaking space
+  // emitted by Intl for Brazilian currency ("R$\u00a06,00"). Keep the receipt
+  // strictly ASCII so it prints as "R$ 6,00", never "R$â6,00".
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
 }
 
 function escapeHtml(value) {
