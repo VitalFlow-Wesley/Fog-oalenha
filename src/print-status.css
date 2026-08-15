@@ -1,0 +1,15 @@
+.printNotice { display:flex; align-items:center; gap:10px; margin:0 0 16px; padding:12px 14px; border-radius:10px; font-weight:700; }
+.printNotice span { flex:1; }
+.printNotice button { border:0; border-radius:7px; padding:7px 10px; font:inherit; cursor:pointer; }
+.printNotice-pending { color:#6b4e00; background:#fff3cd; }
+.printNotice-processing { color:#084298; background:#cfe2ff; }
+.printNotice-printed { color:#0f5132; background:#d1e7dd; }
+.printNotice-failed { color:#842029; background:#f8d7da; }
+.printNotice-idle { color:#41464b; background:#e2e3e5; }
+.printNotice-failed button { background:#842029; color:white; }
+.printNoticeClose { background:transparent; color:inherit; padding:4px !important; }
+.itemPrintStatus { display:block; width:max-content; margin-top:4px; padding:2px 6px; border-radius:999px; font-weight:700; }
+.itemPrintStatus-pending { color:#6b4e00; background:#fff3cd; }
+.itemPrintStatus-processing { color:#084298; background:#cfe2ff; }
+.itemPrintStatus-printed { color:#0f5132; background:#d1e7dd; }
+.itemPrintStatus-failed { color:#842029; background:#f8d7da; }

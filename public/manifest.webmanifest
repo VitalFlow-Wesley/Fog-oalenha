@@ -1,0 +1,26 @@
+{
+  "name": "Fogão a Lenha - Gestão da Churrascaria",
+  "short_name": "Fogão a Lenha",
+  "description": "Sistema de mesas, pedidos, cozinha, relatórios e fechamento de caixa.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fff7ea",
+  "theme_color": "#d94a2b",
+  "categories": ["business", "food", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/logooficial.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logooficial.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

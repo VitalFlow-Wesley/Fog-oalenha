@@ -1,0 +1,405 @@
+/* Camada final de estabilidade visual e responsividade */
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+html {
+  overflow-x: hidden;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+  font: inherit;
+}
+
+button,
+[role='button'],
+a,
+label,
+select,
+input[type='checkbox'],
+input[type='radio'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page,
+.appContent,
+.mainContent,
+main,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+form,
+[class*='Grid'],
+[class*='Layout'],
+[class*='Panel'],
+[class*='Card'],
+[class*='Table'],
+[class*='Row'] {
+  min-width: 0;
+}
+
+.page {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Tabelas e listas largas nunca devem cortar conteúdo */
+.premiumReportTable,
+.completeTable,
+.accessTable,
+.productsTable,
+.printerTable,
+.closedTablesReportTable,
+[class*='TableWrap'],
+[class*='tableWrap'] {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Modais utilizáveis mesmo em telas baixas */
+[role='dialog'],
+.modal,
+.modalCard,
+.modalContent,
+[class*='Modal'] {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+}
+
+.modalContent,
+.modalBody,
+[class*='ModalBody'] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Textos longos não forçam largura */
+h1,
+h2,
+h3,
+p,
+span,
+strong,
+small,
+label,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+/* Estado de erro global */
+.appFatalError {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #fbf5e9;
+}
+
+.appFatalErrorCard {
+  width: min(520px, 100%);
+  padding: 30px;
+  border: 1px solid #ead3b8;
+  border-radius: 24px;
+  background: #fffdf8;
+  color: #3b2118;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(87, 46, 27, .12);
+}
+
+.appFatalErrorIcon {
+  width: 58px;
+  height: 58px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff0cf;
+  color: #c64c27;
+}
+
+.appFatalErrorCard h1 {
+  margin: 10px 0 8px;
+  font-size: clamp(26px, 5vw, 42px);
+}
+
+.appFatalErrorCard p {
+  color: #7c675c;
+}
+
+.appFatalErrorCard button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #bd4826, #f05a32);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* Correção final do modal de mesas fechadas */
+.closedTablesOverlay {
+  padding: 12px !important;
+}
+
+.closedTablesModal {
+  width: min(900px, calc(100vw - 24px)) !important;
+  max-height: calc(100dvh - 24px) !important;
+  padding: 22px !important;
+  overflow-y: auto !important;
+}
+
+.closedTablesDateFilter {
+  display: grid !important;
+  grid-template-columns: max-content minmax(220px, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 10px 12px !important;
+}
+
+.closedTablesDateFilter > span {
+  display: inline-block !important;
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-height: 1 !important;
+}
+
+.closedTablesDateFilter input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+}
+
+.closedTablesSummary {
+  gap: 10px !important;
+  margin: 10px 0 12px !important;
+}
+
+.closedTablesSummary > div {
+  min-height: 70px !important;
+  padding: 10px 14px !important;
+}
+
+.closedTablesList {
+  gap: 8px !important;
+}
+
+.closedTableCard {
+  padding: 12px 14px !important;
+}
+
+.closedTableCard header strong,
+.closedTableCard header b {
+  font-size: 20px !important;
+}
+
+.closedTableFooter {
+  align-items: center !important;
+}
+
+.closedTableFooter button {
+  flex: 0 0 auto !important;
+  min-width: 132px !important;
+}
+
+@media (max-width: 1024px) {
+  .reportsSummaryGrid,
+  .dashboardSummaryGrid,
+  .accessSummaryGrid,
+  .tableSummaryGrid,
+  .closingSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportsMainGrid,
+  .completeReportLayout,
+  .accessMainGrid,
+  .tablesSettingsLayout,
+  .closingMainGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    min-width: 320px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  button,
+  [role='button'] {
+    min-height: 40px;
+  }
+
+  .page {
+    padding-inline: 12px !important;
+  }
+
+  .settingsTabs,
+  .reportTabs,
+  .periodTabs,
+  .headerActions,
+  .reportsActions {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+  }
+
+  .settingsTabs button,
+  .reportTabs button,
+  .periodTabs button {
+    flex: 0 0 auto;
+  }
+
+  .reportsSummaryGrid,
+  .dashboardSummaryGrid,
+  .accessSummaryGrid,
+  .tableSummaryGrid,
+  .closingSummaryGrid,
+  .sectorPerformanceGrid,
+  .simpleSectorGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportPanel,
+  .settingsPanel,
+  .dashboardPanel,
+  .closingPanel {
+    max-width: 100%;
+  }
+
+  .closedTablesModal {
+    width: calc(100vw - 12px) !important;
+    max-height: calc(100dvh - 12px) !important;
+    padding: 16px !important;
+  }
+
+  .closedTablesDateFilter {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .closedTablesSummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .reportsSummaryGrid,
+  .dashboardSummaryGrid,
+  .accessSummaryGrid,
+  .tableSummaryGrid,
+  .closingSummaryGrid,
+  .sectorPerformanceGrid,
+  .simpleSectorGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page {
+    padding-inline: 8px !important;
+  }
+
+  .reportPanel,
+  .settingsPanel,
+  .dashboardPanel,
+  .closingPanel,
+  .reportsHeader,
+  .settingsTopHeader {
+    border-radius: 16px !important;
+  }
+
+  .appFatalError {
+    padding: 12px;
+  }
+
+  .appFatalErrorCard {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .closedTablesSummary {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .closedTablesSummary > div:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .closedTableCard header,
+  .closedTableFooter {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .closedTableFooter button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media print {
+  .noPrint,
+  .sidebar,
+  .mobileNav,
+  .appFatalError {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .page {
+    overflow: visible !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}

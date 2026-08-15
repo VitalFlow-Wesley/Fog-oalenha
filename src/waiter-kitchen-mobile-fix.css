@@ -1,0 +1,160 @@
+.waiterKitchenView .kitchenOrdersLayout {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.waiterKitchenView .kitchenOrdersList {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+}
+
+.waiterKitchenView .kitchenOrderCard {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 12px !important;
+  align-items: start !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+.waiterKitchenView .kitchenOrderContent,
+.waiterKitchenView .kitchenOrderMesa,
+.waiterKitchenView .kitchenOrderActions {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.waiterKitchenView .kitchenOrderContent ul {
+  padding-left: 18px !important;
+  margin: 8px 0 !important;
+}
+
+.waiterKitchenView .kitchenOrderContent li,
+.waiterKitchenView .kitchenObs {
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+.waiterKitchenView .kitchenOrderActions {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.waiterKitchenView .kitchenOrderActions button,
+.waiterKitchenView .kitchenOrderActions .sentBadge {
+  flex: 1 1 130px !important;
+  justify-content: center !important;
+  min-height: 44px !important;
+}
+
+@media (max-width: 760px) {
+  .waiterKitchenView {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .waiterKitchenView .kitchenOrdersHeaderRefined {
+    margin-bottom: 18px !important;
+  }
+
+  .waiterKitchenView .kitchenActionsRefined,
+  .waiterKitchenView .kitchenBottomActions,
+  .waiterKitchenView .kitchenSearch {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .waiterKitchenView .kitchenFilterChips {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin: 8px 0 18px !important;
+  }
+
+  .waiterKitchenView .kitchenOrdersLayout {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .waiterKitchenView .kitchenOrdersList {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .waiterKitchenView .kitchenOrderCard {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    display: grid !important;
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    border-radius: 22px !important;
+    overflow: visible !important;
+    transform: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  .waiterKitchenView .kitchenTableBadge {
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    border-radius: 18px !important;
+    position: static !important;
+    transform: none !important;
+  }
+
+  .waiterKitchenView .kitchenOrderMesa,
+  .waiterKitchenView .kitchenOrderContent {
+    grid-column: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .waiterKitchenView .sectorBadges {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .waiterKitchenView .kitchenOrderActions {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .waiterKitchenView .kitchenOrderActions button,
+  .waiterKitchenView .kitchenOrderActions .sentBadge {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}

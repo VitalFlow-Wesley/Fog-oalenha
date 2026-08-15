@@ -1,0 +1,487 @@
+/* Ajuste global: cards de resumo mais compactos
+   Estrutura visual: ícone à esquerda, título + valor na mesma linha e descrição abaixo. */
+
+/* Configurações > Acessos */
+.accessSummaryGrid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.accessSummaryCard {
+  min-height: 68px !important;
+  padding: 10px 14px !important;
+  grid-template-columns: 40px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.accessSummaryCard svg {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 9px !important;
+}
+
+.accessSummaryCard div {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.accessSummaryCard span {
+  grid-column: 1 !important;
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+}
+
+.accessSummaryCard strong {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.accessSummaryCard small {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Mesas e comandas */
+.restaurantTablesPage .summaryCard,
+.tablesSummaryGrid .summaryCard,
+.summaryCards .summaryCard {
+  min-height: 70px !important;
+  padding: 10px 14px !important;
+  align-items: center !important;
+}
+
+.restaurantTablesPage .summaryCard .summaryContent,
+.tablesSummaryGrid .summaryCard .summaryContent,
+.summaryCards .summaryCard .summaryContent {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.restaurantTablesPage .summaryCard h3,
+.tablesSummaryGrid .summaryCard h3,
+.summaryCards .summaryCard h3,
+.restaurantTablesPage .summaryCard span,
+.tablesSummaryGrid .summaryCard span,
+.summaryCards .summaryCard span {
+  font-size: 13px !important;
+  line-height: 1.1 !important;
+}
+
+.restaurantTablesPage .summaryCard strong,
+.tablesSummaryGrid .summaryCard strong,
+.summaryCards .summaryCard strong {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.restaurantTablesPage .summaryCard p,
+.tablesSummaryGrid .summaryCard p,
+.summaryCards .summaryCard p,
+.restaurantTablesPage .summaryCard small,
+.tablesSummaryGrid .summaryCard small,
+.summaryCards .summaryCard small {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Dashboard */
+.dashboardPage .metricCard,
+.dashboardPremiumPage .metricCard,
+.operationDashboard .metricCard {
+  min-height: 150px !important;
+  padding: 18px 18px !important;
+}
+
+.dashboardPage .metricCard h3,
+.dashboardPremiumPage .metricCard h3,
+.operationDashboard .metricCard h3 {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+  line-height: 1.05 !important;
+}
+
+.dashboardPage .metricCard .metricValue,
+.dashboardPremiumPage .metricCard .metricValue,
+.operationDashboard .metricCard .metricValue,
+.dashboardPage .metricCard strong,
+.dashboardPremiumPage .metricCard strong,
+.operationDashboard .metricCard strong {
+  font-size: 34px !important;
+  line-height: 1 !important;
+}
+
+/* Pedidos enviados */
+.kitchenSummaryGrid {
+  gap: 9px !important;
+  margin-bottom: 10px !important;
+}
+
+.kitchenSummaryCard {
+  min-height: 58px !important;
+  padding: 9px 12px !important;
+  gap: 9px !important;
+}
+
+.kitchenSummaryCard .summaryRoundIcon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.kitchenSummaryCard > div:last-child {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+}
+
+.kitchenSummaryCard span {
+  font-size: 12.5px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+}
+
+.kitchenSummaryCard strong {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+/* Relatórios */
+.reportMetricCard,
+.reportsPage .metricCard,
+.reportsPremiumPage .metricCard {
+  min-height: 72px !important;
+  padding: 10px 14px !important;
+}
+
+.reportMetricCard > div,
+.reportsPage .metricCard > div,
+.reportsPremiumPage .metricCard > div {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  justify-content: start !important;
+  align-items: baseline !important;
+  column-gap: 8px !important;
+  row-gap: 2px !important;
+}
+
+.reportMetricCard span,
+.reportsPage .metricCard span,
+.reportsPremiumPage .metricCard span,
+.reportMetricCard h3,
+.reportsPage .metricCard h3,
+.reportsPremiumPage .metricCard h3 {
+  font-size: 12.5px !important;
+  line-height: 1.1 !important;
+}
+
+.reportMetricCard strong,
+.reportsPage .metricCard strong,
+.reportsPremiumPage .metricCard strong {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.reportMetricCard small,
+.reportsPage .metricCard small,
+.reportsPremiumPage .metricCard small,
+.reportMetricCard p,
+.reportsPage .metricCard p,
+.reportsPremiumPage .metricCard p {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* =========================================================
+   REFORÇO — cards que ainda estavam com número embaixo
+   ========================================================= */
+
+/* Configurações > Mesas: Mesas cadastradas / Mesas ativas / Juntar mesas */
+.tableSummaryGrid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.tableSummaryCard {
+  min-height: 66px !important;
+  padding: 10px 14px !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.tableSummaryCard svg {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 9px !important;
+  border-radius: 13px !important;
+}
+
+.tableSummaryCard span {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: inline !important;
+  align-self: baseline !important;
+  color: #6f5849 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.tableSummaryCard strong {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: inline !important;
+  justify-self: start !important;
+  align-self: baseline !important;
+  margin-left: 132px !important;
+  color: #c24928 !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.tableSummaryCard.positive strong {
+  color: #0c8d57 !important;
+}
+
+.tableSummaryCard.join strong {
+  color: #c24928 !important;
+  margin-left: 120px !important;
+  font-size: 18px !important;
+}
+
+/* Dashboard / Visão geral: cards grandes do topo */
+.dashboardMetricsGrid,
+.dashboardSummaryGrid,
+.metricsGrid {
+  gap: 10px !important;
+}
+
+.dashboardPage .metricCard,
+.dashboardPremiumPage .metricCard,
+.operationDashboard .metricCard,
+.dashboardMetricCard,
+.dashboardSummaryCard,
+.metricCard {
+  min-height: 84px !important;
+  padding: 12px 14px !important;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.dashboardPage .metricCard > svg,
+.dashboardPremiumPage .metricCard > svg,
+.operationDashboard .metricCard > svg,
+.dashboardPage .metricCard .metricIcon,
+.dashboardPremiumPage .metricCard .metricIcon,
+.operationDashboard .metricCard .metricIcon,
+.metricCard .metricIcon {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 10px !important;
+  border-radius: 999px !important;
+}
+
+.dashboardPage .metricCard h3,
+.dashboardPremiumPage .metricCard h3,
+.operationDashboard .metricCard h3,
+.dashboardMetricCard h3,
+.dashboardSummaryCard h3,
+.metricCard h3 {
+  display: inline !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  font-size: 15px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+  max-width: none !important;
+}
+
+.dashboardPage .metricCard strong,
+.dashboardPremiumPage .metricCard strong,
+.operationDashboard .metricCard strong,
+.dashboardPage .metricCard .metricValue,
+.dashboardPremiumPage .metricCard .metricValue,
+.operationDashboard .metricCard .metricValue,
+.dashboardMetricCard strong,
+.dashboardSummaryCard strong,
+.metricCard strong,
+.metricCard .metricValue {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+  align-self: baseline !important;
+  margin: 0 0 0 8px !important;
+  transform: translateX(145px) !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.dashboardPage .metricCard p,
+.dashboardPremiumPage .metricCard p,
+.operationDashboard .metricCard p,
+.dashboardMetricCard p,
+.dashboardSummaryCard p,
+.metricCard p,
+.metricCard small {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  margin: 3px 0 0 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Mesas e comandas: cards do salão */
+.restaurantTablesPage .summaryCard,
+.tablesSummaryGrid .summaryCard,
+.tablesHeroMetrics .summaryCard,
+.mesasComandasResumo .summaryCard,
+.tablesHeaderStats .summaryCard {
+  min-height: 86px !important;
+  padding: 12px 14px !important;
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) 42px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.restaurantTablesPage .summaryIcon,
+.tablesSummaryGrid .summaryIcon,
+.tablesHeroMetrics .summaryIcon,
+.mesasComandasResumo .summaryIcon,
+.tablesHeaderStats .summaryIcon {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
+.restaurantTablesPage .summaryCard .summaryContent,
+.tablesSummaryGrid .summaryCard .summaryContent,
+.tablesHeroMetrics .summaryCard .summaryContent,
+.mesasComandasResumo .summaryCard .summaryContent,
+.tablesHeaderStats .summaryCard .summaryContent {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  align-items: baseline !important;
+  justify-content: start !important;
+  column-gap: 10px !important;
+  row-gap: 4px !important;
+}
+
+.restaurantTablesPage .summaryCard h3,
+.tablesSummaryGrid .summaryCard h3,
+.tablesHeroMetrics .summaryCard h3,
+.mesasComandasResumo .summaryCard h3,
+.tablesHeaderStats .summaryCard h3 {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+}
+
+.restaurantTablesPage .summaryCard strong,
+.tablesSummaryGrid .summaryCard strong,
+.tablesHeroMetrics .summaryCard strong,
+.mesasComandasResumo .summaryCard strong,
+.tablesHeaderStats .summaryCard strong {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+.restaurantTablesPage .summaryCard p,
+.tablesSummaryGrid .summaryCard p,
+.tablesHeroMetrics .summaryCard p,
+.mesasComandasResumo .summaryCard p,
+.tablesHeaderStats .summaryCard p,
+.restaurantTablesPage .summaryCard small,
+.tablesSummaryGrid .summaryCard small,
+.tablesHeroMetrics .summaryCard small,
+.mesasComandasResumo .summaryCard small,
+.tablesHeaderStats .summaryCard small {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  margin: 0 !important;
+  font-size: 11.5px !important;
+  line-height: 1.15 !important;
+}
+
+.restaurantTablesPage .summaryGhost,
+.tablesSummaryGrid .summaryGhost,
+.tablesHeroMetrics .summaryGhost,
+.mesasComandasResumo .summaryGhost,
+.tablesHeaderStats .summaryGhost {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 13px !important;
+  opacity: .35 !important;
+}
+
+@media (max-width: 760px) {
+  .accessSummaryCard div,
+  .kitchenSummaryCard > div:last-child,
+  .restaurantTablesPage .summaryCard .summaryContent,
+  .tablesSummaryGrid .summaryCard .summaryContent,
+  .summaryCards .summaryCard .summaryContent,
+  .reportMetricCard > div,
+  .reportsPage .metricCard > div,
+  .reportsPremiumPage .metricCard > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  .accessSummaryCard strong,
+  .kitchenSummaryCard strong,
+  .restaurantTablesPage .summaryCard strong,
+  .tablesSummaryGrid .summaryCard strong,
+  .summaryCards .summaryCard strong,
+  .reportMetricCard strong,
+  .reportsPage .metricCard strong,
+  .reportsPremiumPage .metricCard strong {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .tableSummaryCard strong,
+  .dashboardPage .metricCard strong,
+  .dashboardPremiumPage .metricCard strong,
+  .operationDashboard .metricCard strong,
+  .dashboardPage .metricCard .metricValue,
+  .dashboardPremiumPage .metricCard .metricValue,
+  .operationDashboard .metricCard .metricValue,
+  .metricCard strong,
+  .metricCard .metricValue {
+    margin-left: 0 !important;
+    transform: none !important;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+  }
+}

@@ -1,0 +1,115 @@
+.completeReportPage .reportsHeader {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) minmax(520px, auto) !important;
+  align-items: flex-start !important;
+  gap: 18px !important;
+  overflow: visible !important;
+}
+
+.completeReportPage .reportsActions {
+  width: 100% !important;
+  max-width: 660px !important;
+  justify-self: end !important;
+  display: grid !important;
+  grid-template-columns: minmax(320px, 1.35fr) minmax(170px, .65fr) !important;
+  grid-template-areas:
+    "tabs period"
+    "print pdf" !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  align-content: start !important;
+  padding-top: 0 !important;
+  position: static !important;
+  overflow: visible !important;
+}
+
+.completeReportPage .reportsActions > :nth-child(1) {
+  grid-area: tabs !important;
+  justify-self: stretch !important;
+}
+
+.completeReportPage .reportsActions > :nth-child(2) {
+  grid-area: period !important;
+  justify-self: stretch !important;
+}
+
+.completeReportPage .reportsActions > :nth-child(3) {
+  grid-area: print !important;
+  justify-self: stretch !important;
+}
+
+.completeReportPage .reportsActions > :nth-child(4) {
+  grid-area: pdf !important;
+  justify-self: stretch !important;
+}
+
+.completeReportPage .reportTabs {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+  padding: 5px !important;
+  box-sizing: border-box !important;
+}
+
+.completeReportPage .reportTabs button {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.completeReportPage .reportActionBtn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  position: relative !important;
+  transform: none !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.completeReportPage .reportsActions > label.reportActionBtn input[type="date"] {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  z-index: 2 !important;
+  cursor: pointer !important;
+}
+
+@media (max-width: 1180px) {
+  .completeReportPage .reportsHeader {
+    grid-template-columns: 1fr !important;
+  }
+
+  .completeReportPage .reportsActions {
+    justify-self: stretch !important;
+    max-width: none !important;
+    grid-template-columns: minmax(320px, 1fr) minmax(170px, 220px) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .completeReportPage .reportsActions {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "tabs"
+      "period"
+      "print"
+      "pdf" !important;
+  }
+
+  .completeReportPage .reportTabs {
+    grid-template-columns: 1fr !important;
+  }
+}

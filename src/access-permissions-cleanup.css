@@ -1,0 +1,7 @@
+.accessCreateForm .permissionsChecklist {
+  display: none !important;
+}
+
+.accessCreateForm {
+  row-gap: 14px !important;
+}

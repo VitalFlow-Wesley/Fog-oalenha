@@ -1,0 +1,660 @@
+.appShell {
+  grid-template-columns: 210px 1fr;
+  background: linear-gradient(135deg, #fffaf1 0%, #f8ead6 58%, #fff8ed 100%);
+}
+
+.premiumSidebar {
+  background: rgba(255, 249, 239, .96);
+  border-right: 1px solid #ead7bf;
+  padding: 16px 12px;
+  gap: 16px;
+  box-shadow: 8px 0 32px rgba(87, 47, 22, .04);
+}
+
+.sidebarLogoBrand {
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  padding: 0 6px 8px;
+}
+
+.sidebarLogoBrand img {
+  width: 104px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 12px rgba(70, 35, 18, .10));
+}
+
+.sidebarLogoBrand span {
+  color: #7a604f;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.premiumUserBox,
+.loggedUserBox,
+.userAvatar {
+  display: none !important;
+}
+
+.premiumSidebar nav {
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.premiumSidebar .navItem {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  color: #6f5849;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.premiumSidebar .navItem.active {
+  color: #fffaf0;
+  background: linear-gradient(135deg, #a94925, #ef6336);
+  box-shadow: 0 10px 20px rgba(194, 74, 38, .16);
+}
+
+.premiumSidebar .navItem:hover:not(.active) {
+  background: #fff0db;
+  color: #bf4a28;
+}
+
+.premiumSidebar .logout {
+  margin: auto 4px 0;
+  color: #b94220;
+  background: rgba(255, 252, 246, .76);
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  padding: 11px 13px;
+  font-size: 14px;
+}
+
+.content {
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+.restaurantTablesPage {
+  max-width: 1240px;
+  min-height: calc(100vh - 32px);
+  margin: 0 auto;
+  padding: 26px 28px 24px;
+  border: 1px solid rgba(234, 215, 191, .95);
+  border-radius: 26px;
+  background: rgba(255, 252, 246, .62);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.38);
+  position: relative;
+  overflow: hidden;
+}
+
+.restaurantTablesPage::after {
+  content: '❧';
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  font-size: 76px;
+  color: rgba(120, 73, 43, .045);
+  transform: rotate(-22deg);
+  pointer-events: none;
+}
+
+.restaurantPageHeader {
+  align-items: flex-start;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.restaurantEyebrow::before,
+.restaurantEyebrow::after {
+  content: '✦';
+  margin: 0 6px;
+  color: #d45d37;
+}
+
+.restaurantPageHeader h1 {
+  margin-top: 6px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(34px, 3.2vw, 46px);
+  line-height: .98;
+  letter-spacing: -.035em;
+  color: #341d13;
+}
+
+.restaurantPageHeader p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #8a6c58;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 38px;
+  flex-wrap: nowrap;
+}
+
+.restaurantTablesPage .updatedPill,
+.restaurantTablesPage .refreshBtn,
+.restaurantTablesPage .mesasSystemStatusCard {
+  display: none !important;
+}
+
+.restaurantTablesPage .headerActions .primaryBtn {
+  width: auto;
+  min-width: 230px;
+  max-width: 250px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+
+.updatedPill,
+.refreshBtn {
+  border: 1px solid #ead7bf;
+  background: rgba(255, 249, 239, .86);
+  color: #7d6758;
+  border-radius: 999px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .035);
+}
+
+.refreshBtn {
+  width: 38px;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.restaurantSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.restaurantSummaryCard {
+  min-height: 96px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 253, 248, .90);
+  border: 1px solid #ead7bf;
+  border-radius: 18px;
+  padding: 13px 14px;
+  box-shadow: 0 10px 22px rgba(90, 45, 20, .055);
+  position: relative;
+  overflow: hidden;
+}
+
+.restaurantSummaryCard::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  width: 48px;
+  height: 48px;
+  opacity: .045;
+  border-radius: 14px;
+  background: currentColor;
+}
+
+.summaryIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 900;
+  font-size: 24px;
+  box-shadow: 0 10px 18px rgba(90, 45, 20, .12);
+}
+
+.restaurantSummaryCard span {
+  display: block;
+  color: #4b2d1f;
+  font-weight: 800;
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+.restaurantSummaryCard strong {
+  display: block;
+  font-size: 25px;
+  line-height: 1;
+  color: #3a2116;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+.restaurantSummaryCard small {
+  color: #8a6c58;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.restaurantSummaryCard.occupied .summaryIcon { background: linear-gradient(135deg, #c44f2c, #f06738); }
+.restaurantSummaryCard.free .summaryIcon { background: linear-gradient(135deg, #3b9864, #7bbd8a); }
+.restaurantSummaryCard.bill .summaryIcon { background: linear-gradient(135deg, #d89520, #f0b640); }
+.restaurantSummaryCard.revenue .summaryIcon { background: linear-gradient(135deg, #7b3e1f, #a76335); }
+
+.restaurantTablesGrid {
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.restaurantTableCard {
+  min-height: 122px;
+  border-radius: 17px;
+  padding: 15px 16px 14px;
+  background: rgba(255, 253, 248, .92);
+  border: 1px solid #ead7bf;
+  box-shadow: 0 10px 22px rgba(90, 45, 20, .055);
+  overflow: hidden;
+  position: relative;
+}
+
+.restaurantTableCard::after {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  font-size: 46px;
+  opacity: .07;
+  pointer-events: none;
+}
+
+.restaurantTableCard.livre::after { content: '♧'; color: #2f8f5b; }
+.restaurantTableCard.ocupada::after { content: '♨'; color: #d45d37; }
+.restaurantTableCard.conta::after { content: '▤'; color: #d89520; }
+
+.restaurantTableCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(90, 45, 20, .08);
+}
+
+.restaurantTableCard .tableTop strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+  line-height: 1.05;
+  color: #21120c;
+}
+
+.restaurantTableCard .tableTop span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.restaurantTableCard.livre .tableTop span { background: #e4f4e7; color: #2f8f5b; }
+.restaurantTableCard.ocupada .tableTop span { background: #ffe2d4; color: #c24928; }
+.restaurantTableCard.conta .tableTop span { background: #fff0c5; color: #c47a12; }
+
+.restaurantTableMeta {
+  justify-content: flex-start;
+  gap: 15px;
+  margin: 14px 0 9px;
+  color: #8a6c58;
+  font-size: 12px;
+}
+
+.restaurantTableMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tableDivider {
+  height: 1px;
+  width: 72%;
+  border-top: 1px dashed #e3cdb3;
+  margin: 0 0 10px;
+}
+
+.restaurantTableCard .tableTotal {
+  font-size: 19px;
+  color: #c24928;
+}
+
+.restaurantTableCard.livre .tableTotal { color: #2f8f5b; }
+.restaurantTableCard.conta .tableTotal { color: #7b3e1f; }
+
+.secondaryTableBtn {
+  min-height: 52px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .92);
+  color: #4b2d1f;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(92, 45, 18, .06);
+  white-space: nowrap;
+}
+
+.secondaryTableBtn svg {
+  color: #c24928;
+}
+
+.secondaryTableBtn strong {
+  min-width: 26px;
+  min-height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #fff0d1;
+  color: #a95f13;
+  font-size: 13px;
+}
+
+.closedTablesOverlay {
+  z-index: 80;
+}
+
+.closedTablesModal {
+  width: min(880px, calc(100vw - 30px));
+  max-height: min(760px, calc(100vh - 34px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.closedTablesSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.closedTablesDateFilter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(167, 86, 43, 0.22);
+  border-radius: 18px;
+  background: #fffaf1;
+  color: #7c4a33;
+  font-weight: 900;
+}
+
+.closedTablesDateFilter input {
+  border: 1px solid rgba(167, 86, 43, 0.24);
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #3b1f15;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.closedTablesSummary div {
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: #fff9ef;
+  padding: 12px;
+}
+
+.closedTablesSummary span {
+  display: block;
+  color: #7d6758;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.closedTablesSummary strong {
+  display: block;
+  margin-top: 4px;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 24px;
+}
+
+.closedTablesList {
+  overflow: auto;
+  padding-right: 4px;
+  display: grid;
+  gap: 10px;
+}
+
+.closedTableCard {
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .94);
+  padding: 13px;
+}
+
+.closedTableCard header,
+.closedTableMeta,
+.closedTableFooter,
+.closedConsumptionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.closedTableCard header strong {
+  display: block;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+}
+
+.closedTableCard header span,
+.closedTableMeta span {
+  color: #7d6758;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.closedTableCard header b {
+  color: #23845f;
+  font-size: 21px;
+}
+
+.closedTableMeta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.closedTableMeta span {
+  border-radius: 999px;
+  background: #fff0d1;
+  color: #9f5e16;
+  padding: 6px 10px;
+}
+
+.closedTableFooter {
+  border-top: 1px solid #ead7bf;
+  padding-top: 10px;
+}
+
+.closedTableFooter span {
+  color: #7d6758;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.closedTableFooter button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #bf4c27, #f05d32);
+  color: #fffaf0;
+  font-weight: 900;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.closedConsumptionModal {
+  width: min(760px, calc(100vw - 30px));
+  max-height: min(760px, calc(100vh - 34px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.closedConsumptionHero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.closedConsumptionHero div {
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: #fff9ef;
+  padding: 12px;
+}
+
+.closedConsumptionHero span {
+  display: block;
+  color: #7d6758;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.closedConsumptionHero strong {
+  display: block;
+  color: #2a160e;
+  font-size: 15px;
+  margin-top: 5px;
+}
+
+.closedConsumptionItems {
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  overflow: auto;
+}
+
+.closedConsumptionRow {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ead7bf;
+  color: #4b2d1f;
+  font-size: 13px;
+}
+
+.closedConsumptionRow:last-child {
+  border-bottom: 0;
+}
+
+.closedConsumptionRow span {
+  color: #c24928;
+  font-weight: 900;
+}
+
+.closedConsumptionRow strong {
+  flex: 1;
+  min-width: 120px;
+  color: #2a160e;
+}
+
+.closedConsumptionRow em {
+  min-width: 110px;
+  color: #7d6758;
+  font-style: normal;
+}
+
+.closedConsumptionRow b {
+  min-width: 78px;
+  text-align: right;
+}
+
+.closedConsumptionNote {
+  margin: 10px 0 0;
+  border-radius: 12px;
+  background: #fff0d1;
+  color: #7b3e1f;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.closedTablesEmpty {
+  min-height: 150px;
+  border: 1px dashed #e5caa7;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 20px;
+  color: #7d6758;
+}
+
+.closedTablesEmpty strong {
+  display: block;
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+}
+
+@media (max-width: 1220px) {
+  .restaurantSummaryGrid,
+  .restaurantTablesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .appShell { grid-template-columns: 210px 1fr; }
+  .restaurantTablesPage { padding: 22px; }
+}
+
+@media (max-width: 860px) {
+  .appShell { grid-template-columns: 1fr; }
+  .premiumSidebar { position: relative; height: auto; }
+  .content { padding: 12px; }
+  .restaurantTablesPage { border-radius: 22px; padding: 18px; }
+  .restaurantPageHeader { flex-direction: column; }
+  .headerActions { padding-top: 0; flex-wrap: wrap; }
+  .secondaryTableBtn,
+  .restaurantTablesPage .headerActions .primaryBtn {
+    flex: 1 1 210px;
+    width: 100%;
+    max-width: none;
+  }
+  .closedTablesSummary {
+    grid-template-columns: 1fr;
+  }
+  .closedTableCard header,
+  .closedTableFooter,
+  .closedConsumptionRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .closedConsumptionHero {
+    grid-template-columns: 1fr;
+  }
+  .closedConsumptionRow b {
+    min-width: 0;
+    text-align: left;
+  }
+  .restaurantSummaryGrid,
+  .restaurantTablesGrid { grid-template-columns: 1fr; }
+}

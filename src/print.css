@@ -1,0 +1,69 @@
+@media screen {
+  .printOnly {
+    display: none;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .printOnly,
+  .printOnly * {
+    visibility: visible !important;
+  }
+
+  .printOnly {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    width: 80mm;
+    min-height: 100vh;
+    padding: 10mm 6mm;
+    background: #fff;
+    color: #111;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  .printOnly h1 {
+    margin: 0 0 8px;
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: .04em;
+  }
+
+  .printOnly p {
+    margin: 4px 0;
+  }
+
+  .printOnly hr {
+    border: 0;
+    border-top: 1px dashed #111;
+    margin: 10px 0;
+  }
+
+  .printLine,
+  .printTotal {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .printLine span {
+    max-width: 48mm;
+  }
+
+  .printTotal {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .printFooter {
+    margin-top: 12px !important;
+    text-align: center;
+    font-size: 11px;
+  }
+}

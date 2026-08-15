@@ -1,0 +1,933 @@
+import { useEffect, useMemo, useState } from 'react'
+import { products as defaultProducts } from '../data/mockData.js'
+import TableCard from '../components/TableCard.jsx'
+import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
+import { repairData, repairText } from '../text-normalizer.js'
+import { loadRemoteState } from '../services/appStateApi.js'
+import { enqueuePrintJob, retryPrintJob, watchPrintJob } from '../services/printQueueApi.js'
+
+const PRODUCTS_KEY = 'fogao-products-v1'
+const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
+const productIcons = {
+  Refeições: '🍲',
+  Churrasco: '🥩',
+  Churrascos: '🥩',
+  Petiscos: '🍟',
+  Sucos: '🥤',
+  Bebidas: '🥤',
+  Bombons: '🍬',
+  Salgadinhos: '🥨',
+  Sorvetes: '🍨',
+  Sobremesas: '🍮',
+  Outros: '🍽️',
+}
+
+const categoryLabels = { Churrasco: 'Churrascos' }
+const categoryOrder = ['Refeições', 'Churrasco', 'Sucos', 'Bebidas', 'Petiscos', 'Salgadinhos', 'Sorvetes', 'Sobremesas', 'Bombons', 'Outros']
+
+function normalizeCategory(value) {
+  const category = repairText(value || 'Outros').trim()
+  if (category === 'Churrascos') return 'Churrasco'
+  if (category === 'Refeiçõeses' || category === 'Refeicoeses') return 'Refeições'
+  return category || 'Outros'
+}
+
+function normalizeProduct(product) {
+  const fixedProduct = repairData(product)
+  const category = normalizeCategory(fixedProduct.category)
+  const sector = fixedProduct.sector || fixedProduct.localSaida || 'Bar / Caixa'
+  return {
+    ...fixedProduct,
+    name: repairText(fixedProduct.name || 'Produto'),
+    category,
+    sector,
+    localSaida: fixedProduct.localSaida || sector,
+    imprimeCozinha: fixedProduct.imprimeCozinha ?? fixedProduct.prepare ?? !['Bebidas', 'Bombons', 'Salgadinhos', 'Sorvetes', 'Sobremesas'].includes(category),
+    status: fixedProduct.status || 'Ativo',
+  }
+}
+
+function readProducts() {
+  try {
+    const saved = repairData(JSON.parse(localStorage.getItem(PRODUCTS_KEY) || 'null'))
+    return Array.isArray(saved) && saved.length ? saved.map(normalizeProduct) : defaultProducts.map(normalizeProduct)
+  } catch {
+    return defaultProducts.map(normalizeProduct)
+  }
+}
+
+function getPrinterName(settings, role) {
+  const printers = settings?.printers || []
+  const printerId = role === 'cashier' ? settings?.cashierPrinterId : settings?.kitchenPrinterId
+  const selected = printers.find(printer => printer.id === printerId)
+  return selected?.name || selected?.label || (role === 'cashier' ? 'Caixa' : 'Cozinha')
+}
+
+function formatMoney(value) {
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+}
+
+function formatUpdateTime(date) {
+  return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function todayKey() {
+  const date = new Date()
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function getItemsQty(record) {
+  return (record.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)
+}
+
+function getClosedTableRecords(history, date = todayKey()) {
+  return (history || [])
+    .filter(record => record.date === date)
+    .map(record => ({
+      ...record,
+      itemsQty: getItemsQty(record),
+      sourceLabel: record.closedByMode === 'fechamento_caixa' ? 'Fechamento do caixa' : record.closedByMode === 'mesa_parcial' ? 'Pagamento parcial' : 'Fechada pela mesa',
+    }))
+    .sort((a, b) => new Date(b.closedAt || 0) - new Date(a.closedAt || 0))
+}
+
+function getPeopleCount(table = {}) {
+  return Math.max(1, Number(table.peopleCount ?? table.guests ?? 1) || 1)
+}
+
+function itemKey(item) {
+  return item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+}
+
+function pendingKitchenQty(item, table) {
+  const alreadySent = Number(item.sentQty ?? (table.kitchenSent ? item.qty : 0))
+  return Math.max(0, Number(item.qty || 0) - alreadySent)
+}
+
+function createTable(nextId, number, peopleCount = 1) {
+  const safePeopleCount = Math.max(1, Number(peopleCount) || 1)
+  return {
+    id: nextId,
+    number: String(number || nextId).trim(),
+    status: 'ocupada',
+    guests: safePeopleCount,
+    peopleCount: safePeopleCount,
+    openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    items: [],
+    kitchenSent: false,
+    billRequested: false,
+  }
+}
+
+// --- MOTOR DE IMPRESSÃO ESC/POS (DELEGAÇÃO TOTAL PARA O WINDOWS) ---
+async function executeThermalPrint(job) {
+  if (!job || !job.printerName) {
+    alert("Nenhuma impressora configurada para este setor. Verifique as configurações de impressão.");
+    return false;
+  }
+
+  try {
+    const qzModule = await import('qz-tray');
+    const qz = qzModule.default || qzModule;
+
+    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
+
+    // A MÁGICA ESTÁ AQUI: Nós NÃO chamamos as funções qz.security.
+    // Sem promessas, sem certificados, sem chaves e sem null.
+    // Isso força o QZ Tray a ignorar a web e abrir o pop-up nativo de permissão no PC.
+
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    await qz.printers.find(job.printerName);
+    const config = qz.configs.create(job.printerName);
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('pt-BR');
+    const formattedTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+    let payload = [
+      '\x1B' + '\x40', 
+      '\x1B' + '\x61' + '\x31', 
+      '================================\n',
+      '         FOGAO A LENHA          \n',
+      `      ${removeAccents(job.title)}      \n`,
+      '================================\n',
+      '\x1B' + '\x61' + '\x30', 
+      `Mesa:      ${job.table.number}${job.table.mergedTableNumbers?.length ? ` + ${job.table.mergedTableNumbers.join(' + ')}` : ''}\n`,
+      ...(job.type === 'kitchen' ? [`Pessoas:   ${job.peopleCount || getPeopleCount(job.table)}\n`] : []),
+      `Garcom:    ${removeAccents(job.waiterName)}\n`,
+      `Data:      ${formattedDate} as ${formattedTime}\n`,
+      '--------------------------------\n',
+    ];
+
+    if (job.items.length === 0) {
+       payload.push('Nenhum item.\n');
+    } else {
+       job.items.forEach(item => {
+         const itemName = removeAccents(item.name).toUpperCase();
+         let line = `${item.qty}x ${itemName}`;
+         if (item.originTable) line += ` (Mesa ${item.originTable})`;
+         
+         if (job.type === 'bill') {
+           const itemTotal = formatMoney(item.price * item.qty);
+           payload.push(`${line}\n`);
+           payload.push('\x1B' + '\x61' + '\x32'); 
+           payload.push(`${itemTotal}\n`);
+           payload.push('\x1B' + '\x61' + '\x30'); 
+         } else {
+           payload.push(`${line}\n`);
+         }
+         
+         if (item.observation) {
+           payload.push(`   OBS: ${removeAccents(item.observation)}\n`);
+         }
+       });
+    }
+
+    payload.push('--------------------------------\n');
+
+    if (job.type === 'bill') {
+      payload.push('\x1B' + '\x61' + '\x31'); 
+      payload.push('TOTAL DA CONTA\n');
+      payload.push('\x1B' + '\x21' + '\x30'); 
+      payload.push(`${formatMoney(job.total)}\n`);
+      payload.push('\x1B' + '\x21' + '\x00'); 
+      payload.push('--------------------------------\n');
+      payload.push('Obrigado pela preferencia!\n');
+    } else {
+       payload.push('\x1B' + '\x61' + '\x31'); 
+       payload.push('*** BOM PREPARO ***\n');
+    }
+
+    payload.push('\n\n\n\n');
+    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
+
+    await qz.print(config, payload);
+    return true;
+  } catch (error) {
+    console.error("Falha na impressão:", error);
+    alert(`Erro na impressora: ${error.message || error}`);
+    return false;
+  }
+}
+
+export default function Mesas({ tables, setTables, users, currentUser, settings, onCloseTable, onPartialCloseTable }) {
+  const [selected, setSelected] = useState(null)
+  const [availableProducts, setAvailableProducts] = useState(() => readProducts())
+  const [closedTablesOpen, setClosedTablesOpen] = useState(false)
+  const [closedTablesDate, setClosedTablesDate] = useState(todayKey())
+  const [selectedClosedTable, setSelectedClosedTable] = useState(null)
+  const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
+  const categories = useMemo(() => [...new Set(availableProducts.filter(p => p.status !== 'Inativo').map(p => p.category))].sort((a, b) => {
+    const aIndex = categoryOrder.indexOf(a)
+    const bIndex = categoryOrder.indexOf(b)
+    return (aIndex < 0 ? categoryOrder.length : aIndex) - (bIndex < 0 ? categoryOrder.length : bIndex) || a.localeCompare(b, 'pt-BR')
+  }), [availableProducts])
+  const [activeCategory, setActiveCategory] = useState(categories[0] || 'Refeições')
+  const [observation, setObservation] = useState('')
+  const [cancelRequest, setCancelRequest] = useState(null)
+  const [cancelPassword, setCancelPassword] = useState('')
+  const [cancelError, setCancelError] = useState('')
+  const [joinTargetId, setJoinTargetId] = useState('')
+  const [joinModalOpen, setJoinModalOpen] = useState(false)
+  const [addTableModalOpen, setAddTableModalOpen] = useState(false)
+  const [newTableForm, setNewTableForm] = useState({ number: '', peopleCount: 1 })
+  const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [partialCloseOpen, setPartialCloseOpen] = useState(false)
+  const [partialSelection, setPartialSelection] = useState({})
+  const [partialGuests, setPartialGuests] = useState(1)
+  const [partialPayment, setPartialPayment] = useState('dinheiro')
+  const [partialSaving, setPartialSaving] = useState(false)
+  const [printNotice, setPrintNotice] = useState(null)
+  const isWaiterUser = currentUser?.role === 'garcom'
+  const canCloseTables = ['admin', 'gerente'].includes(currentUser?.role)
+
+  const table = useMemo(() => tables.find(t => t.id === selected?.id), [tables, selected])
+  const summary = useMemo(() => {
+    const visibleTables = tables.filter(t => t.status !== 'juntada')
+    const totalTables = visibleTables.length || 1
+    const occupied = visibleTables.filter(t => t.status === 'ocupada' || t.status === 'enviado').length
+    const free = visibleTables.filter(t => t.status === 'livre').length
+    const bill = visibleTables.filter(t => t.status === 'conta').length
+    const revenue = visibleTables
+      .filter(t => t.status !== 'livre')
+      .reduce((sum, tableItem) => sum + tableItem.items.reduce((s, item) => s + item.price * item.qty, 0), 0)
+
+    return {
+      occupied,
+      free,
+      bill,
+      revenue,
+      occupiedPercent: Math.round((occupied / totalTables) * 100),
+      freePercent: Math.round((free / totalTables) * 100),
+      billPercent: Math.round((bill / totalTables) * 100),
+    }
+  }, [tables])
+
+  const mergeTargets = useMemo(
+    () => table ? tables.filter(t => t.id !== table.id && t.status !== 'juntada' && !t.mergedTableIds?.length) : [],
+    [tables, table]
+  )
+  const closedTablesToday = useMemo(() => getClosedTableRecords(closedTablesHistory, closedTablesDate), [closedTablesHistory, closedTablesDate])
+
+  useEffect(() => {
+    if (!categories.length) return
+    if (!categories.includes(activeCategory)) setActiveCategory(categories[0])
+  }, [categories, activeCategory])
+
+  useEffect(() => {
+    function syncProducts() { setAvailableProducts(readProducts()) }
+    window.addEventListener('storage', syncProducts)
+    window.addEventListener('focus', syncProducts)
+    const timer = setInterval(syncProducts, 1500)
+    return () => {
+      window.removeEventListener('storage', syncProducts)
+      window.removeEventListener('focus', syncProducts)
+      clearInterval(timer)
+    }
+  }, [])
+
+  useEffect(() => {
+    async function syncClosedTablesHistory() {
+      try {
+        const remote = await loadRemoteState()
+        if (Array.isArray(remote.closedTablesHistory)) {
+          localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remote.closedTablesHistory))
+          setClosedTablesHistory(remote.closedTablesHistory)
+          return
+        }
+      } catch {
+      }
+      setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    }
+
+    const onUpdate = () => setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    syncClosedTablesHistory()
+    window.addEventListener('fogao-closed-tables-updated', onUpdate)
+    window.addEventListener('focus', syncClosedTablesHistory)
+    return () => {
+      window.removeEventListener('fogao-closed-tables-updated', onUpdate)
+      window.removeEventListener('focus', syncClosedTablesHistory)
+    }
+  }, [])
+
+  function updateTable(id, patch) {
+    setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
+  }
+
+  function touch() {
+    setLastUpdate(new Date())
+    setIsRefreshing(true)
+    window.setTimeout(() => setIsRefreshing(false), 650)
+  }
+
+  function currentWaiterName() {
+    return currentUser?.name || currentUser?.username || 'Garçom'
+  }
+
+  function waiterPatch(table = {}) {
+    const waiterName = currentWaiterName()
+    return {
+      waiterName: table.waiterName || waiterName,
+      openedByName: table.openedByName || waiterName,
+      createdByName: table.createdByName || waiterName,
+      kitchenWaiterName: table.kitchenWaiterName || waiterName,
+    }
+  }
+
+  function openAddTableModal() {
+    setNewTableForm({ number: '', peopleCount: 1 })
+    setAddTableModalOpen(true)
+  }
+
+  function addTable(event) {
+    event.preventDefault()
+    const tableNumber = newTableForm.number.trim()
+    if (!tableNumber) return
+    const peopleCount = Math.max(1, Math.min(99, Number(newTableForm.peopleCount) || 1))
+    // IDs must never be reused after a table closes. The server uses the
+    // closed-table history to reject delayed saves from an old device.
+    const nextId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const newTable = createTable(nextId, tableNumber, peopleCount)
+    setTables(prev => [...prev, newTable])
+    setSelected(newTable)
+    setAddTableModalOpen(false)
+    setNewTableForm({ number: '', peopleCount: 1 })
+    touch()
+  }
+
+  function openTable(t) {
+    if (t.status === 'juntada' && t.mergedTo) {
+      const main = tables.find(tableItem => tableItem.id === t.mergedTo)
+      if (main) setSelected(main)
+      return
+    }
+    if (t.status === 'livre') {
+      const peopleCount = getPeopleCount(t)
+      const updated = { ...t, ...waiterPatch(t), status: 'ocupada', guests: peopleCount, peopleCount, openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }
+      updateTable(t.id, updated)
+      setSelected(updated)
+      touch()
+      return
+    }
+    setSelected(t)
+  }
+
+  function addItem(product) {
+    const current = tables.find(t => t.id === selected.id)
+    if (!current) return
+    const waiterName = currentWaiterName()
+    const existing = current.items.find(i => i.id === product.id && i.observation === observation && (i.launchedByName || i.waiterName || current.waiterName) === waiterName)
+    const launchedAt = new Date().toISOString()
+    const items = existing
+      ? current.items.map(i => i === existing ? { ...i, qty: i.qty + 1, lastLaunchedAt: launchedAt } : i)
+      : [...current.items, { ...product, lineId: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, qty: 1, observation, waiterName, launchedByName: waiterName, launchedAt, lastLaunchedAt: launchedAt }]
+    updateTable(current.id, { ...waiterPatch(current), items, status: current.status === 'livre' ? 'ocupada' : current.status })
+    setObservation('')
+    touch()
+  }
+
+  function trackPrintJob(job, tableId) {
+    setPrintNotice(job)
+    return watchPrintJob(job._id, nextJob => {
+      setPrintNotice(nextJob)
+      if (tableId) {
+        setTables(prev => prev.map(t => t.id !== tableId ? t : {
+          ...t,
+          items: (t.items || []).map(item => item.lastPrintJobId === nextJob._id ? { ...item, lastPrintStatus: nextJob.status, lastPrintError: nextJob.lastError || '' } : item),
+        }))
+      }
+    })
+  }
+
+  async function retryNoticeJob() {
+    if (!printNotice?._id) return
+    try {
+      const job = await retryPrintJob(printNotice._id)
+      trackPrintJob(job)
+    } catch (error) {
+      setPrintNotice(prev => ({ ...prev, status: 'failed', lastError: error.message }))
+    }
+  }
+
+  function changeQty(item, delta) {
+    const current = tables.find(t => t.id === selected.id)
+    if (!current) return
+    if (delta < 0 && Number(item.sentQty ?? (current.kitchenSent ? item.qty : 0)) >= Number(item.qty || 0)) {
+      askCancelItem({ ...item, cancelQty: 1 })
+      return
+    }
+    const items = current.items.map(i => (item.lineId ? i.lineId === item.lineId : i.id === item.id && i.observation === item.observation && i.originTable === item.originTable && i.launchedByName === item.launchedByName) ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
+    updateTable(current.id, { items })
+    touch()
+  }
+
+  function changeGuests(nextValue) {
+    const current = tables.find(t => t.id === selected?.id)
+    if (!current) return
+    const guests = Math.max(1, Math.min(99, Number(nextValue) || 1))
+    updateTable(current.id, { guests, peopleCount: guests })
+    setSelected(prev => prev ? { ...prev, guests, peopleCount: guests } : prev)
+    touch()
+  }
+
+  function askCancelItem(item) {
+    setCancelRequest(item)
+    setCancelPassword('')
+    setCancelError('')
+  }
+
+  async function confirmCancelItem(event) {
+    event.preventDefault()
+    if (!cancelPassword) {
+      setCancelError('Senha inválida. Cancelamento permitido somente com senha cadastrada pelo administrador ou gerente.')
+      return
+    }
+
+    let authorizedUser = null
+    let approvalToken = ''
+    try {
+      const response = await fetch('/api/auth/authorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: cancelPassword }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload.authorizedBy) {
+        setCancelError(payload.error || 'Senha inválida. Cancelamento permitido somente com autorização da gerência.')
+        return
+      }
+      authorizedUser = payload.authorizedBy
+      approvalToken = payload.approvalToken || ''
+    } catch {
+      setCancelError('Não foi possível validar a autorização. Tente novamente.')
+      return
+    }
+
+    const current = tables.find(t => t.id === selected.id)
+    if (!current) return
+    const sentQty = Number(cancelRequest.sentQty ?? (current.kitchenSent ? cancelRequest.qty : 0))
+    const cancelQty = Math.min(Number(cancelRequest.cancelQty || cancelRequest.qty || 0), sentQty)
+    const matches = i => itemKey(i) === itemKey(cancelRequest)
+    const items = current.items.map(i => {
+      if (!matches(i)) return i
+      const nextQty = Math.max(0, Number(i.qty || 0) - Number(cancelRequest.cancelQty || i.qty || 0))
+      return { ...i, qty: nextQty }
+    }).filter(i => i.qty > 0)
+    if (cancelQty > 0) {
+      try {
+        const job = await enqueuePrintJob({
+          type: 'kitchen', kind: 'cancellation', title: 'CANCELAMENTO', table: current, peopleCount: getPeopleCount(current),
+          items: [{ ...cancelRequest, qty: cancelQty, cancellationReason: 'Cancelamento autorizado' }],
+          printerName: getPrinterName(settings, 'kitchen'), waiterName: currentWaiterName(),
+          dedupeKey: `cancel-${current.id}-${itemKey(cancelRequest)}-${cancelQty}-${Date.now()}`,
+        })
+        trackPrintJob(job)
+      } catch (error) { setPrintNotice({ status: 'failed', lastError: error.message }) }
+    }
+    const removedItemIds = (current.removedItemIds || []).concat(
+      current.items.filter(item => !items.some(nextItem => itemKey(nextItem) === itemKey(item))).map(itemKey)
+    )
+    updateTable(current.id, {
+      items,
+      removedItemIds,
+      removalApproval: { token: approvalToken, at: new Date().toISOString() },
+      lastCancelAuthorizedBy: authorizedUser.name || authorizedUser.username || 'Gerência',
+    })
+    setCancelRequest(null)
+    setCancelPassword('')
+    setCancelError('')
+    touch()
+  }
+
+  function joinTable() {
+    if (!table || !joinTargetId) return
+    const target = tables.find(t => t.id === Number(joinTargetId))
+    if (!target || target.status === 'juntada') return
+    const joinedIds = [...(table.mergedTableIds || []), target.id]
+    const joinedNumbers = [...(table.mergedTableNumbers || []), target.number]
+    const mergedItems = [...table.items, ...target.items.map(item => ({ ...item, originTable: target.number }))]
+    const nextStatus = table.status === 'conta' || target.status === 'conta' ? 'conta' : 'ocupada'
+    const mergedPeopleCount = getPeopleCount(table) + getPeopleCount(target)
+    setTables(prev => prev.map(t => {
+      if (t.id === table.id) return { ...t, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }
+      if (t.id === target.id) return { ...t, status: 'juntada', items: [], guests: 0, peopleCount: 0, mergedTo: table.id, mergedToNumber: table.number, previousMergeState: target }
+      return t
+    }))
+    setSelected(prev => ({ ...prev, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }))
+    setJoinTargetId('')
+    setJoinModalOpen(false)
+    touch()
+  }
+
+  function splitTables() {
+    if (!table?.mergedTableIds?.length) return
+    setTables(prev => prev.map(t => {
+      if (t.id === table.id) {
+        const peopleCount = Math.max(1, getPeopleCount(t) - table.mergedTableIds.length)
+        return { ...t, guests: peopleCount, peopleCount, items: t.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+      }
+      if (table.mergedTableIds.includes(t.id)) {
+        const previous = t.previousMergeState || t
+        return { ...previous, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
+      }
+      return t
+    }))
+    setSelected(prev => {
+      const peopleCount = Math.max(1, getPeopleCount(prev) - prev.mergedTableIds.length)
+      return { ...prev, guests: peopleCount, peopleCount, items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+    })
+    touch()
+  }
+
+  async function sendKitchen() {
+    const current = tables.find(t => t.id === selected.id)
+    if (!current) return
+    const kitchenPrinterName = getPrinterName(settings, 'kitchen')
+    const kitchenItems = current.items
+      .filter(i => i.imprimeCozinha || settings?.printBarItems)
+      .map(i => ({ ...i, qty: pendingKitchenQty(i, current) }))
+      .filter(i => i.qty > 0)
+    if (!kitchenItems.length) {
+      setPrintNotice({ status: 'idle', message: 'Não há novos itens para enviar.' })
+      return
+    }
+    const waiterName = currentUser?.name || currentUser?.username || 'Garçom'
+    const kitchenSentAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    const peopleCount = getPeopleCount(current)
+    const job = {
+      type: 'kitchen',
+      title: 'PEDIDO DE PREPARO',
+      table: { ...current, peopleCount, guests: peopleCount },
+      peopleCount,
+      items: kitchenItems,
+      printerName: kitchenPrinterName,
+      waiterName,
+      total: 0,
+      // The same product can be added again later. Include its already-sent
+      // quantity in the idempotency key so that "1 more Coxinha" is a new
+      // kitchen ticket, while a repeated click for the same dispatch remains
+      // safely deduplicated.
+      dedupeKey: `kitchen-${current.id}-${kitchenItems.map(i => {
+        const sentBefore = Number(i.sentQty ?? (current.kitchenSent ? Number(i.qty || 0) : 0))
+        return `${itemKey(i)}:${sentBefore}->${sentBefore + Number(i.qty || 0)}`
+      }).join('|')}`,
+    }
+    try {
+      const queued = await enqueuePrintJob(job)
+      const sentByKey = new Map(kitchenItems.map(i => [itemKey(i), Number(i.qty || 0)]))
+      const items = current.items.map(i => sentByKey.has(itemKey(i)) ? {
+        ...i,
+        sentQty: Number(i.sentQty ?? (current.kitchenSent ? i.qty : 0)) + sentByKey.get(itemKey(i)),
+        lastSentAt: new Date().toISOString(), lastPrintJobId: queued._id, lastPrintStatus: queued.status, sentObservation: i.observation || '',
+      } : i)
+      updateTable(selected.id, { status: 'enviado', kitchenSent: true, kitchenSentAt, kitchenWaiterName: waiterName, peopleCount, guests: peopleCount, lastKitchenPrinter: kitchenPrinterName, items })
+      trackPrintJob(queued, current.id)
+    } catch (error) {
+      setPrintNotice({ status: 'failed', lastError: error.message })
+      return
+    }
+    touch()
+  }
+
+  async function requestBill() {
+    const current = tables.find(t => t.id === selected.id)
+    if (!current) return
+    const cashierPrinterName = getPrinterName(settings, 'cashier')
+    const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
+    
+    updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
+    
+    const job = {
+      type: 'bill',
+      title: 'COMANDA DO CLIENTE',
+      table: current,
+      items: current.items,
+      printerName: cashierPrinterName,
+      waiterName: currentUser?.name || currentUser?.username || 'Atendente',
+      total: billTotal,
+      dedupeKey: `bill-${current.id}-${Date.now()}`,
+    }
+    try {
+      const queued = await enqueuePrintJob(job)
+      trackPrintJob(queued)
+    } catch (error) {
+      setPrintNotice({ status: 'failed', lastError: error.message })
+      return
+    }
+    touch()
+  }
+
+  async function closeTable() {
+    if (onCloseTable) {
+      await onCloseTable(selected.id)
+    } else {
+      setTables(prev => prev.map(t => {
+        if (t.id === selected.id) return { ...t, status: 'livre', guests: 0, peopleCount: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTableIds: [], mergedTableNumbers: [] }
+        if (selected.mergedTableIds?.includes(t.id)) return { ...t, status: 'livre', guests: 0, peopleCount: 0, openedAt: null, items: [], kitchenSent: false, billRequested: false, mergedTo: undefined, mergedToNumber: undefined, previousMergeState: undefined }
+        return t
+      }))
+    }
+    setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
+    setSelected(null)
+    touch()
+  }
+
+  function openPartialClose() {
+    if (!table?.items?.length) return
+    setPartialSelection({})
+    setPartialGuests(1)
+    setPartialPayment('dinheiro')
+    setPartialCloseOpen(true)
+  }
+
+  function setPartialItemQty(item, value) {
+    const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+    const qty = Math.max(0, Math.min(Number(item.qty || 0), Number(value) || 0))
+    setPartialSelection(prev => ({ ...prev, [key]: qty }))
+  }
+
+  async function confirmPartialClose(event) {
+    event.preventDefault()
+    if (!table || !onPartialCloseTable) return
+    const selectedItems = table.items.map(item => {
+      const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`
+      return { ...item, qty: Number(partialSelection[key] || 0) }
+    }).filter(item => item.qty > 0)
+    if (!selectedItems.length) return
+    setPartialSaving(true)
+    try {
+      await onPartialCloseTable(table.id, {
+        items: selectedItems,
+        guests: Math.max(1, Math.min(Math.max(1, getPeopleCount(table) - 1), Number(partialGuests) || 1)),
+        paymentMethod: partialPayment,
+      })
+      setPartialCloseOpen(false)
+      touch()
+    } finally {
+      setPartialSaving(false)
+    }
+  }
+
+  const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
+  const filteredProducts = availableProducts.filter(p => p.status !== 'Inativo' && p.category === activeCategory)
+  const tableLabel = table ? `Mesa ${table.number}${table.mergedTableNumbers?.length ? ` + ${table.mergedTableNumbers.join(' + ')}` : ''}` : ''
+  const totalItems = table?.items.reduce((sum, item) => sum + item.qty, 0) || 0
+  const updatedLabel = isRefreshing ? 'Atualizando...' : `Atualizado às ${formatUpdateTime(lastUpdate)}`
+
+  return (
+    <div className="page restaurantTablesPage">
+      <div className="pageHeader restaurantPageHeader">
+        <div>
+          <span className="eyebrow restaurantEyebrow">SALÃO</span>
+          <h1>Mesas e comandas</h1>
+          <p>Acompanhe ocupação, consumo e status das mesas.</p>
+        </div>
+        <div className="headerActions">
+          <button className="secondaryTableBtn" type="button" onClick={() => setClosedTablesOpen(true)}>
+            <History size={18} /> Mesas fechadas <strong>{closedTablesToday.length}</strong>
+          </button>
+          <button className="primaryBtn" type="button" onClick={openAddTableModal}><Plus size={18} /> Adicionar mesa</button>
+          <span className={`updatedPill ${isRefreshing ? 'refreshing' : ''}`}><Clock size={17} /> {updatedLabel}</span>
+          <button className={`refreshBtn ${isRefreshing ? 'refreshing' : ''}`} type="button" onClick={touch} title="Atualizar mesas"><RefreshCw size={20} /></button>
+        </div>
+      </div>
+
+      {printNotice && (
+        <div className={`printNotice printNotice-${printNotice.status}`} role="status">
+          <span>{printNotice.status === 'pending' ? 'Aguardando impressão: pedido enviado para a fila.' : printNotice.status === 'processing' ? 'Imprimindo: o computador do caixa está processando a comanda.' : printNotice.status === 'printed' ? 'Comanda impressa com sucesso.' : printNotice.status === 'idle' ? printNotice.message : 'Não foi possível imprimir. Verifique o computador do caixa, o QZ Tray e a impressora.'}</span>
+          {printNotice.status === 'failed' && <button type="button" onClick={retryNoticeJob}>Tentar novamente</button>}
+          <button type="button" className="printNoticeClose" aria-label="Fechar aviso" onClick={() => setPrintNotice(null)}><X size={16} /></button>
+        </div>
+      )}
+
+      {!isWaiterUser && <div className="restaurantSummaryGrid">
+        <div className="restaurantSummaryCard occupied"><div className="summaryIcon"><Users size={26} /></div><div><span>Mesas ocupadas</span><strong>{summary.occupied}</strong><small>{summary.occupiedPercent}% do salão</small></div></div>
+        <div className="restaurantSummaryCard free"><div className="summaryIcon">▱</div><div><span>Mesas livres</span><strong>{summary.free}</strong><small>{summary.freePercent}% do salão</small></div></div>
+        <div className="restaurantSummaryCard bill"><div className="summaryIcon"><ReceiptText size={26} /></div><div><span>Contas solicitadas</span><strong>{summary.bill}</strong><small>{summary.billPercent}% do salão</small></div></div>
+        <div className="restaurantSummaryCard revenue"><div className="summaryIcon"><DollarSign size={28} /></div><div><span>Faturamento do salão</span><strong>{formatMoney(summary.revenue)}</strong><small>Hoje</small></div></div>
+      </div>}
+
+      {tables.length === 0 ? (
+        <section className="emptyState restaurantEmptyState">
+          <div className="emptyIcon">🍽️</div>
+          <h2>Nenhuma mesa aberta ainda</h2>
+          <p>Comece adicionando as mesas conforme os clientes forem chegando no salão.</p>
+          <button className="primaryBtn" type="button" onClick={openAddTableModal}><Plus size={18} /> Adicionar primeira mesa</button>
+        </section>
+      ) : (
+        <div className="tablesGrid restaurantTablesGrid">
+          {tables.map(tableItem => <TableCard table={tableItem} key={tableItem.id} onOpen={openTable} />)}
+        </div>
+      )}
+
+      {table && (
+        <div className="drawerOverlay commandOverlay">
+          <aside className="drawer commandDrawer">
+            <button className="commandClose" onClick={() => setSelected(null)}><X size={24} /></button>
+            <header className="commandHeader">
+              <div>
+                <span className="commandEyebrow">COMANDA ABERTA</span>
+                <div className="commandTitleRow">
+                  <h2>{tableLabel}</h2>
+                  <div className="commandGuestsEditor" aria-label="Quantidade de pessoas na mesa">
+                    <Users size={18} />
+                    <button type="button" onClick={() => changeGuests(getPeopleCount(table) - 1)}><Minus size={13} /></button>
+                    <input type="number" min="1" max="99" value={getPeopleCount(table)} onChange={event => changeGuests(event.target.value)} />
+                    <button type="button" onClick={() => changeGuests(getPeopleCount(table) + 1)}><Plus size={13} /></button>
+                    <span>pessoas</span>
+                  </div>
+                </div>
+              </div>
+              <div className="commandActions">
+                <button className="commandBtn" onClick={() => setJoinModalOpen(true)}><Link2 size={18} /> Juntar mesas</button>
+                {table.mergedTableIds?.length > 0 && <button className="commandBtn" onClick={splitTables}><Split size={18} /> Separar mesas</button>}
+                <button className="commandBtn" onClick={sendKitchen}><ChefHat size={18} /> Enviar para cozinha</button>
+                <button className="commandBtn" onClick={requestBill}><ReceiptText size={18} /> Solicitar conta</button>
+                {canCloseTables && table.items.length > 0 && getPeopleCount(table) > 1 && <button className="commandBtn" onClick={openPartialClose}><Split size={18} /> Fechar parcialmente</button>}
+                {canCloseTables && <button className="commandBtn commandDanger" onClick={closeTable}>Fechar mesa</button>}
+              </div>
+            </header>
+
+            <div className="commandMainGrid">
+              <section className="commandPanel">
+                <h3>Itens da comanda</h3>
+                <div className="commandItemsList">
+                  {table.items.length === 0 && <p className="empty">Nenhum item lançado ainda.</p>}
+                  {table.items.map((item, index) => (
+                    <div className="commandItem" key={`${item.id}-${index}-${item.observation}-${item.originTable || ''}`}>
+                      <div className="commandItemInfo">
+                        <strong>{item.name}</strong>
+                        <small>Lançado por: {item.launchedByName || item.waiterName || table.waiterName || 'Não identificado'}{item.launchedAt ? ` às ${new Date(item.launchedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</small>
+                        {item.originTable && <small>Origem: Mesa {item.originTable}</small>}
+                        {item.observation && <small>Obs.: {item.observation}</small>}
+                        {item.lastPrintStatus && <small className={`itemPrintStatus itemPrintStatus-${item.lastPrintStatus}`}>{item.lastPrintStatus === 'pending' ? 'Aguardando impressão' : item.lastPrintStatus === 'processing' ? 'Imprimindo' : item.lastPrintStatus === 'printed' ? 'Impresso' : 'Falhou na impressão'}</small>}
+                      </div>
+                      <div className="commandItemControls">
+                        <div className="qtyStepper"><button onClick={() => changeQty(item, -1)}><Minus size={14} /></button><b>{item.qty}</b><button onClick={() => changeQty(item, 1)}><Plus size={14} /></button></div>
+                        <button className="removeItemBtn" onClick={() => askCancelItem(item)}><Trash2 size={16} /></button>
+                        <strong>{formatMoney(item.price * item.qty)}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="commandTotalCard"><div><span>Total da mesa</span><small>{totalItems} itens</small></div><strong>{formatMoney(total)}</strong></div>
+              </section>
+
+              <section className="commandPanel commandProductsPanel">
+                <h3>Adicionar pedido</h3>
+                <label className="commandObs"><Search size={20} /><input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex.: sem cebola" /></label>
+                <div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{categoryLabels[cat] || cat}</button>)}</div>
+                <div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}</div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {partialCloseOpen && table && (
+        <div className="authModalOverlay">
+          <form className="authModal partialCloseModal" onSubmit={confirmPartialClose}>
+            <div className="drawerHeader"><div><span className="eyebrow">Pagamento parcial</span><h2>Fechar parte da {tableLabel}</h2></div><button type="button" className="iconBtn" onClick={() => setPartialCloseOpen(false)}><X size={22} /></button></div>
+            <p>Informe quantos itens serão pagos agora. O restante continuará na mesa.</p>
+            <div className="partialItemsList">{table.items.map((item, index) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; const selectedQty = Number(partialSelection[key] || 0); return <label className="partialItemRow" key={`${key}-${index}`}><div><strong>{item.name}</strong><small>{item.launchedByName || item.waiterName || 'Não identificado'} · {formatMoney(item.price)} cada</small></div><input aria-label={`Quantidade de ${item.name}`} type="number" min="0" max={item.qty} value={selectedQty} onChange={event => setPartialItemQty(item, event.target.value)} /><span>de {item.qty}</span><b>{formatMoney(item.price * selectedQty)}</b></label> })}</div>
+            <div className="partialCloseFields"><label><span>Pessoas saindo</span><input type="number" min="1" max={Math.max(1, getPeopleCount(table) - 1)} value={partialGuests} onChange={event => setPartialGuests(event.target.value)} /></label><label><span>Forma de pagamento</span><select value={partialPayment} onChange={event => setPartialPayment(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Crédito</option><option value="debito">Débito</option><option value="outros">Outros</option></select></label></div>
+            <div className="partialTotal"><span>Total desta parte</span><strong>{formatMoney(table.items.reduce((sum, item) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; return sum + Number(item.price || 0) * Number(partialSelection[key] || 0) }, 0))}</strong></div>
+            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={partialSaving || !Object.values(partialSelection).some(Number)}>{partialSaving ? 'Salvando...' : 'Confirmar pagamento parcial'}</button><button className="secondaryBtn" type="button" onClick={() => setPartialCloseOpen(false)}>Cancelar</button></div>
+          </form>
+        </div>
+      )}
+
+      {addTableModalOpen && (
+        <div className="authModalOverlay">
+          <form className="authModal joinTableModal" onSubmit={addTable}>
+            <div className="drawerHeader"><div><span className="eyebrow">Nova mesa</span><h2>Adicionar mesa</h2></div><button type="button" className="iconBtn" onClick={() => setAddTableModalOpen(false)}><X size={22} /></button></div>
+            <p>Informe a identificação da mesa e a quantidade de pessoas.</p>
+            <label><span>Número / Identificação da Mesa</span><input value={newTableForm.number} onChange={e => setNewTableForm(prev => ({ ...prev, number: e.target.value }))} placeholder="Ex.: 14 ou 17 KAROL" autoFocus /></label>
+            <label><span>Quantidade de Pessoas</span><input type="number" min="1" max="99" value={newTableForm.peopleCount} onChange={e => setNewTableForm(prev => ({ ...prev, peopleCount: e.target.value }))} /></label>
+            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={!newTableForm.number.trim()}>Confirmar mesa</button><button className="secondaryBtn" type="button" onClick={() => setAddTableModalOpen(false)}>Cancelar</button></div>
+          </form>
+        </div>
+      )}
+
+      {joinModalOpen && table && (
+        <div className="authModalOverlay">
+          <form className="authModal joinTableModal" onSubmit={e => { e.preventDefault(); joinTable() }}>
+            <div className="drawerHeader"><div><span className="eyebrow">Juntar mesas</span><h2>{tableLabel}</h2></div><button type="button" className="iconBtn" onClick={() => { setJoinModalOpen(false); setJoinTargetId('') }}><X size={22} /></button></div>
+            <p>Escolha a mesa que será agrupada na comanda principal.</p>
+            <label><span>Mesa para juntar</span><select value={joinTargetId} onChange={e => setJoinTargetId(e.target.value)} autoFocus><option value="">Selecione uma mesa</option>{mergeTargets.map(target => <option key={target.id} value={target.id}>Mesa {target.number} - {target.status === 'livre' ? 'Livre' : 'Ocupada'}</option>)}</select></label>
+            {mergeTargets.length === 0 && <div className="loginError">Não há mesas disponíveis para juntar no momento.</div>}
+            <div className="actionsRow"><button className="secondaryBtn" type="submit" disabled={!joinTargetId}>Confirmar junção</button><button className="secondaryBtn" type="button" onClick={() => { setJoinModalOpen(false); setJoinTargetId('') }}>Cancelar</button></div>
+          </form>
+        </div>
+      )}
+
+      {cancelRequest && (
+        <div className="authModalOverlay">
+          <form className="authModal" onSubmit={confirmCancelItem}>
+            <div className="drawerHeader"><div><span className="eyebrow">Autorização obrigatória</span><h2>Cancelar item</h2></div><button type="button" className="iconBtn" onClick={() => setCancelRequest(null)}><X size={22} /></button></div>
+            <p>Para cancelar <strong>{cancelRequest.name}</strong>, informe a senha de autorização.</p>
+            <label><span>Senha de autorização</span><input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoComplete="off" autoFocus /></label>
+            {cancelError && <div className="loginError">{cancelError}</div>}
+            <div className="actionsRow"><button className="dangerBtn" type="submit">Confirmar cancelamento</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button></div>
+          </form>
+        </div>
+      )}
+
+      {closedTablesOpen && (
+        <div className="authModalOverlay closedTablesOverlay">
+          <section className="authModal closedTablesModal">
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Histórico do dia</span>
+                <h2>Mesas fechadas</h2>
+              </div>
+              <button type="button" className="iconBtn" onClick={() => setClosedTablesOpen(false)}><X size={22} /></button>
+            </div>
+            <label className="closedTablesDateFilter">
+              <span>Data</span>
+              <input type="date" value={closedTablesDate} onChange={event => setClosedTablesDate(event.target.value || todayKey())} />
+            </label>
+            <div className="closedTablesSummary">
+              <div><span>Mesas</span><strong>{closedTablesToday.length}</strong></div>
+              <div><span>Itens</span><strong>{closedTablesToday.reduce((sum, record) => sum + record.itemsQty, 0)}</strong></div>
+              <div><span>Consumo</span><strong>{formatMoney(closedTablesToday.reduce((sum, record) => sum + Number(record.total || 0), 0))}</strong></div>
+            </div>
+            <div className="closedTablesList">
+              {closedTablesToday.length ? closedTablesToday.map(record => (
+                <article className="closedTableCard" key={record.id}>
+                  <header>
+                    <div>
+                      <strong>Mesa {record.tableNumber}</strong>
+                      <span>{record.sourceLabel} · {record.closedAtLabel || 'Hoje'}</span>
+                    </div>
+                    <b>{formatMoney(record.total)}</b>
+                  </header>
+                  <div className="closedTableMeta">
+                    <span>{record.guests || 0} pessoas</span>
+                    <span>{record.itemsQty} itens</span>
+                    <span>{record.waiterName || 'Sem garçom'}</span>
+                  </div>
+                  <div className="closedTableFooter">
+                    <span>{record.observation || 'Sem observação'}</span>
+                    <button type="button" onClick={() => setSelectedClosedTable(record)}>Ver consumo</button>
+                  </div>
+                </article>
+              )) : (
+                <div className="closedTablesEmpty">
+                  <strong>Nenhuma mesa fechada hoje</strong>
+                  <span>As mesas fechadas manualmente ou pelo fechamento do caixa aparecerão aqui.</span>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedClosedTable && (
+        <div className="authModalOverlay closedTablesOverlay">
+          <section className="authModal closedConsumptionModal">
+            <div className="drawerHeader">
+              <div>
+                <span className="eyebrow">Consumo fechado</span>
+                <h2>Mesa {selectedClosedTable.tableNumber}</h2>
+              </div>
+              <button type="button" className="iconBtn" onClick={() => setSelectedClosedTable(null)}><X size={22} /></button>
+            </div>
+            <div className="closedConsumptionHero">
+              <div><span>Garçom</span><strong>{selectedClosedTable.waiterName || 'Sem garçom'}</strong></div>
+              <div><span>Data e hora</span><strong>{selectedClosedTable.closedAtLabel || 'Hoje'}</strong></div>
+              <div><span>Total</span><strong>{formatMoney(selectedClosedTable.total)}</strong></div>
+            </div>
+            <div className="closedConsumptionItems">
+              {(selectedClosedTable.items || []).map((item, index) => (
+                <div className="closedConsumptionRow" key={`${selectedClosedTable.id}-${item.id}-${index}`}>
+                  <span>{Number(item.qty || 0)}x</span>
+                  <strong>{item.name}</strong>
+                  <em>{item.category || item.sector || '-'}{item.launchedByName ? ` · ${item.launchedByName}` : ''}</em>
+                  <b>{formatMoney(item.price)}</b>
+                  <b>{formatMoney(item.total ?? Number(item.price || 0) * Number(item.qty || 0))}</b>
+                </div>
+              ))}
+            </div>
+            {selectedClosedTable.observation && <p className="closedConsumptionNote">{selectedClosedTable.observation}</p>}
+          </section>
+        </div>
+      )}
+    </div>
+  )
+}

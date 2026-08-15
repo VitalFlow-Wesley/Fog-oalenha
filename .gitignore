@@ -1,0 +1,27 @@
+# Dependências
+node_modules/
+
+# Build gerado
+/dist/
+dist/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+local-server/.env
+local-server/.secrets/
+.local-runtime/
+backups/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sistema/editores
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/

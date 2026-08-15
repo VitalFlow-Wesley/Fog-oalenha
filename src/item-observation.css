@@ -1,0 +1,69 @@
+.commandProductsPanel > .commandObs {
+  display: none !important;
+}
+
+.commandProductsPanel h3 {
+  margin-bottom: 10px !important;
+}
+
+.commandItem {
+  align-items: stretch !important;
+}
+
+.commandItemInfo {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.commandItemObservationEditor {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.commandItemObservationEditor span {
+  color: #7c675b;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.commandItemObservationEditor input {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid #ead2b5;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #3a2118;
+  font-size: 13px;
+  outline: none;
+}
+
+.commandItemObservationEditor input::placeholder {
+  color: #a28e82;
+}
+
+.commandItemObservationEditor input:focus {
+  border-color: #df5a34;
+  box-shadow: 0 0 0 3px rgba(223, 90, 52, .12);
+}
+
+.commandItemObservationEditor input:disabled {
+  opacity: .65;
+}
+
+@media (max-width: 760px) {
+  .commandItem {
+    grid-template-columns: 1fr !important;
+  }
+
+  .commandItemControls {
+    align-self: end;
+  }
+
+  .commandItemObservationEditor input {
+    min-height: 40px;
+    font-size: 16px;
+  }
+}

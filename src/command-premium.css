@@ -1,0 +1,439 @@
+.commandOverlay {
+  align-items: stretch;
+  background: rgba(255, 250, 242, .98);
+  backdrop-filter: blur(10px);
+  padding: 0;
+}
+
+.commandDrawer {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  padding: 24px 34px;
+  background: linear-gradient(135deg, #fffaf2 0%, #fff7ec 55%, #fffdf8 100%);
+  box-shadow: none;
+  overflow: auto;
+  position: relative;
+}
+
+.commandClose {
+  position: absolute;
+  right: 28px;
+  top: 22px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #ead7bf;
+  background: rgba(255, 253, 248, .92);
+  color: #1f110b;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.commandHeader {
+  display: grid;
+  grid-template-columns: minmax(430px, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 18px;
+  padding-right: 58px;
+}
+
+.commandEyebrow {
+  color: #ca4b25;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.commandEyebrow::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #d95a34;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.commandTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: nowrap;
+}
+
+.commandTitleRow h2 {
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1;
+  color: #1f110b;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.commandTitleRow > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #2d1a12;
+  border-left: 1px solid #ead7bf;
+  padding-left: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.commandActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.commandBtn {
+  min-height: 42px;
+  border: 1px solid #ead7bf;
+  border-radius: 12px;
+  background: rgba(255, 253, 248, .88);
+  color: #2d1a12;
+  padding: 0 16px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(86, 43, 19, .04);
+}
+
+.commandBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.commandDanger {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ba4324, #e96338);
+  color: white;
+  box-shadow: 0 12px 24px rgba(202, 75, 37, .22);
+}
+
+.commandMainGrid {
+  display: grid;
+  grid-template-columns: minmax(340px, .82fr) minmax(460px, 1.18fr);
+  gap: 22px;
+}
+
+.commandPanel {
+  border: 1px solid #ead7bf;
+  border-radius: 18px;
+  background: rgba(255, 253, 248, .84);
+  box-shadow: 0 12px 28px rgba(86, 43, 19, .05);
+  padding: 20px;
+}
+
+.commandPanel h3 {
+  margin: 0 0 18px;
+  color: #1f110b;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.commandItemsList {
+  display: grid;
+  gap: 10px;
+}
+
+.commandItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(255, 252, 246, .96), rgba(255, 247, 235, .74));
+  padding: 14px 14px;
+}
+
+.commandItemInfo strong,
+.commandItemInfo span,
+.commandItemInfo small {
+  display: block;
+}
+
+.commandItemInfo strong {
+  color: #1f110b;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.commandItemInfo span,
+.commandItemInfo small {
+  color: #5f4435;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.commandItemControls {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 8px;
+}
+
+.qtyStepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ead7bf;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #fffdf8;
+}
+
+.qtyStepper button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  color: #2d1a12;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.qtyStepper b {
+  min-width: 26px;
+  text-align: center;
+}
+
+.removeItemBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  border: 1px solid #ffd4c7;
+  background: #fff2ed;
+  color: #ef4d31;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.commandItemControls > strong {
+  color: #c84928;
+  font-size: 14px;
+}
+
+.commandMergeBox {
+  display: none;
+}
+
+.commandTotalCard {
+  margin-top: 14px;
+  min-height: 82px;
+  border-radius: 16px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  background: linear-gradient(135deg, #b73d20, #e45d34);
+  box-shadow: 0 14px 24px rgba(196, 73, 40, .22);
+}
+
+.commandTotalCard span,
+.commandTotalCard small {
+  display: block;
+}
+
+.commandTotalCard span {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.commandTotalCard small {
+  font-weight: 800;
+}
+
+.commandTotalCard strong {
+  font-size: clamp(26px, 2.7vw, 36px);
+  line-height: 1;
+}
+
+.commandObs {
+  min-height: 52px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: #fffdf8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 15px;
+  color: #6d5748;
+  margin-bottom: 14px;
+}
+
+.commandObs input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  flex: 1;
+  font-size: 14.5px;
+  color: #2d1a12;
+}
+
+.commandCategoryTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.commandCategoryTabs button {
+  min-height: 36px;
+  border: 1px solid #ead7bf;
+  border-radius: 999px;
+  background: #fff7eb;
+  color: #4f3425;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.commandCategoryTabs button.active {
+  background: linear-gradient(135deg, #b73d20, #e45d34);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 10px 18px rgba(202, 75, 37, .16);
+}
+
+.commandProductGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.commandProductCard {
+  min-height: 104px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: rgba(255, 253, 248, .9);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 34px;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+}
+
+.productThumb {
+  width: 74px;
+  height: 74px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  background: radial-gradient(circle at 35% 30%, #fff8e9, #f4d6b4);
+  box-shadow: inset 0 0 0 1px rgba(127, 72, 37, .08);
+}
+
+.commandProductCard strong,
+.commandProductCard span,
+.commandProductCard small {
+  display: block;
+}
+
+.commandProductCard strong {
+  color: #1f110b;
+  font-size: 15px;
+  margin-bottom: 7px;
+}
+
+.commandProductCard span {
+  color: #c84928;
+  font-weight: 900;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.commandProductCard small {
+  color: #5f4435;
+  font-size: 12.5px;
+}
+
+.commandProductCard em {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ead7bf;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #1f110b;
+  font-style: normal;
+  background: #fffdf8;
+}
+
+.joinTableModal select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  background: #fffdf8;
+  color: #4f3425;
+  padding: 0 12px;
+  font-size: 15px;
+}
+
+.joinTableModal .secondaryBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1280px) {
+  .commandHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .commandActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1180px) {
+  .commandMainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .commandDrawer {
+    padding: 26px 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .commandProductGrid,
+  .commandItem {
+    grid-template-columns: 1fr;
+  }
+
+  .commandProductCard {
+    grid-template-columns: 66px 1fr 32px;
+  }
+
+  .productThumb {
+    width: 66px;
+    height: 66px;
+  }
+
+  .commandTitleRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .commandTitleRow > span {
+    border-left: 0;
+    padding-left: 0;
+  }
+}

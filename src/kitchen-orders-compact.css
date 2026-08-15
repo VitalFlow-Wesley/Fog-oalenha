@@ -1,0 +1,494 @@
+/* Compactação da tela Pedidos enviados */
+.kitchenOrdersPage {
+  max-width: 1180px !important;
+  padding: 16px 20px !important;
+  border-radius: 22px !important;
+}
+
+.kitchenOrdersHeader {
+  align-items: flex-start !important;
+  gap: 14px !important;
+  margin-bottom: 12px !important;
+}
+
+.kitchenOrdersHeaderRefined {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 560px !important;
+  align-items: start !important;
+}
+
+.kitchenTitleBlock h1,
+.kitchenOrdersHeader h1 {
+  max-width: 620px !important;
+  font-size: clamp(26px, 2.35vw, 34px) !important;
+  line-height: .96 !important;
+  letter-spacing: -.035em !important;
+  margin: 4px 0 0 !important;
+}
+
+.kitchenTitleBlock p,
+.kitchenOrdersHeader p {
+  max-width: 560px !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  margin-top: 6px !important;
+}
+
+.kitchenEyebrow {
+  font-size: 11px !important;
+  letter-spacing: .14em !important;
+}
+
+.kitchenActions {
+  gap: 8px !important;
+  max-width: 560px !important;
+}
+
+.kitchenActionsRefined {
+  width: 100% !important;
+  max-width: 560px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 9px !important;
+  justify-items: stretch !important;
+  align-self: start !important;
+}
+
+.kitchenTopActions,
+.kitchenBottomActions {
+  display: grid !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.kitchenTopActions {
+  grid-template-columns: 150px 150px 1fr !important;
+  justify-content: end !important;
+}
+
+.kitchenTopActions .periodSelectWrap {
+  grid-column: 2 !important;
+}
+
+.kitchenTopActions .kitchenPrimaryBtn {
+  grid-column: 3 !important;
+}
+
+.kitchenBottomActions {
+  grid-template-columns: minmax(0, 1fr) 140px !important;
+}
+
+.periodSelectWrap {
+  position: relative !important;
+  width: 100% !important;
+}
+
+.kitchenPeriodMenu {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  right: 0 !important;
+  z-index: 20 !important;
+  min-width: 138px !important;
+  padding: 6px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 12px !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 12px 24px rgba(80, 42, 22, .13) !important;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+.kitchenPeriodMenu button {
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 9px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  text-align: left !important;
+  color: #3b2419 !important;
+  cursor: pointer !important;
+}
+
+.kitchenPeriodMenu button:hover {
+  background: #fff0e7 !important;
+  color: #c24928 !important;
+}
+
+.kitchenSearch {
+  width: 220px !important;
+  min-height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.kitchenBottomActions .kitchenSearch {
+  flex: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.kitchenSearch input {
+  font-size: 15px !important;
+}
+
+.kitchenPeriodBtn,
+.kitchenLightBtn,
+.kitchenPrimaryBtn {
+  width: 100% !important;
+  min-height: 44px !important;
+  border-radius: 14px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  justify-content: center !important;
+}
+
+.kitchenLightBtn {
+  background: rgba(255, 253, 248, .94) !important;
+}
+
+.kitchenSummaryGrid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.kitchenSummaryCard {
+  min-height: 68px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  gap: 10px !important;
+}
+
+.summaryRoundIcon {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.summaryRoundIcon svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.kitchenSummaryCard span {
+  font-size: 14px !important;
+  line-height: 1.05 !important;
+}
+
+.kitchenSummaryCard strong {
+  font-size: 22px !important;
+}
+
+.kitchenFilterChips {
+  gap: 7px !important;
+  margin-bottom: 10px !important;
+}
+
+.kitchenFilterChips button {
+  min-height: 30px !important;
+  padding: 0 13px !important;
+  font-size: 13px !important;
+}
+
+.kitchenOrdersLayout {
+  grid-template-columns: minmax(0, 1.9fr) minmax(300px, .78fr) !important;
+  gap: 14px !important;
+}
+
+.kitchenOrdersList {
+  gap: 8px !important;
+}
+
+.kitchenOrderCard {
+  grid-template-columns: 46px 92px minmax(0, 1fr) 118px !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+}
+
+.kitchenTableBadge {
+  width: 40px !important;
+  height: 40px !important;
+  font-size: 17px !important;
+}
+
+.kitchenOrderMesa strong {
+  font-size: 18px !important;
+}
+
+.kitchenOrderMesa span,
+.kitchenOrderContent li,
+.kitchenObs {
+  font-size: 12px !important;
+}
+
+.sectorBadges {
+  gap: 5px !important;
+  margin-bottom: 4px !important;
+}
+
+.sectorBadges span {
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+}
+
+.kitchenOrderContent ul {
+  margin: 0 0 4px 15px !important;
+}
+
+.kitchenObs {
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+}
+
+.kitchenOrderActions {
+  gap: 5px !important;
+}
+
+.sentBadge,
+.kitchenOrderActions button {
+  min-height: 28px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+  gap: 5px !important;
+}
+
+.kitchenOperationalCard {
+  padding: 14px !important;
+  border-radius: 16px !important;
+}
+
+.kitchenOperationalCardRefined {
+  padding: 14px !important;
+}
+
+.kitchenSideTitle {
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+
+.kitchenSideTitle h2 {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+.lastOrderBox {
+  display: grid !important;
+  grid-template-columns: 36px 1fr !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding: 12px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(255, 253, 248, .96), rgba(255, 244, 230, .72)) !important;
+  margin-bottom: 10px !important;
+}
+
+.lastOrderBox svg {
+  color: #c24928 !important;
+}
+
+.lastOrderBox span {
+  display: block !important;
+  color: #7f6250 !important;
+  font-size: 11.5px !important;
+  margin-bottom: 2px !important;
+}
+
+.lastOrderBox strong {
+  color: #2a160e !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 17px !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+}
+
+.sectorMetricGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin-bottom: 10px !important;
+}
+
+.sectorMetricBox {
+  min-height: 82px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 13px !important;
+  background: rgba(255, 253, 248, .9) !important;
+  padding: 9px 7px !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  text-align: center !important;
+  gap: 2px !important;
+}
+
+.sectorMetricBox svg,
+.sectorMetricBox .emojiIcon {
+  color: #c24928 !important;
+  font-size: 18px !important;
+}
+
+.sectorMetricBox.cozinha svg { color: #277848 !important; }
+.sectorMetricBox.churrasco svg { color: #c24928 !important; }
+
+.sectorMetricBox span:not(.emojiIcon) {
+  color: #7f6250 !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+.sectorMetricBox strong {
+  color: #2a160e !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+.sectorMetricBox small {
+  color: #7f6250 !important;
+  font-size: 10px !important;
+}
+
+.totalSentBox {
+  display: grid !important;
+  grid-template-columns: 34px 1fr auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding: 11px 12px !important;
+  border-radius: 13px !important;
+  background: #fff0d1 !important;
+  border: 1px solid rgba(216, 149, 32, .24) !important;
+}
+
+.totalSentBox svg {
+  color: #c24928 !important;
+}
+
+.totalSentBox span {
+  color: #7f6250 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.totalSentBox strong {
+  color: #2a160e !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 24px !important;
+}
+
+.kitchenSideListRefined {
+  display: grid !important;
+  gap: 0 !important;
+}
+
+.kitchenSideListRefined > div,
+.kitchenSideList > div {
+  grid-template-columns: 34px 1fr !important;
+  gap: 10px !important;
+  padding: 11px 0 !important;
+  align-items: center !important;
+}
+
+.kitchenSideListRefined .sideMetric strong {
+  display: block !important;
+  font-size: 16px !important;
+  line-height: 1.15 !important;
+  margin-top: 2px !important;
+  word-break: normal !important;
+}
+
+.kitchenSideListRefined .lastOrderMetric strong {
+  font-size: 15px !important;
+  white-space: nowrap !important;
+}
+
+.kitchenSideList span:not(.emojiIcon) {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+.kitchenSideList strong {
+  font-size: 16px !important;
+  margin-top: 1px !important;
+}
+
+.kitchenSideListRefined .totalSent {
+  margin-top: 8px !important;
+  padding: 11px 12px !important;
+  border: 1px solid rgba(216, 149, 32, .24) !important;
+  display: grid !important;
+  grid-template-columns: 34px 1fr !important;
+  border-radius: 12px !important;
+}
+
+.exportPdfBtn {
+  display: none !important;
+}
+
+.kitchenFlowMessage {
+  margin-top: 10px !important;
+  min-height: 34px !important;
+  padding: 8px 10px !important;
+  font-size: 11.5px !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 1180px) {
+  .kitchenOrdersHeaderRefined,
+  .kitchenOrdersHeader {
+    grid-template-columns: 1fr !important;
+    display: grid !important;
+  }
+
+  .kitchenActions,
+  .kitchenActionsRefined {
+    max-width: none !important;
+    justify-items: stretch !important;
+  }
+
+  .kitchenTopActions {
+    grid-template-columns: 150px 150px 1fr !important;
+  }
+
+  .kitchenBottomActions {
+    grid-template-columns: minmax(0, 1fr) 140px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .kitchenOrdersPage {
+    padding: 14px !important;
+  }
+
+  .kitchenOrdersHeader h1 {
+    font-size: 28px !important;
+  }
+
+  .kitchenTopActions,
+  .kitchenBottomActions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .kitchenTopActions .periodSelectWrap,
+  .kitchenTopActions .kitchenPrimaryBtn {
+    grid-column: auto !important;
+  }
+
+  .kitchenBottomActions .kitchenSearch {
+    min-width: 100% !important;
+  }
+
+  .kitchenOrderCard {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+  }
+
+  .kitchenOrderContent,
+  .kitchenOrderActions {
+    grid-column: 1 / -1 !important;
+  }
+
+  .sectorMetricGrid {
+    grid-template-columns: 1fr !important;
+  }
+}

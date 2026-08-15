@@ -1,0 +1,362 @@
+/* Relatório completo: cards superiores mais compactos */
+.reportsPremiumPage.completeReportPage .completeSummaryGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard {
+  min-height: 82px !important;
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryIcon {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryIcon svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard > div:last-child {
+  gap: 2px !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard span {
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard strong {
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .completeSummaryGrid .reportSummaryCard small {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+/* Desempenho por setor mais baixo e enxuto */
+.reportsPremiumPage.completeReportPage .sectorPerformancePanel {
+  grid-column: span 6 !important;
+  padding: 14px 16px !important;
+}
+
+.reportsPremiumPage.completeReportPage .categoryPanelComplete {
+  grid-column: span 6 !important;
+}
+
+.reportsPremiumPage.completeReportPage .quantityProductsComplete,
+.reportsPremiumPage.completeReportPage .revenueProductsComplete,
+.reportsPremiumPage.completeReportPage .tablePerformanceComplete,
+.reportsPremiumPage.completeReportPage .movementPanel {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .indicatorsPanel {
+  grid-column: span 4 !important;
+}
+
+.reportsPremiumPage.completeReportPage .generalSummaryPanel {
+  grid-column: span 8 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformancePanel h2 {
+  margin: 0 0 9px !important;
+  font-size: 19px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+  gap: 9px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard {
+  min-height: 92px !important;
+  padding: 10px 8px !important;
+  gap: 4px !important;
+  border-radius: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard > div {
+  line-height: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard span,
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard small {
+  font-size: 10.5px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .sectorPerformanceCard b {
+  font-size: 13.5px !important;
+  line-height: 1 !important;
+}
+
+/* Mesas fechadas do dia: ocupar toda a largura do relatório */
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 14px 16px !important;
+  overflow: hidden !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow h2 {
+  margin: 0 !important;
+  font-size: 19px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow > span {
+  flex: 0 0 auto !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  background: #fff0cf !important;
+  color: #a55a16 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportTable {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closedTablesReportTable .completeTableRow {
+  grid-template-columns: 90px minmax(120px, 1fr) 90px 70px minmax(150px, 1.2fr) 100px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Histórico de fechamentos: layout compacto e proporcional */
+.reportsPremiumPage.completeReportPage .closingsHistoryPanel {
+  padding: 14px 16px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryPanel .reportPanelTitleRow {
+  margin-bottom: 10px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryGrid {
+  grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr) !important;
+  gap: 12px !important;
+  align-items: start !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingsHistoryList {
+  align-content: start !important;
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem {
+  min-height: 0 !important;
+  padding: 10px 11px !important;
+  gap: 5px 10px !important;
+  align-items: center !important;
+  border-radius: 12px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem span {
+  gap: 2px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem strong,
+.reportsPremiumPage.completeReportPage .closingHistoryItem b {
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem small {
+  font-size: 10.5px !important;
+  line-height: 1.2 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryItem em {
+  grid-column: 1 / -1 !important;
+  justify-self: start !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: max-content !important;
+  padding: 4px 8px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingHistoryDetails {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero div,
+.reportsPremiumPage.completeReportPage .closingDetailInfo p,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid div,
+.reportsPremiumPage.completeReportPage .closingTablesList div,
+.reportsPremiumPage.completeReportPage .closingNoteBox {
+  padding: 9px 10px !important;
+  border-radius: 11px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero span,
+.reportsPremiumPage.completeReportPage .closingDetailInfo span,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid span,
+.reportsPremiumPage.completeReportPage .closingTablesList small,
+.reportsPremiumPage.completeReportPage .closingNoteBox span {
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailHero strong {
+  margin-top: 2px !important;
+  font-size: 18px !important;
+  line-height: 1.05 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid {
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo p,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid div {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingDetailInfo strong,
+.reportsPremiumPage.completeReportPage .closingPaymentGrid strong {
+  display: block !important;
+  min-width: 0 !important;
+  font-size: 15px !important;
+  line-height: 1.1 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesBlock h3 {
+  margin: 1px 0 7px !important;
+  font-size: 18px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList {
+  gap: 7px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList div {
+  grid-template-columns: 82px minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+}
+
+.reportsPremiumPage.completeReportPage .closingTablesList span,
+.reportsPremiumPage.completeReportPage .closingTablesList strong {
+  font-size: 12.5px !important;
+}
+
+@media (max-width: 1280px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .reportsPremiumPage.completeReportPage .sectorPerformancePanel,
+  .reportsPremiumPage.completeReportPage .categoryPanelComplete,
+  .reportsPremiumPage.completeReportPage .indicatorsPanel,
+  .reportsPremiumPage.completeReportPage .generalSummaryPanel {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .reportsPremiumPage.completeReportPage .closingsHistoryGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingsHistoryList {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportPanel .reportPanelTitleRow {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportTable {
+    overflow-x: auto !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closedTablesReportTable .completeTableRow {
+    min-width: 720px !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingDetailInfo,
+  .reportsPremiumPage.completeReportPage .closingPaymentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .reportsPremiumPage.completeReportPage .closingsHistoryList,
+  .reportsPremiumPage.completeReportPage .closingDetailHero,
+  .reportsPremiumPage.completeReportPage .closingDetailInfo,
+  .reportsPremiumPage.completeReportPage .closingPaymentGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingTablesList div {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .closingTablesList small {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .reportsPremiumPage.completeReportPage .completeSummaryGrid,
+  .reportsPremiumPage.completeReportPage .sectorPerformanceGrid {
+    grid-template-columns: 1fr !important;
+  }
+}

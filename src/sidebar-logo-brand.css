@@ -1,0 +1,126 @@
+.sidebarLogoBrand {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 11px !important;
+}
+
+.sidebarLogoMark {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+  display: grid !important;
+  place-items: center !important;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,.72), transparent 34%),
+    linear-gradient(135deg, #fff4df 0%, #f6d4a4 42%, #d34b2b 100%) !important;
+  border: 1px solid rgba(207, 105, 45, .35) !important;
+  box-shadow: 0 10px 22px rgba(120, 58, 24, .13) !important;
+  color: #3a1c12 !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+}
+
+.sidebarLogoMark::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 5px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,.45) !important;
+  pointer-events: none !important;
+}
+
+.sidebarLogoMark svg {
+  width: 27px !important;
+  height: 27px !important;
+  stroke-width: 2.3 !important;
+  filter: drop-shadow(0 2px 2px rgba(255,255,255,.35)) !important;
+}
+
+.sidebarLogoText {
+  display: grid !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.sidebarLogoText strong {
+  line-height: 1.08 !important;
+}
+
+.sidebarLogoText span {
+  line-height: 1.2 !important;
+}
+
+.officialLogoBrand {
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  gap: 8px !important;
+  text-align: center !important;
+  padding-top: 2px !important;
+}
+
+.sidebarOfficialLogoWrap {
+  width: 132px !important;
+  max-width: 100% !important;
+  min-height: 118px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.sidebarOfficialLogo {
+  width: 132px !important;
+  height: auto !important;
+  max-width: 100% !important;
+  display: block !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 12px 18px rgba(79, 42, 22, .12)) !important;
+}
+
+.sidebarLogoFallback {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 16px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: linear-gradient(135deg, #fff4df 0%, #f6d4a4 42%, #d34b2b 100%) !important;
+  color: #3a1c12 !important;
+}
+
+.hiddenLogoFallback {
+  display: none !important;
+}
+
+.officialLogoText span {
+  font-size: .93rem !important;
+  color: #7a5a4b !important;
+}
+
+@media (max-width: 760px) {
+  .sidebarLogoBrand {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .sidebarLogoMark {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .sidebarLogoMark svg {
+    width: 23px !important;
+    height: 23px !important;
+  }
+
+  .officialLogoBrand {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebarOfficialLogoWrap {
+    width: 108px !important;
+    min-height: 98px !important;
+  }
+
+  .sidebarOfficialLogo {
+    width: 108px !important;
+  }
+}

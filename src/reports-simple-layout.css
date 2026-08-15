@@ -1,0 +1,150 @@
+.simpleSummaryGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.simpleSectorPanel {
+  margin-bottom: 14px !important;
+}
+
+.simpleSectorPanel h2 {
+  margin: 0 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  color: #2a160e !important;
+  font-size: 22px !important;
+}
+
+.simpleSectorPanel h2 svg {
+  color: #d74a2b !important;
+}
+
+.simpleSectorGrid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.simpleSectorCard {
+  min-height: 64px !important;
+  border: 1px solid #ead7bf !important;
+  border-radius: 14px !important;
+  background: rgba(255, 248, 237, .72) !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, .9fr) 1px minmax(88px, auto) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+}
+
+.simpleSectorCard div {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: #ffe0ce !important;
+  color: #d74a2b !important;
+}
+
+.simpleSectorCard strong {
+  color: #c24928 !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.simpleSectorCard span {
+  color: #6f5849 !important;
+  font-size: 12px !important;
+  margin-top: 3px !important;
+  display: block !important;
+  grid-column: 2 !important;
+}
+
+.simpleSectorCard i {
+  width: 1px !important;
+  height: 30px !important;
+  background: #ead7bf !important;
+}
+
+.simpleSectorCard b {
+  color: #2a160e !important;
+  font-size: 15px !important;
+  white-space: nowrap !important;
+  text-align: right !important;
+}
+
+.simpleReportGrid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(330px, .85fr) !important;
+}
+
+.simpleReportGrid .productsPanel,
+.simpleReportGrid .simpleResumePanel {
+  min-height: 330px !important;
+}
+
+.simpleProductsTable .premiumReportRow {
+  grid-template-columns: minmax(0, 1fr) 70px 110px 110px !important;
+}
+
+.simpleProductsTable em {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 54px !important;
+  padding: 4px 9px !important;
+  border-radius: 999px !important;
+  background: #eef6e8 !important;
+  color: #437447 !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  font-size: 11px !important;
+}
+
+.simpleResumePanel .quickActions {
+  display: none !important;
+}
+
+.simpleResumePanel .readyMessage {
+  margin-top: 14px !important;
+}
+
+.completePreview {
+  display: none !important;
+}
+
+@media (max-width: 1180px) {
+  .simpleSectorGrid,
+  .simpleSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .simpleReportGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .simpleSectorGrid,
+  .simpleSummaryGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .simpleSectorCard {
+    grid-template-columns: 42px 1fr !important;
+  }
+
+  .simpleSectorCard i,
+  .simpleSectorCard b {
+    display: none !important;
+  }
+
+  .simpleProductsTable {
+    overflow-x: auto !important;
+  }
+
+  .simpleProductsTable .premiumReportRow {
+    min-width: 620px !important;
+  }
+}

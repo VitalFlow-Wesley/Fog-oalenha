@@ -1,0 +1,43 @@
+.premiumSidebar.compactSidebar {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.premiumSidebar.compactSidebar nav {
+  flex: 1 1 auto !important;
+}
+
+.sidebarLogoutArea {
+  margin-top: auto !important;
+  padding-top: 18px !important;
+  border-top: 1px solid rgba(234, 215, 191, .82) !important;
+}
+
+.logoutBtn {
+  width: 100% !important;
+  min-height: 46px !important;
+  border: 1px solid rgba(183, 46, 46, .20) !important;
+  border-radius: 15px !important;
+  background: rgba(255, 246, 243, .82) !important;
+  color: #b72e2e !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 18px rgba(90, 45, 20, .045) !important;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease !important;
+}
+
+.logoutBtn:hover {
+  background: #ffe7df !important;
+  border-color: rgba(183, 46, 46, .38) !important;
+  color: #962424 !important;
+  transform: translateY(-1px) !important;
+}
+
+.logoutBtn svg {
+  width: 18px !important;
+  height: 18px !important;
+}

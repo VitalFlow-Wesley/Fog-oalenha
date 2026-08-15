@@ -1,0 +1,28 @@
+{
+  "name": "mesa-brasa-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "local:build": "vite build",
+    "local:start": "node local-server/server.js",
+    "local:dev": "node --watch local-server/server.js",
+    "local:check": "node local-server/check.js",
+    "local:sync:pull": "node local-server/sync-cli.js pull",
+    "local:sync:push": "node local-server/sync-cli.js push"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "lucide-react": "latest",
+    "mongodb": "latest",
+    "qz-tray": "^2.2.6",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest"
+  }
+}

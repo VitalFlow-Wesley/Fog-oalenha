@@ -1,0 +1,109 @@
+.restaurantTablesGrid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.restaurantTableCard {
+  width: 100%;
+  min-width: 0;
+  min-height: 168px;
+  height: auto;
+}
+
+.restaurantTableCard .restaurantTableTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+}
+
+.restaurantTableIdentification {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.restaurantTableCard .restaurantTableIdentification > strong {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  writing-mode: horizontal-tb;
+  flex-shrink: 0;
+}
+
+.restaurantTableCard .tableCustomerBadge {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #a96217;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: normal;
+  writing-mode: horizontal-tb;
+}
+
+.restaurantTableCard .restaurantTableStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 145px;
+  min-height: 28px;
+  height: auto;
+  margin: 0;
+  padding: 6px 10px;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  writing-mode: horizontal-tb;
+}
+
+.restaurantTableCard .restaurantTableMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px 16px;
+  margin: 18px 0 10px;
+}
+
+.restaurantTableCard .restaurantTableMeta span {
+  width: auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .restaurantTablesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurantTableCard .restaurantTableTop {
+    gap: 10px;
+  }
+
+  .restaurantTableCard .restaurantTableStatus {
+    max-width: 132px;
+    font-size: 10px;
+  }
+}

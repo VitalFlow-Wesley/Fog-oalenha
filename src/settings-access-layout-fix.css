@@ -1,0 +1,115 @@
+.accessSettingsTab,
+.accessMainGrid,
+.accessListPanel {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+.accessMainGrid:has(> .accessListPanel:only-child) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.accessMainGrid:has(> .accessListPanel:only-child) > .accessListPanel {
+  grid-column: 1 / -1 !important;
+}
+
+.accessMainGrid {
+  align-items: start !important;
+}
+
+.accessCreatePanel,
+.accessListPanel {
+  align-self: start !important;
+}
+
+.accessListPanel .accessTable {
+  width: 100% !important;
+  max-width: none !important;
+  overflow-x: auto !important;
+}
+
+.accessListPanel .accessTableHead,
+.accessListPanel .accessTableRow {
+  width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns:
+    minmax(150px, 1.45fr)
+    minmax(90px, .85fr)
+    minmax(92px, .85fr)
+    minmax(74px, .7fr)
+    minmax(70px, .55fr) !important;
+  gap: 8px !important;
+}
+
+.accessNameCell {
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  min-width: 0 !important;
+}
+
+.accessNameCell strong,
+.accessTableRow > span,
+.accessTableRow > b,
+.accessTableRow > em,
+.accessTableHead > span {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  white-space: nowrap !important;
+}
+
+.accessNameCell strong {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.accessActions {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+}
+
+@media (min-width: 1025px) {
+  .accessMainGrid {
+    grid-template-columns: minmax(290px, .62fr) minmax(0, 1.55fr) !important;
+  }
+
+  .accessMainGrid:has(> .accessListPanel:only-child) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .accessListPanel {
+    padding: 12px !important;
+  }
+
+  .accessListPanel .accessTable {
+    overflow-x: visible !important;
+  }
+
+  .accessListPanel .accessTableHead {
+    display: none !important;
+  }
+
+  .accessListPanel .accessTableHead,
+  .accessListPanel .accessTableRow {
+    min-width: 0 !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .accessListPanel .accessTableRow {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    margin: 8px !important;
+  }
+
+  .accessTableRow > span,
+  .accessTableRow > b,
+  .accessTableRow > em {
+    white-space: normal !important;
+  }
+
+  .accessActions {
+    justify-content: flex-end !important;
+  }
+}

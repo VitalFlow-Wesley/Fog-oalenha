@@ -1,0 +1,69 @@
+/* Correção final: deixa o nome do garçom e o detalhe abaixo legíveis */
+.closingPage .otherDetailsPanel p {
+  display: grid !important;
+  grid-template-columns: 32px minmax(0, 1fr) minmax(260px, 320px) !important;
+  grid-template-areas:
+    "icone texto valor"
+    "icone texto detalhe" !important;
+  column-gap: 18px !important;
+  row-gap: 8px !important;
+  align-items: center !important;
+  min-height: 76px !important;
+}
+
+.closingPage .otherDetailsPanel p > svg {
+  grid-area: icone !important;
+}
+
+.closingPage .otherDetailsPanel p > span {
+  grid-area: texto !important;
+  min-width: 0 !important;
+}
+
+.closingPage .otherDetailsPanel p > strong {
+  grid-area: valor !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  text-align: right !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.2 !important;
+  font-size: 22px !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.closingPage .otherDetailsPanel p > small {
+  grid-area: detalhe !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.35 !important;
+  font-size: 13px !important;
+  margin-top: 0 !important;
+  opacity: .82 !important;
+}
+
+@media (max-width: 760px) {
+  .closingPage .otherDetailsPanel p {
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "icone texto"
+      "icone valor"
+      "icone detalhe" !important;
+    min-height: auto !important;
+    row-gap: 6px !important;
+  }
+
+  .closingPage .otherDetailsPanel p > strong,
+  .closingPage .otherDetailsPanel p > small {
+    text-align: left !important;
+  }
+}

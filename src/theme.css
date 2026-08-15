@@ -1,0 +1,234 @@
+.loginPageClean {
+  grid-template-columns: 1fr 0.78fr;
+  background: radial-gradient(circle at 18% 12%, rgba(191, 91, 43, .18), transparent 28%), linear-gradient(135deg, #fff7e9 0%, #f2dec0 100%);
+}
+
+.loginBrandPanel {
+  min-height: 78vh;
+  border-radius: 38px;
+  padding: 52px;
+  color: #fff7ed;
+  background: linear-gradient(145deg, rgba(71, 31, 14, .97), rgba(135, 48, 21, .95));
+  box-shadow: 0 28px 80px rgba(92, 43, 18, .24);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.loginBrandPanel::before {
+  content: '';
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  border: 62px solid rgba(255, 255, 255, .055);
+  right: -160px;
+  bottom: -180px;
+}
+
+.loginBrandPanel::after {
+  content: '';
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 177, 89, .18), transparent 70%);
+  left: -110px;
+  top: -90px;
+}
+
+.fogaoLogo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.fogaoLogoIcon {
+  width: 112px;
+  height: 112px;
+  border-radius: 34px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .2);
+  box-shadow: inset 0 0 40px rgba(255, 255, 255, .06);
+}
+
+.fogaoLogo span {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: #ffd9b7;
+  font-weight: 900;
+}
+
+.fogaoLogo strong {
+  display: block;
+  font-size: clamp(48px, 6vw, 92px);
+  line-height: .88;
+  letter-spacing: -0.055em;
+  margin: 8px 0;
+}
+
+.fogaoLogo small {
+  display: block;
+  color: #ffe4cc;
+  font-size: 17px;
+}
+
+.loginBrandText {
+  max-width: 540px;
+  position: relative;
+  z-index: 1;
+}
+
+.loginBrandText h1 {
+  display: none;
+}
+
+.loginBrandText p {
+  font-size: 20px;
+  line-height: 1.45;
+  color: #ffe4cc;
+  margin: 0;
+}
+
+.loginError {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #ffe5df;
+  border: 1px solid #f1b5a8;
+  color: #a72b20;
+  font-weight: 700;
+}
+
+.loggedUserBox {
+  padding: 14px;
+  background: #fff3df;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loggedUserBox strong { color: var(--text); }
+.loggedUserBox span { color: var(--muted); font-size: 13px; }
+
+.pageDescription {
+  max-width: 820px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.sectionTitle {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--fire);
+}
+
+.sectionTitle h2 { margin: 0; }
+
+.userForm {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.userForm input,
+.userForm select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: white;
+  color: var(--text);
+  outline: none;
+}
+
+.usersGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #fff7ea;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+.userAvatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--fire), var(--fire2));
+  color: white;
+  font-weight: 900;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.userInfo span,
+.userInfo small { color: var(--muted); }
+.userInfo small { font-weight: 800; }
+
+.iconDanger {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #ffe5df;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.blockedPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff1d9;
+}
+
+.blockedPanel span { color: var(--muted); }
+
+@media (max-width: 1050px) {
+  .loginPageClean { grid-template-columns: 1fr; }
+  .loginBrandPanel { min-height: auto; }
+  .userForm, .usersGrid { grid-template-columns: 1fr; }
+  .loggedUserBox { min-width: 160px; }
+}
+
+@media (max-width: 680px) {
+  .loginBrandPanel { padding: 28px; border-radius: 28px; }
+  .fogaoLogoIcon { width: 76px; height: 76px; border-radius: 22px; }
+  .fogaoLogo strong { font-size: 42px; }
+}

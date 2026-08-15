@@ -1,0 +1,295 @@
+.completeReportPage {
+  max-width: 1320px !important;
+}
+
+.completeReportPage .reportsHeader {
+  align-items: flex-start !important;
+  display: grid !important;
+  grid-template-columns: minmax(300px, 1fr) auto !important;
+  gap: 18px !important;
+}
+
+.completeReportPage .reportsActions {
+  display: grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-areas:
+    "tabs period"
+    "print pdf" !important;
+  align-items: end !important;
+  justify-content: end !important;
+  gap: 10px !important;
+  padding-top: 0 !important;
+}
+
+.completeReportPage .reportTabs {
+  grid-area: tabs !important;
+  justify-self: end !important;
+}
+
+.completeReportPage .reportsActions > .reportActionBtn:nth-of-type(1) {
+  grid-area: period !important;
+  justify-self: end !important;
+}
+
+.completeReportPage .reportsActions > .reportActionBtn:nth-of-type(2) {
+  grid-area: print !important;
+  justify-self: end !important;
+}
+
+.completeReportPage .reportsActions > .reportActionBtn:nth-of-type(3) {
+  grid-area: pdf !important;
+  justify-self: end !important;
+}
+
+.completeReportPage .reportTabs button,
+.completeReportPage .reportActionBtn {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  padding: 0 18px !important;
+  font-size: 14px !important;
+}
+
+.completeReportPage .reportActionBtn {
+  min-width: 150px !important;
+  justify-content: center !important;
+}
+
+.completeReportPage .reportTabs {
+  min-height: 54px !important;
+  border-radius: 16px !important;
+}
+
+.completeReportPage .reportTabs button {
+  min-width: 170px !important;
+}
+
+.completeSummaryGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.completeSummaryGrid .reportSummaryCard {
+  min-height: 104px !important;
+  grid-template-columns: 46px 1fr !important;
+  padding: 14px !important;
+}
+
+.completeSummaryGrid .reportSummaryIcon {
+  width: 46px !important;
+  height: 46px !important;
+}
+
+.completeSummaryGrid .reportSummaryCard span {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.completeSummaryGrid .reportSummaryCard strong {
+  font-size: 23px !important;
+  line-height: 1.08 !important;
+  white-space: normal !important;
+}
+
+.completeReportLayout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.completeReportLayout .reportPanel h2 {
+  margin: 0 0 12px;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #2a160e;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.sectorPerformancePanel { grid-column: span 5; }
+.categoryPanelComplete { grid-column: span 4; }
+.paymentPanelComplete { grid-column: span 3; }
+.quantityProductsComplete { grid-column: span 6; }
+.revenueProductsComplete { grid-column: span 6; }
+.topProductsComplete { grid-column: span 6; }
+.tablePerformanceComplete { grid-column: span 6; }
+.movementPanel { grid-column: span 4; }
+.indicatorsPanel { grid-column: span 3; }
+.generalSummaryPanel { grid-column: span 5; }
+
+.sectorPerformanceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sectorPerformanceCard {
+  min-height: 142px;
+  border: 1px solid #ead7bf;
+  border-radius: 14px;
+  background: rgba(255, 248, 237, .62);
+  padding: 14px 10px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.sectorPerformanceCard svg {
+  color: #ef6336;
+}
+
+.sectorPerformanceCard strong {
+  color: #2a160e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+}
+
+.sectorPerformanceCard span,
+.sectorPerformanceCard small {
+  color: #6f5849;
+  font-size: 12px;
+}
+
+.sectorPerformanceCard b {
+  color: #2a160e;
+  font-size: 15px;
+}
+
+.paymentNoteBox {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 13px;
+  background: #fff5e6;
+  border: 1px solid #ead7bf;
+  margin-bottom: 10px;
+}
+
+.paymentNoteBox svg { color: #c24928; }
+.paymentNoteBox strong { display: block; color: #2a160e; margin-bottom: 3px; }
+.paymentNoteBox span { color: #7d6758; font-size: 12px; line-height: 1.35; }
+.paymentRows { display: grid; gap: 0; border: 1px solid #ead7bf; border-radius: 12px; overflow: hidden; }
+.paymentRows p { display: flex; justify-content: space-between; margin: 0; padding: 10px 12px; border-bottom: 1px solid #ead7bf; }
+.paymentRows p:last-child { border-bottom: 0; }
+
+.completeTable {
+  border: 1px solid #ead7bf;
+  border-radius: 13px;
+  overflow: hidden;
+  background: rgba(255,255,255,.35);
+}
+
+.completeTableRow {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  min-height: 39px;
+  padding: 0 12px;
+  border-bottom: 1px solid #ead7bf;
+  color: #3b2419;
+  font-size: 12px;
+}
+
+.completeTableRow:last-child { border-bottom: 0; }
+.completeTableRow.head { background: #fff1dd; font-weight: 900; }
+.productsCompleteTable .completeTableRow { grid-template-columns: 32px minmax(130px, 1.2fr) 100px 90px 55px 95px 95px; }
+.tablesCompleteTable .completeTableRow { grid-template-columns: 70px 105px 55px 60px minmax(130px, 1fr) 90px 80px; }
+.completeTableRow em { display: inline-flex; justify-content: center; border-radius: 999px; padding: 4px 9px; font-style: normal; font-weight: 900; font-size: 11px; }
+.completeTableRow em.success { background: #e7f5e5; color: #277848; }
+.completeTableRow em.warning { background: #fff0d1; color: #b36b1f; }
+
+.movementChart {
+  min-height: 170px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  border-bottom: 1px solid #ead7bf;
+  padding: 12px 4px 0;
+}
+
+.movementChart div {
+  height: 150px;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  gap: 6px;
+}
+
+.movementChart span {
+  width: 100%;
+  max-width: 18px;
+  display: block;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #ef6336, rgba(239, 99, 54, .18));
+}
+
+.movementChart small { color: #7d6758; font-size: 11px; }
+
+.indicatorRows {
+  display: grid;
+  gap: 0;
+}
+
+.indicatorRows p {
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #ead7bf;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #6f5849;
+}
+
+.indicatorRows p:last-child { border-bottom: 0; }
+.indicatorRows strong { color: #2a160e; text-align: right; }
+
+@media (max-width: 1280px) {
+  .completeReportPage .reportsHeader {
+    grid-template-columns: 1fr !important;
+  }
+
+  .completeReportPage .reportsActions {
+    justify-content: start !important;
+    grid-template-columns: auto auto !important;
+  }
+
+  .completeSummaryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .sectorPerformancePanel,
+  .categoryPanelComplete,
+  .paymentPanelComplete,
+  .quantityProductsComplete,
+  .revenueProductsComplete,
+  .topProductsComplete,
+  .tablePerformanceComplete,
+  .movementPanel,
+  .indicatorsPanel,
+  .generalSummaryPanel { grid-column: span 12; }
+}
+
+@media (max-width: 780px) {
+  .completeSummaryGrid { grid-template-columns: 1fr !important; }
+  .sectorPerformanceGrid { grid-template-columns: 1fr 1fr; }
+  .completeTable { overflow-x: auto; }
+  .completeTableRow { min-width: 760px; }
+
+  .completeReportPage .reportsActions {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "tabs"
+      "period"
+      "print"
+      "pdf" !important;
+  }
+
+  .completeReportPage .reportTabs,
+  .completeReportPage .reportActionBtn,
+  .completeReportPage .reportTabs button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}

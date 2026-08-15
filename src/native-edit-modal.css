@@ -1,0 +1,133 @@
+.native-edit-modal-open {
+  overflow: hidden !important;
+}
+
+.nativeEditModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(40, 22, 15, .58);
+  backdrop-filter: blur(6px);
+}
+
+.nativeEditModalOverlay[hidden] {
+  display: none !important;
+}
+
+.nativeEditModalCard {
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid #e8ccb0;
+  border-radius: 22px;
+  background: #fffaf1;
+  color: #3a2118;
+  box-shadow: 0 24px 70px rgba(54, 28, 18, .28);
+}
+
+.nativeEditModalEyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: #c44d2a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.nativeEditModalCard h2 {
+  margin: 0;
+  font-size: clamp(25px, 4vw, 34px);
+  line-height: 1.05;
+}
+
+.nativeEditModalDescription {
+  margin: 10px 0 20px;
+  color: #7c675b;
+  line-height: 1.5;
+}
+
+.nativeEditModalForm label {
+  display: grid;
+  gap: 8px;
+  color: #55372a;
+  font-weight: 800;
+}
+
+.nativeEditModalForm input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #dfc6aa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f1c15;
+  font-size: 16px;
+  outline: none;
+}
+
+.nativeEditModalForm input:focus {
+  border-color: #d7552f;
+  box-shadow: 0 0 0 3px rgba(215, 85, 47, .13);
+}
+
+.nativeEditModalError {
+  margin: 8px 0 0;
+  color: #c93f2c;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.nativeEditModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.nativeEditModalActions button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nativeEditModalActions button:first-child {
+  border: 1px solid #e4cfb8;
+  background: #f8ead8;
+  color: #69483a;
+}
+
+.nativeEditModalActions button:last-child {
+  border: 0;
+  background: linear-gradient(135deg, #bc4827, #f15b32);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(210, 79, 42, .2);
+}
+
+@media (max-width: 520px) {
+  .nativeEditModalOverlay {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .nativeEditModalCard {
+    width: 100%;
+    padding: 22px 18px;
+    border-radius: 20px 20px 14px 14px;
+  }
+
+  .nativeEditModalActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nativeEditModalActions button {
+    width: 100%;
+    padding-inline: 10px;
+  }
+}
