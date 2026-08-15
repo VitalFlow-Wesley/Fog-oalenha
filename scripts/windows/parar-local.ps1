@@ -5,16 +5,16 @@ $AgentPidFile = Join-Path $ProjectRoot '.local-runtime\print-agent.pid'
 
 if (Test-Path $PidFile) {
   $serverPid = [int](Get-Content -LiteralPath $PidFile)
-  $process = Get-Process -Id $serverPid -ErrorAction SilentlyContinue
-  if ($process -and $process.ProcessName -eq 'node') { Stop-Process -Id $serverPid -Force }
+  $process = Get-CimInstance Win32_Process -Filter "ProcessId = $serverPid" -ErrorAction SilentlyContinue
+  if ($process -and $process.Name -eq 'node.exe' -and $process.CommandLine -like '*local-server/server.js*') { Stop-Process -Id $serverPid -Force }
   Remove-Item -LiteralPath $PidFile -Force
 }
 
 $agentPid = $null
 if (Test-Path $AgentPidFile) {
   $agentPid = [int](Get-Content -LiteralPath $AgentPidFile)
-  $agent = Get-Process -Id $agentPid -ErrorAction SilentlyContinue
-  if ($agent -and $agent.ProcessName -eq 'electron') { Stop-Process -Id $agentPid -Force }
+  $agent = Get-CimInstance Win32_Process -Filter "ProcessId = $agentPid" -ErrorAction SilentlyContinue
+  if ($agent -and $agent.Name -eq 'electron.exe' -and $agent.CommandLine -like "*$ProjectRoot\print-agent*") { Stop-Process -Id $agentPid -Force }
   Remove-Item -LiteralPath $AgentPidFile -Force
 }
 

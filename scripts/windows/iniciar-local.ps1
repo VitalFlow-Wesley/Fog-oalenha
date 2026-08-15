@@ -9,13 +9,36 @@ $AgentLogFile = Join-Path $RuntimeDir 'print-agent.log'
 $AgentErrorLogFile = Join-Path $RuntimeDir 'print-agent-error.log'
 New-Item -ItemType Directory -Path $RuntimeDir -Force | Out-Null
 
+function Get-LocalServerProcess {
+  param([int]$ProcessId)
+  $candidate = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+  # O Windows registra o comando relativo usado pelo launcher, portanto o diretório
+  # de trabalho não aparece no CommandLine. A combinação node + server local é a
+  # identidade estável deste processo.
+  if ($candidate -and $candidate.Name -eq 'node.exe' -and $candidate.CommandLine -like '*local-server/server.js*') {
+    return $candidate
+  }
+  return $null
+}
+
+function Get-PrintAgentRoots {
+  param([string]$AgentDirectory)
+  $agents = @(Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like "*$AgentDirectory*" })
+  $agentIds = @($agents | ForEach-Object { $_.ProcessId })
+  return @($agents | Where-Object { $_.ParentProcessId -notin $agentIds })
+}
+
 $mongoService = Get-Service -Name MongoDB -ErrorAction SilentlyContinue
 if ($mongoService -and $mongoService.Status -ne 'Running') { Start-Service -Name MongoDB }
 
 if (Test-Path $PidFile) {
   $existingPid = [int](Get-Content -LiteralPath $PidFile)
-  if (Get-Process -Id $existingPid -ErrorAction SilentlyContinue) { Write-Host "Servidor já está rodando (PID $existingPid)." }
-  else { Remove-Item -LiteralPath $PidFile -Force }
+  if (Get-LocalServerProcess -ProcessId $existingPid) { Write-Host "Servidor já está rodando (PID $existingPid)." }
+  else {
+    Write-Host "Removendo PID antigo do servidor ($existingPid)." -ForegroundColor Yellow
+    Remove-Item -LiteralPath $PidFile -Force
+  }
 }
 
 $process = $null
@@ -69,11 +92,14 @@ if ($ComAgenteImpressao) {
   $agentRunning = $false
   if (Test-Path $AgentPidFile) {
     $agentPid = [int](Get-Content -LiteralPath $AgentPidFile)
-    $agentRunning = [bool](Get-Process -Id $agentPid -ErrorAction SilentlyContinue)
-    if (-not $agentRunning) { Remove-Item -LiteralPath $AgentPidFile -Force }
+    $agentRunning = [bool](Get-PrintAgentRoots -AgentDirectory $agentDir | Where-Object { $_.ProcessId -eq $agentPid })
+    if (-not $agentRunning) {
+      Write-Host "Removendo PID antigo do agente ($agentPid)." -ForegroundColor Yellow
+      Remove-Item -LiteralPath $AgentPidFile -Force
+    }
   }
   if (-not $agentRunning) {
-    $existingAgent = Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" | Where-Object { $_.CommandLine -like "*$agentDir*" } | Select-Object -First 1
+    $existingAgent = Get-PrintAgentRoots -AgentDirectory $agentDir | Select-Object -First 1
     if ($existingAgent) {
       $agentPid = [int]$existingAgent.ProcessId
       $agentRunning = $true
