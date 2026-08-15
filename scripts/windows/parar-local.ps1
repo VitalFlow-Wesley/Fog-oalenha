@@ -20,6 +20,6 @@ if (Test-Path $AgentPidFile) {
 
 # Compatibilidade com versões que gravavam o PID do npm em vez do Electron.
 $orphanAgent = Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" | Where-Object { $_.CommandLine -like "*$ProjectRoot\print-agent*" } | Where-Object { $_.ParentProcessId -notin (Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" | ForEach-Object ProcessId) } | Select-Object -First 1
-if ($orphanAgent) { Stop-Process -Id $orphanAgent.ProcessId -Force }
+if ($orphanAgent) { Stop-Process -Id $orphanAgent.ProcessId -Force -ErrorAction SilentlyContinue }
 
 Write-Host 'Servidor local e agente de impressão encerrados.' -ForegroundColor Green

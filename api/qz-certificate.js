@@ -21,7 +21,8 @@ export default async function handler(req, res) {
     return
   }
 
-  if (!await requireUser(req, res, ['admin', 'gerente'])) return
+  const isLocalPrintAgent = Boolean(process.env.PRINT_AGENT_TOKEN) && req.headers.authorization === `Bearer ${process.env.PRINT_AGENT_TOKEN}`
+  if (!isLocalPrintAgent && !await requireUser(req, res, ['admin', 'gerente'])) return
 
   const certificate = (process.env.QZ_CERTIFICATE_PEM || process.env.VITE_QZ_CERTIFICATE_PEM || '').replace(/\\n/g, '\n').trim()
   res.setHeader('Content-Type', 'text/plain; charset=utf-8')

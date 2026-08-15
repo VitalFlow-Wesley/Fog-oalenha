@@ -3,7 +3,7 @@ import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
-import { loadRemoteState } from '../services/appStateApi.js'
+import { loadRemoteState, saveRemoteState } from '../services/appStateApi.js'
 import { enqueuePrintJob, fetchPrintJob, retryPrintJob, watchPrintJob } from '../services/printQueueApi.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
@@ -361,6 +361,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
 
   function updateTable(id, patch) {
     setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
+    setSelected(prev => prev?.id === id ? { ...prev, ...patch } : prev)
   }
 
   function touch() {
@@ -428,8 +429,28 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const existing = current.items.find(i => i.id === product.id && i.observation === observation && (i.launchedByName || i.waiterName || current.waiterName) === waiterName)
     const launchedAt = new Date().toISOString()
     const items = existing
-      ? current.items.map(i => i === existing ? { ...i, qty: i.qty + 1, lastLaunchedAt: launchedAt } : i)
-      : [...current.items, { ...product, lineId: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, qty: 1, observation, waiterName, launchedByName: waiterName, launchedAt, lastLaunchedAt: launchedAt }]
+      ? current.items.map(i => i === existing ? {
+        ...i,
+        qty: i.qty + 1,
+        // Once a table has any ticket, legacy rows without sentQty are
+        // interpreted as already sent. Persist the previous quantity before
+        // incrementing it so the newly added unit remains pending.
+        sentQty: Number(i.sentQty ?? (current.kitchenSent ? i.qty : 0)),
+        lastLaunchedAt: launchedAt,
+      } : i)
+      : [...current.items, {
+        ...product,
+        lineId: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        qty: 1,
+        // Explicitly mark a fresh item as unsent. This is essential after a
+        // prior kitchen dispatch, when table.kitchenSent is already true.
+        sentQty: 0,
+        observation,
+        waiterName,
+        launchedByName: waiterName,
+        launchedAt,
+        lastLaunchedAt: launchedAt,
+      }]
     updateTable(current.id, { ...waiterPatch(current), items, status: current.status === 'livre' ? 'ocupada' : current.status })
     setObservation('')
     touch()
@@ -643,14 +664,26 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     if (!current) return
     const cashierPrinterName = getPrinterName(settings, 'cashier')
     const billTotal = current.items.reduce((sum, item) => sum + item.price * item.qty, 0)
-    
-    updateTable(selected.id, { status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName })
+    const billedTable = { ...current, status: 'conta', billRequested: true, lastCashierPrinter: cashierPrinterName }
+    const nextTables = tables.map(tableItem => tableItem.id === current.id ? billedTable : tableItem)
+
+    // Save the status before awaiting the queue call. Otherwise the polling
+    // browser can read the old snapshot and erase "conta solicitada" while
+    // the receipt is being enqueued.
+    setTables(nextTables)
+    setSelected(billedTable)
+    try {
+      await saveRemoteState({ tables: nextTables })
+    } catch (error) {
+      setPrintNotice({ status: 'failed', lastError: error.message })
+      return
+    }
     
     const job = {
       type: 'bill',
       title: 'COMANDA DO CLIENTE',
-      table: current,
-      items: current.items,
+      table: billedTable,
+      items: billedTable.items,
       printerName: cashierPrinterName,
       waiterName: currentUser?.name || currentUser?.username || 'Atendente',
       total: billTotal,

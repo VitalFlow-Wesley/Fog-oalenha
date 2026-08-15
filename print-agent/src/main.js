@@ -92,38 +92,6 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;')
 }
 
-function buildCashierHtml(job) {
-  const items = (job.items || []).map(item => `
-    <div class="item">
-      <span>${escapeHtml(item.quantity || 1)}x ${escapeHtml(item.name || 'Item')}</span>
-      <strong>${money(item.total ?? (Number(item.price || 0) * Number(item.quantity || 1)))}</strong>
-    </div>
-  `).join('')
-
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-    @page { size: 80mm auto; margin: 3mm; }
-    body { width: 72mm; margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #000; }
-    h1 { font-size: 18px; text-align: center; margin: 0 0 3px; }
-    .center { text-align: center; }
-    .line { border-top: 1px dashed #000; margin: 8px 0; }
-    .item { display: flex; justify-content: space-between; gap: 8px; margin: 4px 0; }
-    .total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; }
-  </style></head><body>
-    <h1>FOGÃO A LENHA</h1>
-    <div class="center">CONTA DO CLIENTE</div>
-    <div class="line"></div>
-    <div>Mesa: ${escapeHtml(job.tableNumber)}</div>
-    ${job.customerName ? `<div>Cliente: ${escapeHtml(job.customerName)}</div>` : ''}
-    ${job.waiterName ? `<div>Garçom: ${escapeHtml(job.waiterName)}</div>` : ''}
-    <div class="line"></div>
-    ${items}
-    <div class="line"></div>
-    <div class="total"><span>TOTAL</span><strong>${money(job.total)}</strong></div>
-    <div class="line"></div>
-    <div class="center">Obrigado pela preferência!</div>
-  </body></html>`
-}
-
 function textLine(text = '', width = 42) {
   const normalized = String(text).replace(/\s+/g, ' ').trim()
   if (normalized.length <= width) return normalized
@@ -132,6 +100,38 @@ function textLine(text = '', width = 42) {
     parts.push(normalized.slice(index, index + width))
   }
   return parts.join('\n')
+}
+
+function buildCashierText(job) {
+  const lines = [
+    '\x1B\x40',
+    '\x1B\x61\x01',
+    '================================\n',
+    '         FOGAO A LENHA          \n',
+    '      CONTA DO CLIENTE          \n',
+    '================================\n',
+    '\x1B\x61\x00',
+    `Mesa: ${job.tableNumber || '-'}\n`,
+    job.waiterName ? `Garcom: ${job.waiterName}\n` : '',
+    '--------------------------------\n',
+  ]
+
+  for (const item of job.items || []) {
+    const qty = Number(item.qty ?? item.quantity ?? 1)
+    lines.push(textLine(`${qty}x ${item.name || 'Item'}`) + '\n')
+    lines.push(`  ${money(Number(item.price || 0) * qty)}\n`)
+    if (item.observation) lines.push(textLine(`OBS: ${item.observation}`) + '\n')
+  }
+
+  lines.push('--------------------------------\n')
+  lines.push('\x1B\x61\x01')
+  lines.push('TOTAL DA CONTA\n')
+  lines.push('\x1B\x21\x30')
+  lines.push(`${money(job.total)}\n`)
+  lines.push('\x1B\x21\x00')
+  lines.push('Obrigado pela preferencia!\n\n\n\n')
+  lines.push('\x1D\x56\x41\x00')
+  return lines.join('')
 }
 
 function buildKitchenText(job) {
@@ -176,26 +176,52 @@ async function printCashier(job) {
   const deviceName = String(store.get('cashierPrinterName') || '').trim()
   if (!deviceName) throw new Error('Impressora do caixa não configurada.')
 
-  const printWindow = new BrowserWindow({ show: false })
+  const printWindow = new BrowserWindow({
+    show: false,
+    webPreferences: { contextIsolation: false, nodeIntegration: false },
+  })
   try {
-    const printers = await printWindow.webContents.getPrintersAsync()
-    const printer = printers.find(candidate => candidate.name === deviceName)
-    if (!printer) throw new Error(`Impressora do caixa não encontrada: ${deviceName}`)
-    emitStatus(`${jobTag} setor=caixa method=windows printer=${deviceName}`)
+    await printWindow.loadFile(path.join(agentDir, 'renderer', 'qz-print.html'))
+    const result = await printWindow.webContents.executeJavaScript(`
+      (async () => {
+        if (!window.qz) throw new Error('QZ Tray indisponível no agente local.')
+        const apiBase = ${JSON.stringify(String(store.get('apiUrl')).replace('/api/print-jobs', ''))}
+        const agentToken = ${JSON.stringify(String(store.get('agentToken') || ''))}
+        const authHeaders = agentToken ? { Authorization: 'Bearer ' + agentToken } : {}
+        qz.security.setCertificatePromise(resolve => {
+          fetch(apiBase + '/api/qz-certificate', { cache: 'no-store', headers: authHeaders })
+            .then(response => response.ok ? response.text() : '')
+            .then(certificate => resolve(String(certificate || '').trim()))
+            .catch(() => resolve(''))
+        })
+        qz.security.setSignaturePromise(toSign => (resolve, reject) => {
+          fetch(apiBase + '/api/qz-sign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeaders },
+            body: JSON.stringify({ request: toSign }),
+          })
+            .then(response => response.ok ? response.json() : Promise.reject(new Error('Assinatura QZ indisponível.')))
+            .then(payload => payload?.signature ? resolve(payload.signature) : reject(new Error('Assinatura QZ vazia.')))
+            .catch(reject)
+        })
+        if (qz.security.setSignatureAlgorithm) qz.security.setSignatureAlgorithm('SHA512')
+        const within = (promise, label) => Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo esgotado no QZ Tray: ' + label)), 12000)),
+        ])
+        if (!qz.websocket.isActive()) await within(qz.websocket.connect(), 'conexão')
+        const requested = ${JSON.stringify(deviceName)}
+        const found = await within(qz.printers.find(requested), 'localização da impressora')
+        const names = Array.isArray(found) ? found : [found]
+        if (!names.includes(requested)) throw new Error('Impressora do caixa não encontrada: ' + requested)
+        const config = qz.configs.create(requested)
+        await within(qz.print(config, [${JSON.stringify(buildCashierText(job))}]), 'envio RAW')
+        return requested
+      })()
+    `)
+    if (result !== deviceName) throw new Error(`Impressora do caixa não encontrada: ${deviceName}`)
+    emitStatus(`${jobTag} setor=caixa method=qz-raw printer=${deviceName}`)
     emitStatus(`${jobTag} printer found`)
-    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildCashierHtml(job))}`)
-
-    await new Promise((resolve, reject) => {
-      printWindow.webContents.print({
-        silent: true,
-        deviceName,
-        printBackground: false,
-        margins: { marginType: 'none' },
-      }, (success, reason) => {
-        if (success) resolve()
-        else reject(new Error(reason || 'Falha ao imprimir no caixa.'))
-      })
-    })
     emitStatus(`${jobTag} sent`)
   } finally {
     if (!printWindow.isDestroyed()) printWindow.close()

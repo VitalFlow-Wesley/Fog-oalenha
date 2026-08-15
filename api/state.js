@@ -64,6 +64,10 @@ function closedTableKeys(records = []) {
     (Array.isArray(records) ? records : [])
       .map(record => {
         if (!record || typeof record !== 'object') return null
+        // A partial payment creates a history record but intentionally keeps
+        // the table open.  It must never become a tombstone, otherwise later
+        // orders from the remaining guests are discarded on the next save.
+        if (record.closedByMode === 'mesa_parcial') return null
         if (record.tableId !== undefined && record.tableId !== null && record.tableId !== '') return `id:${record.tableId}`
         if (record.tableNumber !== undefined && record.tableNumber !== null && record.tableNumber !== '') return `number:${String(record.tableNumber).trim()}`
         return null
@@ -87,10 +91,17 @@ function mergeConcurrentTables(existingTables = [], incomingTables = [], session
     const current = existingByKey.get(tableKey(incoming))
     if (!current) return incoming
 
-    const incomingItems = Array.isArray(incoming.items) ? incoming.items : []
     // A completed table is intentionally cleared; it is not a stale snapshot.
     const approval = readManagerApproval(incoming.removalApproval?.token)
     const hasManagerApproval = session.role !== 'garcom' || Boolean(approval)
+    const currentRemoved = new Set(Array.isArray(current.removedItemIds) ? current.removedItemIds : [])
+    // A delayed browser snapshot can still contain a line already removed by
+    // an approved partial payment.  Do not let that old snapshot resurrect
+    // the line. New launches have a distinct lineId and are unaffected.
+    const incomingItems = (Array.isArray(incoming.items) ? incoming.items : []).filter(item => {
+      const key = itemKey(item)
+      return !(hasManagerApproval && key && currentRemoved.has(key))
+    })
     if (incoming.status === 'livre') {
       if (!hasManagerApproval && Array.isArray(current.items) && current.items.length) {
         const { status, ...withoutClear } = incoming
@@ -99,7 +110,7 @@ function mergeConcurrentTables(existingTables = [], incomingTables = [], session
       return { ...current, ...incoming, items: incomingItems }
     }
 
-    const explicitlyRemoved = new Set(Array.isArray(incoming.removedItemIds) ? incoming.removedItemIds : [])
+    const explicitlyRemoved = new Set([...currentRemoved, ...(Array.isArray(incoming.removedItemIds) ? incoming.removedItemIds : [])])
     const incomingItemKeys = new Set(incomingItems.map(itemKey).filter(Boolean))
     const missingItems = (Array.isArray(current.items) ? current.items : []).filter(item => {
       const key = itemKey(item)

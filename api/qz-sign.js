@@ -26,7 +26,8 @@ export default async function handler(req, res) {
     return
   }
 
-  if (!await requireUser(req, res, ['admin', 'gerente'])) return
+  const isLocalPrintAgent = Boolean(process.env.PRINT_AGENT_TOKEN) && req.headers.authorization === `Bearer ${process.env.PRINT_AGENT_TOKEN}`
+  if (!isLocalPrintAgent && !await requireUser(req, res, ['admin', 'gerente'])) return
 
   const privateKey = (process.env.QZ_PRIVATE_KEY_PEM || '').replace(/\\n/g, '\n').trim()
   if (!privateKey) {
