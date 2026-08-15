@@ -412,6 +412,10 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
     } catch (error) {
       setClosingMessage(`Caixa fechado localmente, mas houve falha ao sincronizar: ${error.message}`)
       setClosed(true)
+      // The app state may already have been reset before a local persistence
+      // error is surfaced. Closing the confirmation dialog prevents the
+      // recalculated zeroed summary from being mistaken for a new divergence.
+      closeModal()
     } finally {
       setIsClosing(false)
     }
