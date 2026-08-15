@@ -4,7 +4,7 @@ import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
 import { repairData, repairText } from '../text-normalizer.js'
 import { loadRemoteState } from '../services/appStateApi.js'
-import { enqueuePrintJob, retryPrintJob, watchPrintJob } from '../services/printQueueApi.js'
+import { enqueuePrintJob, fetchPrintJob, retryPrintJob, watchPrintJob } from '../services/printQueueApi.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -324,6 +324,40 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       window.removeEventListener('focus', syncClosedTablesHistory)
     }
   }, [])
+
+  // A tela pode ter sido fechada enquanto o agente local imprimia. Ao voltar,
+  // recupera o estado definitivo da fila para que "Aguardando impressão" não
+  // fique preso após o job já ter sido confirmado pelo agente.
+  useEffect(() => {
+    let stopped = false
+    const pendingIds = [...new Set(tables.flatMap(current => (current.items || [])
+      .filter(item => item.lastPrintJobId && ['pending', 'processing'].includes(item.lastPrintStatus))
+      .map(item => item.lastPrintJobId)))]
+    if (!pendingIds.length) return undefined
+
+    async function reconcilePrintStatuses() {
+      const jobs = await Promise.all(pendingIds.map(id => fetchPrintJob(id).catch(() => null)))
+      if (stopped) return
+      const byId = new Map(jobs.filter(Boolean).map(job => [job._id, job]))
+      setTables(previous => {
+        let changed = false
+        const next = previous.map(current => ({
+          ...current,
+          items: (current.items || []).map(item => {
+            const job = byId.get(item.lastPrintJobId)
+            if (!job || job.status === item.lastPrintStatus) return item
+            changed = true
+            return { ...item, lastPrintStatus: job.status, lastPrintError: job.lastError || '' }
+          }),
+        }))
+        return changed ? next : previous
+      })
+    }
+
+    reconcilePrintStatuses()
+    const timer = window.setInterval(reconcilePrintStatuses, 5000)
+    return () => { stopped = true; window.clearInterval(timer) }
+  }, [tables, setTables])
 
   function updateTable(id, patch) {
     setTables(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))

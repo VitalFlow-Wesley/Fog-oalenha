@@ -53,6 +53,7 @@ export default async function handler(req, res) {
       }
       try {
         const result = await collection.insertOne(job)
+        process.stdout.write(`[PRINT] job=${result.insertedId} queued type=${job.type} target=${job.printerName || 'agent-default'}\n`)
         return res.status(201).json(serialize({ ...job, _id: result.insertedId }))
       } catch (error) {
         if (error?.code !== 11000) throw error
@@ -82,6 +83,7 @@ export default async function handler(req, res) {
       const result = await collection.findOneAndUpdate(filter, { $set: update, ...(status === 'processing' ? { $inc: { attempts: 1 } } : {}) }, { returnDocument: 'after' })
       const job = result?.value || result
       if (!job) return res.status(409).json({ error: 'Job não está mais aguardando.' })
+      process.stdout.write(`[PRINT] job=${id} status=${status}${body.printer ? ` target=${body.printer}` : ''}${body.error ? ` error=${String(body.error).slice(0, 160)}` : ''}\n`)
       return res.status(200).json(serialize(job))
     }
     res.setHeader('Allow', 'GET,POST,PATCH,OPTIONS'); return res.status(405).json({ error: 'Método não permitido.' })

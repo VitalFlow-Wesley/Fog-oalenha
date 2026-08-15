@@ -1,13 +1,17 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import Store from 'electron-store'
 import net from 'node:net'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const agentDir = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new Store({
   defaults: {
     // O agente é sempre local. A fila e a impressão não dependem da internet.
     apiUrl: process.env.FOGAO_PRINT_API_URL || 'http://127.0.0.1:3000/api/print-jobs',
     agentToken: '',
-    cashierPrinterName: '',
+    cashierPrinterName: process.env.FOGAO_CASHIER_PRINTER_NAME || 'POS-80',
     kitchenPrinterIp: process.env.FOGAO_KITCHEN_PRINTER_IP || '192.168.1.110',
     kitchenPrinterPort: 9100,
     simulationMode: process.env.FOGAO_PRINT_SIMULATION_MODE === 'true',
@@ -17,6 +21,7 @@ const store = new Store({
 
 if (process.env.FOGAO_PRINT_API_URL) store.set('apiUrl', process.env.FOGAO_PRINT_API_URL)
 if (process.env.FOGAO_PRINT_AGENT_TOKEN) store.set('agentToken', process.env.FOGAO_PRINT_AGENT_TOKEN)
+if (process.env.FOGAO_CASHIER_PRINTER_NAME) store.set('cashierPrinterName', process.env.FOGAO_CASHIER_PRINTER_NAME)
 if (process.env.FOGAO_KITCHEN_PRINTER_IP) store.set('kitchenPrinterIp', process.env.FOGAO_KITCHEN_PRINTER_IP)
 if (process.env.FOGAO_KITCHEN_PRINTER_PORT) store.set('kitchenPrinterPort', Number(process.env.FOGAO_KITCHEN_PRINTER_PORT))
 if (process.env.FOGAO_PRINT_SIMULATION_MODE) store.set('simulationMode', process.env.FOGAO_PRINT_SIMULATION_MODE === 'true')
@@ -32,13 +37,13 @@ function createWindow() {
     minWidth: 760,
     minHeight: 560,
     webPreferences: {
-      preload: new URL('./preload.cjs', import.meta.url).pathname,
+      preload: path.join(agentDir, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   })
 
-  mainWindow.loadFile(new URL('./renderer/index.html', import.meta.url).pathname)
+  mainWindow.loadFile(path.join(agentDir, 'renderer', 'index.html'))
 }
 
 function emitStatus(message, level = 'info') {
@@ -162,8 +167,9 @@ function buildKitchenText(job) {
 }
 
 async function printCashier(job) {
+  const jobTag = `job=${job._id || job.dedupeKey || '-'}`
   if (store.get('simulationMode')) {
-    emitStatus(`Simulação: conta da mesa ${job.tableNumber} enviada ao caixa.`)
+    emitStatus(`${jobTag} Simulação: conta da mesa ${job.tableNumber} enviada ao caixa.`)
     return 'SIMULAÇÃO - CAIXA'
   }
 
@@ -171,25 +177,35 @@ async function printCashier(job) {
   if (!deviceName) throw new Error('Impressora do caixa não configurada.')
 
   const printWindow = new BrowserWindow({ show: false })
-  await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildCashierHtml(job))}`)
+  try {
+    const printers = await printWindow.webContents.getPrintersAsync()
+    const printer = printers.find(candidate => candidate.name === deviceName)
+    if (!printer) throw new Error(`Impressora do caixa não encontrada: ${deviceName}`)
+    emitStatus(`${jobTag} setor=caixa method=windows printer=${deviceName}`)
+    emitStatus(`${jobTag} printer found`)
+    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(buildCashierHtml(job))}`)
 
-  await new Promise((resolve, reject) => {
-    printWindow.webContents.print({
-      silent: true,
-      deviceName,
-      printBackground: false,
-      margins: { marginType: 'none' },
-    }, (success, reason) => {
-      printWindow.close()
-      if (success) resolve()
-      else reject(new Error(reason || 'Falha ao imprimir no caixa.'))
+    await new Promise((resolve, reject) => {
+      printWindow.webContents.print({
+        silent: true,
+        deviceName,
+        printBackground: false,
+        margins: { marginType: 'none' },
+      }, (success, reason) => {
+        if (success) resolve()
+        else reject(new Error(reason || 'Falha ao imprimir no caixa.'))
+      })
     })
-  })
+    emitStatus(`${jobTag} sent`)
+  } finally {
+    if (!printWindow.isDestroyed()) printWindow.close()
+  }
 
   return deviceName
 }
 
 async function printKitchen(job) {
+  const jobTag = `job=${job._id || job.dedupeKey || '-'}`
   if (store.get('simulationMode')) {
     emitStatus(`Simulação: pedido da mesa ${job.tableNumber} enviado à cozinha.`)
     return 'SIMULAÇÃO - COZINHA'
@@ -200,8 +216,8 @@ async function printKitchen(job) {
   if (!host) throw new Error('IP da impressora da cozinha não configurado.')
 
   const payload = buildKitchenText(job)
-  emitStatus(`Setor: cozinha | Impressora: ${host}:${port}`)
-  emitStatus('Conectando')
+  emitStatus(`${jobTag} setor=cozinha method=raw target=${host}:${port}`)
+  emitStatus(`${jobTag} connected: connecting`)
 
   await new Promise((resolve, reject) => {
     const socket = net.createConnection({ host, port })
@@ -211,7 +227,8 @@ async function printKitchen(job) {
     }, 5000)
 
     socket.on('connect', () => {
-      emitStatus('Enviando ESC/POS')
+      emitStatus(`${jobTag} connected`)
+      emitStatus(`${jobTag} sent: ESC/POS`)
       socket.write(payload, error => {
         clearTimeout(timeout)
         socket.end()
@@ -230,11 +247,12 @@ async function printKitchen(job) {
 }
 
 async function processJob(job) {
-  emitStatus(`Job recebido: ${job._id} | Setor: ${job.type === 'cashier' ? 'caixa' : 'cozinha'}`)
+  const jobTag = `job=${job._id || '-'}`
+  emitStatus(`${jobTag} recebido tipo=${job.type} setor=${job.type === 'cashier' || job.type === 'bill' ? 'caixa' : 'cozinha'}`)
   await apiRequest('PATCH', { id: job._id, status: 'printing', agentId: 'fogao-a-lenha-local' })
 
   try {
-    const printer = job.type === 'cashier'
+    const printer = job.type === 'cashier' || job.type === 'bill'
       ? await printCashier(job)
       : await printKitchen(job)
 
@@ -243,14 +261,14 @@ async function processJob(job) {
       status: 'printed',
       printer,
     })
-    emitStatus(`Sucesso | ${job.type === 'cashier' ? 'Conta' : 'Pedido'} da mesa ${job.tableNumber} impresso com sucesso.`, 'success')
+    emitStatus(`${jobTag} success status=printed printer=${printer}`, 'success')
   } catch (error) {
     await apiRequest('PATCH', {
       id: job._id,
       status: 'error',
       error: error.message,
     }).catch(() => {})
-    emitStatus(`Falha: ${error.message} | Mesa ${job.tableNumber}`, 'error')
+    emitStatus(`${jobTag} failure status=failed reason=${error.message}`, 'error')
   }
 }
 

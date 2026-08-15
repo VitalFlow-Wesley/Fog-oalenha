@@ -46,6 +46,7 @@ if ($ComAgenteImpressao) {
   $env:FOGAO_PRINT_API_URL = 'http://127.0.0.1:3000/api/print-jobs'
   $env:FOGAO_KITCHEN_PRINTER_IP = '192.168.1.110'
   $env:FOGAO_KITCHEN_PRINTER_PORT = '9100'
+  $env:FOGAO_CASHIER_PRINTER_NAME = 'POS-80'
   $env:FOGAO_PRINT_SIMULATION_MODE = 'false'
   $envFile = Join-Path $ProjectRoot 'local-server\.env'
   if (Test-Path $envFile) {
@@ -55,11 +56,14 @@ if ($ComAgenteImpressao) {
     if ($kitchenIpLine) { $env:FOGAO_KITCHEN_PRINTER_IP = $kitchenIpLine.Substring('FOGAO_KITCHEN_PRINTER_IP='.Length).Trim() }
     $kitchenPortLine = Get-Content -LiteralPath $envFile | Where-Object { $_ -match '^FOGAO_KITCHEN_PRINTER_PORT=' } | Select-Object -First 1
     if ($kitchenPortLine) { $env:FOGAO_KITCHEN_PRINTER_PORT = $kitchenPortLine.Substring('FOGAO_KITCHEN_PRINTER_PORT='.Length).Trim() }
+    $cashierPrinterLine = Get-Content -LiteralPath $envFile | Where-Object { $_ -match '^FOGAO_CASHIER_PRINTER_NAME=' } | Select-Object -First 1
+    if ($cashierPrinterLine) { $env:FOGAO_CASHIER_PRINTER_NAME = $cashierPrinterLine.Substring('FOGAO_CASHIER_PRINTER_NAME='.Length).Trim() }
     $simulationLine = Get-Content -LiteralPath $envFile | Where-Object { $_ -match '^FOGAO_PRINT_SIMULATION_MODE=' } | Select-Object -First 1
     if ($simulationLine) { $env:FOGAO_PRINT_SIMULATION_MODE = $simulationLine.Substring('FOGAO_PRINT_SIMULATION_MODE='.Length).Trim() }
   }
   $agentDir = Join-Path $ProjectRoot 'print-agent'
-  if (-not (Test-Path (Join-Path $agentDir 'node_modules\electron'))) {
+  $agentExecutable = Join-Path $agentDir 'node_modules\electron\dist\electron.exe'
+  if (-not (Test-Path $agentExecutable)) {
     throw 'Agente de impressão não está instalado. Execute scripts\windows\instalar-local.ps1 uma vez antes de iniciar o sistema.'
   }
   $agentRunning = $false
@@ -69,7 +73,15 @@ if ($ComAgenteImpressao) {
     if (-not $agentRunning) { Remove-Item -LiteralPath $AgentPidFile -Force }
   }
   if (-not $agentRunning) {
-    $agentProcess = Start-Process -FilePath 'npm.cmd' -ArgumentList 'start' -WorkingDirectory $agentDir -RedirectStandardOutput $AgentLogFile -RedirectStandardError $AgentErrorLogFile -WindowStyle Hidden -PassThru
+    $existingAgent = Get-CimInstance Win32_Process -Filter "Name = 'electron.exe'" | Where-Object { $_.CommandLine -like "*$agentDir*" } | Select-Object -First 1
+    if ($existingAgent) {
+      $agentPid = [int]$existingAgent.ProcessId
+      $agentRunning = $true
+      Set-Content -LiteralPath $AgentPidFile -Value $agentPid
+    }
+  }
+  if (-not $agentRunning) {
+    $agentProcess = Start-Process -FilePath $agentExecutable -ArgumentList '.' -WorkingDirectory $agentDir -RedirectStandardOutput $AgentLogFile -RedirectStandardError $AgentErrorLogFile -WindowStyle Hidden -PassThru
     Set-Content -LiteralPath $AgentPidFile -Value $agentProcess.Id
     Write-Host "Agente de impressão iniciado (PID $($agentProcess.Id))." -ForegroundColor Green
   } else { Write-Host "Agente de impressão já está rodando (PID $agentPid)." }
