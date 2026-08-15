@@ -571,7 +571,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
 
   function joinTable() {
     if (!table || !joinTargetId) return
-    const target = tables.find(t => t.id === Number(joinTargetId))
+    // Table ids created locally are strings (for example "178...-abc"), while
+    // older imported records may be numeric. Compare their canonical values
+    // so joining works for both without losing the selected table.
+    const target = tables.find(t => String(t.id) === String(joinTargetId))
     if (!target || target.status === 'juntada') return
     const joinedIds = [...(table.mergedTableIds || []), target.id]
     const joinedNumbers = [...(table.mergedTableNumbers || []), target.number]
