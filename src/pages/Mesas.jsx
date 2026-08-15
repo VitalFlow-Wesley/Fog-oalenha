@@ -582,11 +582,11 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     const nextStatus = table.status === 'conta' || target.status === 'conta' ? 'conta' : 'ocupada'
     const mergedPeopleCount = getPeopleCount(table) + getPeopleCount(target)
     setTables(prev => prev.map(t => {
-      if (t.id === table.id) return { ...t, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }
+      if (t.id === table.id) return { ...t, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers, preMergePeopleCount: t.preMergePeopleCount ?? getPeopleCount(t) }
       if (t.id === target.id) return { ...t, status: 'juntada', items: [], guests: 0, peopleCount: 0, mergedTo: table.id, mergedToNumber: table.number, previousMergeState: target }
       return t
     }))
-    setSelected(prev => ({ ...prev, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers }))
+    setSelected(prev => ({ ...prev, status: nextStatus, guests: mergedPeopleCount, peopleCount: mergedPeopleCount, items: mergedItems, mergedTableIds: joinedIds, mergedTableNumbers: joinedNumbers, preMergePeopleCount: prev.preMergePeopleCount ?? getPeopleCount(prev) }))
     setJoinTargetId('')
     setJoinModalOpen(false)
     touch()
@@ -596,8 +596,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     if (!table?.mergedTableIds?.length) return
     setTables(prev => prev.map(t => {
       if (t.id === table.id) {
-        const peopleCount = Math.max(1, getPeopleCount(t) - table.mergedTableIds.length)
-        return { ...t, guests: peopleCount, peopleCount, items: t.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+        const peopleCount = Math.max(1, Number(t.preMergePeopleCount) || getPeopleCount(t) - table.mergedTableIds.length)
+        return { ...t, guests: peopleCount, peopleCount, items: t.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [], preMergePeopleCount: undefined }
       }
       if (table.mergedTableIds.includes(t.id)) {
         const previous = t.previousMergeState || t
@@ -606,8 +606,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       return t
     }))
     setSelected(prev => {
-      const peopleCount = Math.max(1, getPeopleCount(prev) - prev.mergedTableIds.length)
-      return { ...prev, guests: peopleCount, peopleCount, items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [] }
+      const peopleCount = Math.max(1, Number(prev.preMergePeopleCount) || getPeopleCount(prev) - prev.mergedTableIds.length)
+      return { ...prev, guests: peopleCount, peopleCount, items: prev.items.filter(item => !item.originTable), mergedTableIds: [], mergedTableNumbers: [], preMergePeopleCount: undefined }
     })
     touch()
   }
