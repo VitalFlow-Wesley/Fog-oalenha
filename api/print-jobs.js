@@ -93,6 +93,7 @@ export default async function handler(req, res) {
         paymentMethod: String(body.paymentMethod || ''), remainingTotal: Number(body.remainingTotal || 0), remainingGuests: Number(body.remainingGuests || 0),
         reservation: body.reservation && typeof body.reservation === 'object' ? body.reservation : null,
         closing: body.closing && typeof body.closing === 'object' ? body.closing : null,
+        report: body.report && typeof body.report === 'object' ? body.report : null,
         sourceDevice: String(body.sourceDevice || ''), attempts: 0, lastError: '', agentId: '',
         createdAt: new Date(), updatedAt: new Date(), startedAt: null, printedAt: null,
       }

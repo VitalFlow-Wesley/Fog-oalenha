@@ -104,6 +104,7 @@ function textLine(text = '', width = 42) {
 
 function buildCashierText(job) {
   if (job.kind === 'daily_closing') return buildDailyClosingText(job)
+  if (job.kind === 'report') return buildReportText(job)
   const isPartialPayment = job.kind === 'partial_payment'
   const paymentLabels = { dinheiro: 'DINHEIRO', pix: 'PIX', credito: 'CREDITO', debito: 'DEBITO', outros: 'OUTROS' }
   const lines = [
@@ -140,6 +141,58 @@ function buildCashierText(job) {
   }
   lines.push('Obrigado pela preferencia!\n\n\n\n')
   lines.push('\x1D\x56\x41\x00')
+  return lines.join('')
+}
+
+function ascii(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+function buildReportText(job) {
+  const payload = job.report || {}
+  const closing = payload.selectedClosing || null
+  const isClosingHistory = payload.mode === 'fechamentos' && closing
+  const report = payload.report || {}
+  const lines = [
+    '\x1B\x40', '\x1B\x61\x01',
+    '================================\n',
+    isClosingHistory ? '      HISTORICO DE CAIXA\n' : '       RELATORIO DE VENDAS\n',
+    '         FOGAO A LENHA\n',
+    '================================\n', '\x1B\x61\x00',
+    `Data: ${ascii(payload.dateLabel || '-')}\n`,
+    job.waiterName ? `Operador: ${textLine(ascii(job.waiterName))}\n` : '',
+    '--------------------------------\n',
+  ]
+  const add = (label, value) => lines.push(`${ascii(label)} ${value}\n`)
+
+  if (isClosingHistory) {
+    const payments = closing.payments || {}
+    const informed = Number(closing.informedTotal ?? Object.values(payments).reduce((sum, value) => sum + Number(value || 0), 0))
+    add('Faturamento:', money(closing.total))
+    add('Informado:', money(informed))
+    add('Diferenca:', money(closing.difference ?? informed - Number(closing.total || 0)))
+    add('Comandas:', Number(closing.tableCount || 0))
+    add('Itens:', Number(closing.itemCount || 0))
+    lines.push('--------------------------------\nRECEBIMENTOS\n')
+    add('Dinheiro:', money(payments.dinheiro))
+    add('PIX:', money(payments.pix))
+    add('Cartao:', money(payments.cartao))
+    add('Outros:', money(payments.outros))
+    if (closing.note) add('Obs:', textLine(ascii(closing.note), 34))
+  } else {
+    add('Faturamento:', money(report.total))
+    add('Pedidos:', Number(report.ordersQty || 0))
+    add('Comandas distintas:', Number(report.attendedTables || 0))
+    add('Ticket medio:', money(report.ticket))
+    lines.push('--------------------------------\nPOR SETOR\n')
+    for (const sector of (report.sectors || []).slice(0, 6)) add(`${sector.name} (${Number(sector.qty || 0)}):`, money(sector.total))
+    const products = report.topProductsByQty || []
+    if (products.length) {
+      lines.push('--------------------------------\nMAIS VENDIDOS\n')
+      for (const product of products.slice(0, 5)) add(`${Number(product.qty || 0)}x ${textLine(ascii(product.name), 23)}:`, money(product.total))
+    }
+  }
+  lines.push('\x1B\x61\x01', 'Relatorio gerado pelo sistema.\n\n\n\n', '\x1D\x56\x41\x00')
   return lines.join('')
 }
 

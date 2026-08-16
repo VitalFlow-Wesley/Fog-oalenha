@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BarChart3, CalendarDays, CheckCircle2, ChefHat, ClipboardList, Flame, History, Martini, PackageCheck, Printer, ReceiptText, Star, Table2, TrendingUp, Utensils, WalletCards } from 'lucide-react'
 import { loadRemoteState } from '../services/appStateApi.js'
-import { configureQzSecurity } from '../services/qzPrintService.js'
+import { enqueuePrintJob, watchPrintJob } from '../services/printQueueApi.js'
 
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
@@ -263,131 +263,10 @@ function closingTableCount(record = {}) {
   return Number(record.tableCount || closingTables(record).length || 0)
 }
 
-// --- MOTOR DE IMPRESSÃO ESC/POS DOS RELATÓRIOS (QZ TRAY SILENCIOSO) ---
-// Removidos os códigos de segurança para usar o "Remember this decision" do Windows
-async function executeThermalPrint(mode, report, selectedClosing, dateLabel, settings) {
-  try {
-    const qzModule = await import('qz-tray');
-    const qz = qzModule.default || qzModule;
-    await configureQzSecurity(qz);
-
-    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
-
-    if (!qz.websocket.isActive()) {
-      await qz.websocket.connect();
-    }
-
-    // Busca a impressora configurada para o Caixa/Bar
-    const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {});
-    const printers = systemSettings?.printers || [];
-    const printerId = systemSettings?.cashierPrinterId;
-    const selected = printers.find(p => p.id === printerId);
-    // Se não achar a do caixa, tenta a primeira da lista, se não houver nenhuma usa POS-80
-    const printerName = selected?.name || selected?.label || printers[0]?.name || 'POS-80';
-
-    await qz.printers.find(printerName);
-    const config = qz.configs.create(printerName);
-
-    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-    let payload = [
-      '\x1B' + '\x40', // Init
-      '\x1B' + '\x61' + '\x31', // Centralizar
-      '================================\n',
-    ];
-
-    const addLine = (label, value) => {
-      payload.push(`${label}\n`);
-      payload.push('\x1B' + '\x61' + '\x32'); // Direita
-      payload.push(`${value}\n`);
-      payload.push('\x1B' + '\x61' + '\x30'); // Esquerda
-    };
-
-    if (mode === 'fechamentos' && selectedClosing) {
-      // TICKET DE HISTÓRICO DE FECHAMENTO
-      payload.push('       HISTORICO DE CAIXA       \n');
-      payload.push('          FOGAO A LENHA         \n');
-      payload.push('================================\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      payload.push(`Data:     ${dateLabel}\n`);
-      payload.push(`Operador: ${removeAccents(selectedClosing.operatorName || 'Operador')}\n`);
-      payload.push(`Fechado:  ${removeAccents(selectedClosing.closedAtLabel || '-')}\n`);
-      payload.push('--------------------------------\n');
-      
-      const informedTotal = Number(selectedClosing.informedTotal ?? paymentTotal(selectedClosing.payments));
-      const diff = Number(selectedClosing.difference ?? informedTotal - Number(selectedClosing.total || 0));
-
-      addLine("Faturamento total:", money(selectedClosing.total));
-      addLine("Total informado:", money(informedTotal));
-      addLine("Diferenca:", money(diff));
-      payload.push('--------------------------------\n');
-      
-      payload.push('\x1B' + '\x61' + '\x31');
-      payload.push('PAGAMENTOS\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      const payments = selectedClosing.payments || {};
-      Object.entries(payments).forEach(([k, v]) => {
-          if (v > 0) addLine(`${removeAccents(paymentLabel(k))}:`, money(v));
-      });
-      payload.push('--------------------------------\n');
-      
-      if (selectedClosing.note) {
-          payload.push(`Obs: ${removeAccents(selectedClosing.note)}\n`);
-          payload.push('--------------------------------\n');
-      }
-    } else {
-      // TICKET DE RESUMO DE RELATÓRIO DO DIA
-      payload.push('       RELATORIO DE VENDAS      \n');
-      payload.push('          FOGAO A LENHA         \n');
-      payload.push('================================\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      payload.push(`Data:     ${dateLabel}\n`);
-      payload.push(`Gerado:   ${new Date().toLocaleTimeString('pt-BR')}\n`);
-      payload.push('--------------------------------\n');
-      
-      addLine("Faturamento total:", money(report.total));
-      addLine("Pedidos lancados:", String(report.ordersQty));
-      addLine("Comandas distintas atendidas:", String(report.attendedTables));
-      addLine("Ticket medio:", money(report.ticket));
-      payload.push('--------------------------------\n');
-
-      if (report.sectors && report.sectors.length > 0) {
-        payload.push('\x1B' + '\x61' + '\x31');
-        payload.push('DESEMPENHO POR SETOR\n');
-        payload.push('\x1B' + '\x61' + '\x30');
-        report.sectors.forEach(s => addLine(`${removeAccents(s.name)} (${s.qty} un):`, money(s.total)));
-        payload.push('--------------------------------\n');
-      }
-
-      if (report.categories && report.categories.length > 0) {
-        payload.push('\x1B' + '\x61' + '\x31');
-        payload.push('VENDAS POR CATEGORIA\n');
-        payload.push('\x1B' + '\x61' + '\x30');
-        report.categories.slice(0, 6).forEach(c => addLine(`${removeAccents(c.name)}:`, money(c.total)));
-        payload.push('--------------------------------\n');
-      }
-
-      if (report.topProductsByQty && report.topProductsByQty.length > 0) {
-        payload.push('\x1B' + '\x61' + '\x31');
-        payload.push('PRODUTOS MAIS VENDIDOS\n');
-        payload.push('\x1B' + '\x61' + '\x30');
-        report.topProductsByQty.slice(0, 5).forEach((p, i) => addLine(`${i+1}. ${removeAccents(p.name)} (${p.qty}x):`, money(p.total)));
-        payload.push('--------------------------------\n');
-      }
-    }
-
-    payload.push('\x1B' + '\x61' + '\x31');
-    payload.push('Relatorio gerado pelo sistema.\n');
-    payload.push('\n\n\n\n');
-    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); // Cortar
-
-    await qz.print(config, payload);
-    return true;
-  } catch (err) {
-    console.error("Falha na impressão do relatório:", err);
-    alert(`Erro na impressora: ${err.message || err}`);
-    return false;
-  }
+function cashierPrinterName(settings = {}) {
+  const printers = settings?.printers || []
+  const selected = printers.find(printer => printer.id === settings?.cashierPrinterId)
+  return selected?.name || selected?.label || 'POS-80'
 }
 
 function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosing, dateLabel }) {
@@ -475,7 +354,7 @@ function ClosingsHistoryView({ closings, summary, selectedClosing, onSelectClosi
   )
 }
 
-export default function Relatorios({ tables = [], settings }) {
+export default function Relatorios({ tables = [], settings, currentUser }) {
   const [mode, setMode] = useState('simples')
   const [period, setPeriod] = useState('Hoje')
   const [selectedDate, setSelectedDate] = useState(initialReportDate)
@@ -607,9 +486,19 @@ export default function Relatorios({ tables = [], settings }) {
     localStorage.setItem('fogao-reports-date-label', formatDateBR(value))
   }
 
-  // --- BOTÃO DE IMPRESSÃO TÉRMICA (BAR / CAIXA) ---
   async function handlePrint() {
-    await executeThermalPrint(mode, report, selectedClosing, dateLabel, settings);
+    try {
+      const job = await enqueuePrintJob({
+        type: 'bill', kind: 'report', title: mode === 'fechamentos' ? 'HISTORICO DE CAIXA' : 'RELATORIO DE VENDAS',
+        printerName: cashierPrinterName(settings), waiterName: currentUser?.name || currentUser?.username || 'Operador',
+        total: mode === 'fechamentos' ? Number(selectedClosing?.total || 0) : Number(report.total || 0),
+        report: { mode, dateLabel, report, selectedClosing },
+        dedupeKey: `report-${mode}-${selectedDate}-${Date.now()}`,
+      })
+      watchPrintJob(job._id, () => {})
+    } catch (error) {
+      alert(`Erro ao enviar relatório para impressão: ${error?.message || error}`)
+    }
   }
   
   const summaryCards = [

@@ -860,7 +860,7 @@ export default function App() {
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}
         {page === 'reservas' && <Reservas reservations={reservations} setReservations={setReservations} tables={tables} currentUser={currentUser} onActivate={activateReservation} onPersistReservations={persistReservations} />}
         {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} reservations={reservations} currentUser={currentUser} settings={settings} />}
-        {page === 'relatorios' && <Relatorios tables={tables} />}
+        {page === 'relatorios' && <Relatorios tables={tables} settings={settings} currentUser={currentUser} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} settings={settings} onCloseCash={handleCloseCash} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
       </main>
