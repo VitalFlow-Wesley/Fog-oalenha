@@ -52,7 +52,9 @@ function tableKey(table) {
 
 function itemKey(item) {
   if (!item || typeof item !== 'object') return null
-  if (item.lineId) return `line:${item.lineId}`
+  // O cliente grava o lineId puro em removedItemIds. Usar a mesma chave aqui
+  // impede que uma cópia antiga da mesa restaure um item já cancelado.
+  if (item.lineId) return String(item.lineId)
   return `item:${item.id || ''}|${item.observation || ''}|${item.originTable || ''}|${item.launchedByName || item.waiterName || ''}`
 }
 
@@ -95,12 +97,13 @@ function mergeConcurrentTables(existingTables = [], incomingTables = [], session
     const approval = readManagerApproval(incoming.removalApproval?.token)
     const hasManagerApproval = session.role !== 'garcom' || Boolean(approval)
     const currentRemoved = new Set(Array.isArray(current.removedItemIds) ? current.removedItemIds : [])
-    // A delayed browser snapshot can still contain a line already removed by
-    // an approved partial payment.  Do not let that old snapshot resurrect
-    // the line. New launches have a distinct lineId and are unaffected.
+    // Uma cópia antiga do navegador pode ainda conter uma linha já cancelada.
+    // removedItemIds só é persistido após autorização; portanto a linha nunca
+    // pode ressuscitar. Um novo lançamento recebe outro lineId e continua
+    // permitido.
     const incomingItems = (Array.isArray(incoming.items) ? incoming.items : []).filter(item => {
       const key = itemKey(item)
-      return !(hasManagerApproval && key && currentRemoved.has(key))
+      return !(key && currentRemoved.has(key))
     })
     if (incoming.status === 'livre') {
       if (!hasManagerApproval && Array.isArray(current.items) && current.items.length) {

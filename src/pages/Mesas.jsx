@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { products as defaultProducts } from '../data/mockData.js'
 import TableCard from '../components/TableCard.jsx'
 import { ChefHat, Clock, DollarSign, History, Link2, Minus, Plus, RefreshCw, ReceiptText, Search, Split, Trash2, Users, X } from 'lucide-react'
@@ -241,6 +241,8 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   const [cancelRequest, setCancelRequest] = useState(null)
   const [cancelPassword, setCancelPassword] = useState('')
   const [cancelError, setCancelError] = useState('')
+  const [cancelSubmitting, setCancelSubmitting] = useState(false)
+  const cancellingItemKeysRef = useRef(new Set())
   const [joinTargetId, setJoinTargetId] = useState('')
   const [joinModalOpen, setJoinModalOpen] = useState(false)
   const [addTableModalOpen, setAddTableModalOpen] = useState(false)
@@ -513,6 +515,11 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       return
     }
 
+    const cancellationKey = `${selected?.id || ''}:${itemKey(cancelRequest)}`
+    if (cancellingItemKeysRef.current.has(cancellationKey)) return
+    cancellingItemKeysRef.current.add(cancellationKey)
+    setCancelSubmitting(true)
+
     let authorizedUser = null
     let approvalToken = ''
     try {
@@ -524,49 +531,57 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
       const payload = await response.json().catch(() => ({}))
       if (!response.ok || !payload.authorizedBy) {
         setCancelError(payload.error || 'Senha inválida. Cancelamento permitido somente com autorização da gerência.')
+        cancellingItemKeysRef.current.delete(cancellationKey)
+        setCancelSubmitting(false)
         return
       }
       authorizedUser = payload.authorizedBy
       approvalToken = payload.approvalToken || ''
     } catch {
       setCancelError('Não foi possível validar a autorização. Tente novamente.')
+      cancellingItemKeysRef.current.delete(cancellationKey)
+      setCancelSubmitting(false)
       return
     }
-
-    const current = tables.find(t => t.id === selected.id)
-    if (!current) return
-    const sentQty = Number(cancelRequest.sentQty ?? (current.kitchenSent ? cancelRequest.qty : 0))
-    const cancelQty = Math.min(Number(cancelRequest.cancelQty || cancelRequest.qty || 0), sentQty)
-    const matches = i => itemKey(i) === itemKey(cancelRequest)
-    const items = current.items.map(i => {
-      if (!matches(i)) return i
-      const nextQty = Math.max(0, Number(i.qty || 0) - Number(cancelRequest.cancelQty || i.qty || 0))
-      return { ...i, qty: nextQty }
-    }).filter(i => i.qty > 0)
-    if (cancelQty > 0) {
-      try {
-        const job = await enqueuePrintJob({
-          type: 'kitchen', kind: 'cancellation', title: 'CANCELAMENTO', table: current, peopleCount: getPeopleCount(current),
-          items: [{ ...cancelRequest, qty: cancelQty, cancellationReason: 'Cancelamento autorizado' }],
-          printerName: getPrinterName(settings, 'kitchen'), waiterName: currentWaiterName(),
-          dedupeKey: `cancel-${current.id}-${itemKey(cancelRequest)}-${cancelQty}-${Date.now()}`,
-        })
-        trackPrintJob(job)
-      } catch (error) { setPrintNotice({ status: 'failed', lastError: error.message }) }
+    try {
+      const current = tables.find(t => t.id === selected.id)
+      if (!current) return
+      const sentQty = Number(cancelRequest.sentQty ?? (current.kitchenSent ? cancelRequest.qty : 0))
+      const cancelQty = Math.min(Number(cancelRequest.cancelQty || cancelRequest.qty || 0), sentQty)
+      const matches = i => itemKey(i) === itemKey(cancelRequest)
+      const items = current.items.map(i => {
+        if (!matches(i)) return i
+        const nextQty = Math.max(0, Number(i.qty || 0) - Number(cancelRequest.cancelQty || i.qty || 0))
+        return { ...i, qty: nextQty }
+      }).filter(i => i.qty > 0)
+      if (cancelQty > 0) {
+        try {
+          const job = await enqueuePrintJob({
+            type: 'kitchen', kind: 'cancellation', title: 'CANCELAMENTO', table: current, peopleCount: getPeopleCount(current),
+            items: [{ ...cancelRequest, qty: cancelQty, cancellationReason: 'Cancelamento autorizado' }],
+            printerName: getPrinterName(settings, 'kitchen'), waiterName: currentWaiterName(),
+            dedupeKey: `cancel-${current.id}-${itemKey(cancelRequest)}-${cancelQty}-${Date.now()}`,
+          })
+          trackPrintJob(job)
+        } catch (error) { setPrintNotice({ status: 'failed', lastError: error.message }) }
+      }
+      const removedItemIds = (current.removedItemIds || []).concat(
+        current.items.filter(item => !items.some(nextItem => itemKey(nextItem) === itemKey(item))).map(itemKey)
+      )
+      updateTable(current.id, {
+        items,
+        removedItemIds,
+        removalApproval: { token: approvalToken, at: new Date().toISOString() },
+        lastCancelAuthorizedBy: authorizedUser.name || authorizedUser.username || 'Gerência',
+      })
+      setCancelRequest(null)
+      setCancelPassword('')
+      setCancelError('')
+      touch()
+    } finally {
+      cancellingItemKeysRef.current.delete(cancellationKey)
+      setCancelSubmitting(false)
     }
-    const removedItemIds = (current.removedItemIds || []).concat(
-      current.items.filter(item => !items.some(nextItem => itemKey(nextItem) === itemKey(item))).map(itemKey)
-    )
-    updateTable(current.id, {
-      items,
-      removedItemIds,
-      removalApproval: { token: approvalToken, at: new Date().toISOString() },
-      lastCancelAuthorizedBy: authorizedUser.name || authorizedUser.username || 'Gerência',
-    })
-    setCancelRequest(null)
-    setCancelPassword('')
-    setCancelError('')
-    touch()
   }
 
   function joinTable() {
@@ -913,7 +928,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
             <p>Para cancelar <strong>{cancelRequest.name}</strong>, informe a senha de autorização.</p>
             <label><span>Senha de autorização</span><input value={cancelPassword} onChange={e => setCancelPassword(e.target.value)} type="password" placeholder="Senha de cancelamento" autoComplete="off" autoFocus /></label>
             {cancelError && <div className="loginError">{cancelError}</div>}
-            <div className="actionsRow"><button className="dangerBtn" type="submit">Confirmar cancelamento</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)}>Voltar</button></div>
+            <div className="actionsRow"><button className="dangerBtn" type="submit" disabled={cancelSubmitting}>{cancelSubmitting ? 'Cancelando...' : 'Confirmar cancelamento'}</button><button className="secondaryBtn" type="button" onClick={() => setCancelRequest(null)} disabled={cancelSubmitting}>Voltar</button></div>
           </form>
         </div>
       )}

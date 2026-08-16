@@ -135,13 +135,15 @@ function buildCashierText(job) {
 }
 
 function buildKitchenText(job) {
+  const isCancellation = job.kind === 'cancellation'
+  const ticketTitle = isCancellation ? 'CANCELAMENTO\nNAO PREPARAR\n' : 'PEDIDO PARA PREPARO\n'
   const lines = [
     '\x1B\x40',
     '\x1B\x61\x01',
     '\x1D\x21\x11',
     'FOGÃO A LENHA\n',
     '\x1D\x21\x00',
-    'PEDIDO PARA PREPARO\n',
+    ticketTitle,
     '\x1B\x61\x00',
     '------------------------------------------\n',
     `Mesa: ${job.tableNumber || '-'}\n`,
@@ -154,9 +156,10 @@ function buildKitchenText(job) {
 
   for (const item of job.items || []) {
     lines.push('\x1D\x21\x01')
-    lines.push(textLine(`${item.quantity || 1}x ${item.name || 'Item'}`) + '\n')
+    lines.push(textLine(`${item.qty ?? item.quantity ?? 1}x ${item.name || 'Item'}`) + '\n')
     lines.push('\x1D\x21\x00')
     if (item.observation) lines.push(textLine(`OBS: ${item.observation}`) + '\n')
+    if (isCancellation && item.cancellationReason) lines.push(textLine(`MOTIVO: ${item.cancellationReason}`) + '\n')
     lines.push('\n')
   }
 
