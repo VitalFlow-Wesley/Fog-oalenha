@@ -7,10 +7,13 @@ const collectionName = process.env.PRINT_JOBS_COLLECTION || 'print_queue'
 const agentToken = process.env.PRINT_AGENT_TOKEN || ''
 let cachedClient = null
 
-async function getCollection() {
+async function getDatabase() {
   if (!uri) throw new Error('MONGODB_URI não configurada no ambiente.')
   if (!cachedClient) { cachedClient = new MongoClient(uri); await cachedClient.connect() }
-  const collection = cachedClient.db(dbName).collection(collectionName)
+  return cachedClient.db(dbName)
+}
+async function getCollection() {
+  const collection = (await getDatabase()).collection(collectionName)
   await collection.createIndex({ dedupeKey: 1 }, { unique: true })
   return collection
 }
@@ -28,6 +31,44 @@ function parseBody(req) { return typeof req.body === 'string' ? JSON.parse(req.b
 function serialize(job) { return job ? { ...job, _id: String(job._id) } : null }
 function statusOf(status) { return status === 'printing' ? 'processing' : status === 'error' ? 'failed' : status }
 
+// O caixa limpa as mesas ao concluir o fechamento. Por isso, o servidor é a
+// última barreira: um navegador antigo nunca pode transformar a reimpressão
+// do fechamento salvo em um comprovante zerado.
+async function resolveSavedDailyClosing(db, body) {
+  if (body?.kind !== 'daily_closing') return body
+
+  const requestedDate = String(body?.closing?.date || '').trim()
+  const stateId = process.env.APP_STATE_ID || 'main'
+  const stateCollection = process.env.MONGODB_COLLECTION || 'app_state'
+  const state = await db.collection(stateCollection).findOne({ _id: stateId })
+  const closings = Array.isArray(state?.state?.closings) ? state.state.closings : []
+  const saved = closings
+    .filter(closing => closing?.date === requestedDate)
+    .sort((a, b) => new Date(b?.closedAt || 0) - new Date(a?.closedAt || 0))[0]
+
+  if (!saved) return body
+
+  const payments = { dinheiro: 0, pix: 0, cartao: 0, outros: 0, ...(saved.payments || {}) }
+  const total = Number(saved.total || 0)
+  const informedTotal = Number(saved.informedTotal ?? Object.values(payments).reduce((sum, value) => sum + Number(value || 0), 0))
+  const closing = {
+    ...(body.closing || {}),
+    date: saved.date,
+    total,
+    informedTotal,
+    difference: Number(saved.difference ?? informedTotal - total),
+    payments,
+    closedTables: Number(saved.tableCount || 0),
+    totalOrders: Number(saved.itemCount || 0),
+    openTables: Number(saved.openTables || 0),
+    ticketAverage: Number(saved.tableCount || 0) ? total / Number(saved.tableCount) : 0,
+    note: saved.note || body?.closing?.note || '',
+  }
+
+  process.stdout.write(`[PRINT] daily-closing date=${saved.date} source=saved-closing total=${total.toFixed(2)}\n`)
+  return { ...body, total, waiterName: saved.operatorName || body.waiterName, closing }
+}
+
 export default async function handler(req, res) {
   allowCors(res)
   if (req.method === 'OPTIONS') return res.status(204).end()
@@ -35,7 +76,8 @@ export default async function handler(req, res) {
     const collection = await getCollection()
     if (req.method === 'POST') {
       if (!authorized(req)) return res.status(401).json({ error: 'Sessão inválida ou expirada.' })
-      const body = parseBody(req)
+      const requestedBody = parseBody(req)
+      const body = await resolveSavedDailyClosing(await getDatabase(), requestedBody)
       const dedupeKey = String(body.dedupeKey || '').trim()
       if (!dedupeKey) return res.status(400).json({ error: 'dedupeKey é obrigatório.' })
       const session = readSession(req)
