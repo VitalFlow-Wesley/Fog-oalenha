@@ -4,6 +4,7 @@ import { loadRemoteState } from '../services/appStateApi.js'
 import { enqueuePrintJob, watchPrintJob } from '../services/printQueueApi.js'
 
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
+const CLOSINGS_KEY = 'fogao-closings-v1'
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const parseCurrency = value => {
   const raw = String(value || '').trim().replace(/[^0-9,.-]/g, '')
@@ -157,6 +158,33 @@ function buildClosingData(tables = [], closedTablesHistory = [], selectedDate = 
   }
 }
 
+// Depois que o caixa é fechado, as mesas do ciclo são limpas para começar um
+// novo dia. A reimpressão precisa usar o retrato salvo no fechamento, nunca o
+// resumo recalculado das mesas já zeradas.
+function buildSavedClosingData(closing) {
+  const derived = buildClosingData(closing?.tables || [], closing?.closedTables || [], closing?.date || todayInput())
+  const payments = { dinheiro: 0, pix: 0, cartao: 0, outros: 0, ...(closing?.payments || {}) }
+  const total = Number(closing?.total ?? derived.total ?? 0)
+  const tableCount = Number(closing?.tableCount ?? derived.closedTables ?? 0)
+  const itemCount = Number(closing?.itemCount ?? derived.totalOrders ?? 0)
+  const informedTotal = Number(closing?.informedTotal ?? Object.values(payments).reduce((sum, value) => sum + Number(value || 0), 0))
+
+  return {
+    ...derived,
+    date: closing?.date || derived.date,
+    total,
+    payments,
+    closedTables: tableCount,
+    openTables: Number(closing?.openTables ?? derived.openTables ?? 0),
+    totalOrders: itemCount,
+    ticketAverage: tableCount ? total / tableCount : 0,
+    informedTotal,
+    difference: Number(closing?.difference ?? informedTotal - total),
+    note: closing?.note || '',
+    operatorName: closing?.operatorName || '',
+  }
+}
+
 function MiniSummary({ icon: Icon, title, value, tone = 'green' }) {
   return <div className="closingMiniCard"><div className={`closingMiniIcon ${tone}`}><Icon size={19} /></div><span>{title}</span><strong>{value}</strong></div>
 }
@@ -196,6 +224,8 @@ function cashierPrinterName(settings = {}) {
 export default function Fechamento({ tables = [], currentUser, settings, onCloseCash }) {
   const [date, setDate] = useState(todayInput())
   const [closedTablesHistory, setClosedTablesHistory] = useState(() => readJson(CLOSED_TABLES_KEY, []))
+  const [closingsHistory, setClosingsHistory] = useState(() => readJson(CLOSINGS_KEY, []))
+  const [closedClosing, setClosedClosing] = useState(null)
   const data = useMemo(() => buildClosingData(tables, closedTablesHistory, date), [tables, closedTablesHistory, date])
   const [reportedPayments, setReportedPayments] = useState(() => ({ dinheiro: '', pix: '', cartao: '', outros: '' }))
   const [note, setNote] = useState('')
@@ -210,34 +240,45 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
 
   useEffect(() => {
     let cancelled = false
-    const syncClosedTables = async () => {
+    const syncClosingState = async () => {
       const localHistory = readJson(CLOSED_TABLES_KEY, [])
       setClosedTablesHistory(localHistory)
+      setClosingsHistory(readJson(CLOSINGS_KEY, []))
 
       try {
         const remoteState = await loadRemoteState()
-        if (cancelled || !Array.isArray(remoteState?.closedTablesHistory)) return
-        if (remoteState.closedTablesHistory.length) {
+        if (cancelled) return
+        if (Array.isArray(remoteState?.closedTablesHistory) && remoteState.closedTablesHistory.length) {
           localStorage.setItem(CLOSED_TABLES_KEY, JSON.stringify(remoteState.closedTablesHistory))
           // A leitura desta chave aplica o recorte do ciclo de caixa atual.
           // Usar o array remoto diretamente alternava entre o histórico completo
           // e o ciclo atual, fazendo os cards encolherem e a página saltar para cima.
           setClosedTablesHistory(readJson(CLOSED_TABLES_KEY, []))
         }
+        if (Array.isArray(remoteState?.closings)) {
+          localStorage.setItem(CLOSINGS_KEY, JSON.stringify(remoteState.closings))
+          setClosingsHistory(remoteState.closings)
+        }
       } catch {
       }
     }
-    syncClosedTables()
-    window.addEventListener('fogao-closed-tables-updated', syncClosedTables)
-    window.addEventListener('storage', syncClosedTables)
-    window.addEventListener('focus', syncClosedTables)
+    syncClosingState()
+    window.addEventListener('fogao-closed-tables-updated', syncClosingState)
+    window.addEventListener('fogao-closings-updated', syncClosingState)
+    window.addEventListener('storage', syncClosingState)
+    window.addEventListener('focus', syncClosingState)
     return () => {
       cancelled = true
-      window.removeEventListener('fogao-closed-tables-updated', syncClosedTables)
-      window.removeEventListener('storage', syncClosedTables)
-      window.removeEventListener('focus', syncClosedTables)
+      window.removeEventListener('fogao-closed-tables-updated', syncClosingState)
+      window.removeEventListener('fogao-closings-updated', syncClosingState)
+      window.removeEventListener('storage', syncClosingState)
+      window.removeEventListener('focus', syncClosingState)
     }
   }, [])
+
+  const savedClosing = useMemo(() => (closingsHistory || [])
+    .filter(closing => closing?.date === date)
+    .sort((a, b) => new Date(b?.closedAt || 0) - new Date(a?.closedAt || 0))[0] || null, [closingsHistory, date])
 
   const received = {
     dinheiro: parseCurrency(reportedPayments.dinheiro),
@@ -252,6 +293,11 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
   const hasOpenTables = data.openTables > 0
   const requiresAttention = hasDivergence || hasOpenTables
   const receivedData = { ...data, payments: received, total: informedTotal }
+  const savedPrintData = closedClosing || (!data.total ? savedClosing : null)
+  const printData = savedPrintData ? buildSavedClosingData(savedPrintData) : data
+  const printPayments = savedPrintData ? printData.payments : received
+  const printInformedTotal = savedPrintData ? printData.informedTotal : informedTotal
+  const printDifference = savedPrintData ? printData.difference : difference
   const printPending = ['pending', 'processing'].includes(printJob?.status)
   const printMessage = printJob?.status === 'printed' ? 'Fechamento impresso na POS-80.' : printJob?.status === 'failed' ? `Falha ao imprimir: ${printJob.lastError || 'erro desconhecido.'}` : printPending ? 'Fechamento enviado para a POS-80…' : ''
 
@@ -266,9 +312,9 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
         kind: 'daily_closing',
         title: 'FECHAMENTO DE CAIXA',
         printerName: cashierPrinterName(settings),
-        waiterName: currentUser?.name || currentUser?.username || 'Operador',
-        total: data.total,
-        closing: { date, total: data.total, informedTotal, difference, payments: received, note, openTables: data.openTables, closedTables: data.closedTables, totalOrders: data.totalOrders, ticketAverage: data.ticketAverage, topWaiter: data.topWaiter, categories: data.categories, topProducts: data.topProductsByQty },
+        waiterName: savedPrintData?.operatorName || currentUser?.name || currentUser?.username || 'Operador',
+        total: printData.total,
+        closing: { date: printData.date, total: printData.total, informedTotal: printInformedTotal, difference: printDifference, payments: printPayments, note: printData.note || note, openTables: printData.openTables, closedTables: printData.closedTables, totalOrders: printData.totalOrders, ticketAverage: printData.ticketAverage, topWaiter: printData.topWaiter, categories: printData.categories, topProducts: printData.topProductsByQty },
         dedupeKey: `daily-closing-print-${date}-${Date.now()}`,
       })
       setPrintJob(job)
@@ -315,7 +361,8 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
 
     setIsClosing(true)
     try {
-      await onCloseCash?.({ date, payments: received, note: closingNote })
+      const closingRecord = await onCloseCash?.({ date, payments: received, note: closingNote })
+      setClosedClosing(closingRecord || null)
       setClosed(true)
       setReportedPayments({ dinheiro: '', pix: '', cartao: '', outros: '' })
       setNote(closingNote)
@@ -381,7 +428,7 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
       <p className="printFooter">Relatório gerado pelo sistema Fogão a Lenha.</p>
     </div>
 
-    <footer className="closingActions">{printMessage && <p className={printJob?.status === 'failed' ? 'closingPrintMessage error' : 'closingPrintMessage'}>{printMessage}</p>}<button type="button" onClick={handlePrint} disabled={printPending}><Printer size={20} /> {printPending ? 'Enviando para impressão…' : 'Imprimir fechamento'}</button><button type="button" className="closeDayBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
+    <footer className="closingActions">{printMessage && <p className={printJob?.status === 'failed' ? 'closingPrintMessage error' : 'closingPrintMessage'}>{printMessage}</p>}<button type="button" onClick={handlePrint} disabled={printPending}><Printer size={20} /> {printPending ? 'Enviando para impressão…' : savedPrintData ? 'Reimprimir fechamento' : 'Imprimir fechamento'}</button><button type="button" className="closeDayBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
 
     {modalOpen && <style>{`.closingModalOverlay{position:fixed;inset:0;z-index:80;background:rgba(31,16,10,.62);display:grid;place-items:center;padding:18px;backdrop-filter:blur(3px)}.closingModalCard{width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid #ead7bf;background:linear-gradient(135deg,#fffdf8,#fff4e4);box-shadow:0 28px 70px rgba(31,16,10,.32);padding:24px;position:relative;color:#351b12}.closingModalCard.hasDivergence{border-color:#e7b18d}.closingModalClose{position:absolute;right:16px;top:16px;width:38px;height:38px;border:1px solid #ead7bf;border-radius:999px;background:#fffaf2;color:#5a2d1f;display:grid;place-items:center;cursor:pointer}.closingModalHeader{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;align-items:center;margin-right:34px}.closingModalHeader>span{width:48px;height:48px;border-radius:16px;background:#f8e8d8;color:#bd381d;display:grid;place-items:center}.closingModalHeader h2{margin:0;font-family:Georgia,serif;font-size:28px;line-height:1.05;color:#32180f}.closingModalHeader p{margin:6px 0 0;color:#7b6253;font-weight:700}.closingModalAlert{margin-top:18px;border:1px solid #f1b38e;border-radius:16px;background:#fff0e6;color:#9d2e1c;padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-weight:900}.closingModalSummary{margin-top:18px;display:grid;gap:10px}.closingModalSummary p{margin:0;display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid #ead7bf;border-radius:14px;background:#fffaf2;padding:12px 14px}.closingModalSummary span{font-weight:850;color:#5a4033}.closingModalSummary strong{font-size:18px;color:#2f1a12;text-align:right}.closingModalSummary strong.negative{color:#d2472b}.closingModalSummary strong.positive{color:#52740f}.closingModalFields{display:grid;gap:12px;margin-top:18px}.closingModalFields label{display:grid;gap:7px;font-weight:900;color:#3b261d}.closingModalFields input,.closingModalFields textarea{width:100%;border:1px solid #e2cdb3;border-radius:13px;background:#fffaf4;color:#32180f;padding:12px 13px;font-size:15px}.closingModalFields textarea{min-height:96px;resize:vertical}.closingModalNote{margin-top:16px;border-radius:14px;background:#fffaf2;border:1px solid #ead7bf;padding:12px 14px;display:grid;gap:4px}.closingModalError{margin-top:14px;border:1px solid #efb3a0;border-radius:14px;background:#fff0eb;color:#a93420;padding:12px 14px;display:flex;gap:9px;align-items:center;font-weight:900}.closingModalActions{margin-top:20px;display:grid;grid-template-columns:1fr 1.35fr;gap:12px}.closingModalActions button{height:50px;border-radius:14px;font-weight:950;font-size:15px;cursor:pointer}.closingCancelBtn{border:1px solid #e2cdb3;background:#fffaf4;color:#4a2b1f}.closingConfirmBtn{border:0;background:linear-gradient(135deg,#bd381d,#f05a36);color:#fff;box-shadow:0 12px 24px rgba(199,65,35,.22)}@media(max-width:640px){.closingModalOverlay{padding:10px;place-items:end center}.closingModalCard{border-radius:20px 20px 0 0;padding:20px 16px}.closingModalHeader{grid-template-columns:40px minmax(0,1fr);gap:11px}.closingModalHeader>span{width:40px;height:40px;border-radius:13px}.closingModalHeader h2{font-size:24px}.closingModalSummary p{display:grid;gap:4px}.closingModalSummary strong{text-align:left}.closingModalActions{grid-template-columns:1fr}}`}</style>}
     {modalOpen && <div className="closingModalOverlay" role="dialog" aria-modal="true" aria-labelledby="closingModalTitle">
