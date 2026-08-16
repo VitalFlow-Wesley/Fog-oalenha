@@ -757,11 +757,13 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     if (!selectedItems.length) return
     setPartialSaving(true)
     try {
-      await onPartialCloseTable(table.id, {
+      const result = await onPartialCloseTable(table.id, {
         items: selectedItems,
         guests: Math.max(1, Math.min(Math.max(1, getPeopleCount(table) - 1), Number(partialGuests) || 1)),
         paymentMethod: partialPayment,
       })
+      if (result?.printJob) trackPrintJob(result.printJob)
+      if (result?.printError) setPrintNotice({ status: 'failed', lastError: result.printError })
       setPartialCloseOpen(false)
       touch()
     } finally {
@@ -899,7 +901,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
             <div className="partialItemsList">{table.items.map((item, index) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; const selectedQty = Number(partialSelection[key] || 0); return <label className="partialItemRow" key={`${key}-${index}`}><div><strong>{item.name}</strong><small>{item.launchedByName || item.waiterName || 'Não identificado'} · {formatMoney(item.price)} cada</small></div><input aria-label={`Quantidade de ${item.name}`} type="number" min="0" max={item.qty} value={selectedQty} onChange={event => setPartialItemQty(item, event.target.value)} /><span>de {item.qty}</span><b>{formatMoney(item.price * selectedQty)}</b></label> })}</div>
             <div className="partialCloseFields"><label><span>Pessoas saindo</span><input type="number" min="1" max={Math.max(1, getPeopleCount(table) - 1)} value={partialGuests} onChange={event => setPartialGuests(event.target.value)} /></label><label><span>Forma de pagamento</span><select value={partialPayment} onChange={event => setPartialPayment(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Crédito</option><option value="debito">Débito</option><option value="outros">Outros</option></select></label></div>
             <div className="partialTotal"><span>Total desta parte</span><strong>{formatMoney(table.items.reduce((sum, item) => { const key = item.lineId || `${item.id}-${item.observation || ''}-${item.originTable || ''}-${item.launchedByName || ''}`; return sum + Number(item.price || 0) * Number(partialSelection[key] || 0) }, 0))}</strong></div>
-            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={partialSaving || !Object.values(partialSelection).some(Number)}>{partialSaving ? 'Salvando...' : 'Confirmar pagamento parcial'}</button><button className="secondaryBtn" type="button" onClick={() => setPartialCloseOpen(false)}>Cancelar</button></div>
+            <div className="actionsRow"><button className="primaryBtn" type="submit" disabled={partialSaving || !Object.values(partialSelection).some(Number)}>{partialSaving ? 'Salvando e imprimindo...' : 'Confirmar e imprimir pagamento parcial'}</button><button className="secondaryBtn" type="button" onClick={() => setPartialCloseOpen(false)}>Cancelar</button></div>
           </form>
         </div>
       )}

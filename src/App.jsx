@@ -748,7 +748,32 @@ export default function App() {
       closings: readStored(CLOSINGS_KEY, []),
       closedTablesHistory: nextClosedTablesHistory,
     })
-    return closedTableRecord
+
+    // O pagamento já está gravado antes de colocar o comprovante na fila. Se
+    // a POS-80 estiver indisponível, o caixa continua correto e o operador
+    // recebe o erro real para reimprimir depois, sem refazer a cobrança.
+    let printJob = null
+    let printError = ''
+    try {
+      printJob = await enqueuePrintJob({
+        type: 'bill',
+        kind: 'partial_payment',
+        title: 'COMPROVANTE DE PAGAMENTO PARCIAL',
+        table: partialTable,
+        items: paidItems,
+        printerName: getConfiguredPrinterName(settings, 'cashier'),
+        waiterName: currentUser?.name || currentUser?.username || 'Atendente',
+        total: paidTotal,
+        paymentMethod: paymentMethod || 'outros',
+        remainingTotal: tableTotal(nextTable),
+        remainingGuests,
+        dedupeKey: `partial-payment-${closedTableRecord.id}`,
+      })
+    } catch (error) {
+      printError = error?.message || 'Não foi possível criar o comprovante de pagamento parcial.'
+    }
+
+    return { ...closedTableRecord, printJob, printError }
   }
 
   async function activateReservation(reservation, { tableNumber = '', requestBill = false } = {}) {

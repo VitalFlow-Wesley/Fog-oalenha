@@ -103,12 +103,14 @@ function textLine(text = '', width = 42) {
 }
 
 function buildCashierText(job) {
+  const isPartialPayment = job.kind === 'partial_payment'
+  const paymentLabels = { dinheiro: 'DINHEIRO', pix: 'PIX', credito: 'CREDITO', debito: 'DEBITO', outros: 'OUTROS' }
   const lines = [
     '\x1B\x40',
     '\x1B\x61\x01',
     '================================\n',
     '         FOGAO A LENHA          \n',
-    '      CONTA DO CLIENTE          \n',
+    isPartialPayment ? '   PAGAMENTO PARCIAL           \n' : '      CONTA DO CLIENTE          \n',
     '================================\n',
     '\x1B\x61\x00',
     `Mesa: ${job.tableNumber || '-'}\n`,
@@ -125,10 +127,16 @@ function buildCashierText(job) {
 
   lines.push('--------------------------------\n')
   lines.push('\x1B\x61\x01')
-  lines.push('TOTAL DA CONTA\n')
+  lines.push(isPartialPayment ? 'VALOR PAGO\n' : 'TOTAL DA CONTA\n')
   lines.push('\x1B\x21\x30')
   lines.push(`${money(job.total)}\n`)
   lines.push('\x1B\x21\x00')
+  if (isPartialPayment) {
+    lines.push(`Forma: ${paymentLabels[String(job.paymentMethod || '').toLowerCase()] || 'OUTROS'}\n`)
+    lines.push(`Pessoas que sairam: ${Number(job.guests || 0)}\n`)
+    lines.push(`Saldo restante na mesa: ${money(job.remainingTotal)}\n`)
+    if (Number(job.remainingGuests || 0)) lines.push(`Pessoas permanecem: ${Number(job.remainingGuests)}\n`)
+  }
   lines.push('Obrigado pela preferencia!\n\n\n\n')
   lines.push('\x1D\x56\x41\x00')
   return lines.join('')
