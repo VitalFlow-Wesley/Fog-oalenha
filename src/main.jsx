@@ -79,6 +79,7 @@ import './partial-close.css'
 import './hybrid-mode.css'
 import './reports-mobile-final-override.css'
 import './print-status.css'
+import './reservas.css'
 
 createRoot(document.getElementById('root')).render(
   <AppErrorBoundary>

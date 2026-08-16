@@ -7,11 +7,13 @@ import Relatorios from './pages/Relatorios.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 import PedidosCozinha from './pages/PedidosCozinha.jsx'
 import Fechamento from './pages/Fechamento.jsx'
+import Reservas from './pages/Reservas.jsx'
 import { initialTables } from './data/mockData.js'
 import { initialUsers } from './data/users.js'
 import { loadRemoteState, saveRemoteState } from './services/appStateApi.js'
 import { repairData, repairText } from './text-normalizer.js'
 import { loadRuntimeConfig } from './services/runtimeConfig.js'
+import { enqueuePrintJob } from './services/printQueueApi.js'
 
 const SESSION_KEY = 'fogao-a-lenha-session'
 const USERS_KEY = 'fogao-users-v1'
@@ -21,6 +23,7 @@ const PRODUCTS_KEY = 'fogao-products-v1'
 const SALES_KEY = 'fogao-sales-history-v1'
 const CLOSINGS_KEY = 'fogao-closings-v1'
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
+const RESERVATIONS_KEY = 'fogao-reservations-v1'
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000
 const REMOTE_POLL_INTERVAL_MS = 4000
 const LOCAL_EDIT_GRACE_MS = 2500
@@ -276,6 +279,7 @@ export default function App() {
   const [tables, setTables] = useState(() => cleanSalonTables(readStored(TABLES_KEY, initialTables)))
   const [users, setUsers] = useState(() => readStored(USERS_KEY, initialUsers))
   const [settings, setSettings] = useState(() => ({ ...initialSettings, ...readStored(SETTINGS_KEY, initialSettings) }))
+  const [reservations, setReservations] = useState(() => readStored(RESERVATIONS_KEY, []))
   const [currentUser, setCurrentUser] = useState(() => getSavedSession(readStored(USERS_KEY, initialUsers)))
   const [runtimeConfig, setRuntimeConfig] = useState({ mode: 'online', label: 'Sistema online', onlineUrl: window.location.origin, localUrl: '' })
   const remoteLoadedRef = useRef(false)
@@ -301,6 +305,7 @@ export default function App() {
     writeStored(SALES_KEY, [])
     writeStored(CLOSINGS_KEY, [])
     writeStored(CLOSED_TABLES_KEY, [])
+    writeStored(RESERVATIONS_KEY, [])
     window.dispatchEvent(new Event('fogao-closed-tables-updated'))
     return safeUser
   }
@@ -328,6 +333,7 @@ export default function App() {
     const localSalesHistory = readStored(SALES_KEY, [])
     const localClosings = readStored(CLOSINGS_KEY, [])
     const localClosedTables = readStored(CLOSED_TABLES_KEY, [])
+    const localReservations = readStored(RESERVATIONS_KEY, [])
     const missingRemoteState = {}
 
     applyingRemoteRef.current = true
@@ -405,6 +411,16 @@ export default function App() {
       missingRemoteState.closedTablesHistory = localClosedTables
     }
 
+    if (Array.isArray(remote.reservations)) {
+      if (!isSameData(localReservations, remote.reservations)) {
+        setReservations(remote.reservations)
+        writeStored(RESERVATIONS_KEY, remote.reservations)
+      }
+      if (fillMissing && !remote.reservations.length && localReservations.length) missingRemoteState.reservations = localReservations
+    } else if (fillMissing && localReservations.length) {
+      missingRemoteState.reservations = localReservations
+    }
+
     window.setTimeout(() => {
       applyingRemoteRef.current = false
     }, 150)
@@ -444,6 +460,7 @@ export default function App() {
   useEffect(() => writeStored(TABLES_KEY, tables), [tables])
   useEffect(() => writeStored(USERS_KEY, users), [users])
   useEffect(() => writeStored(SETTINGS_KEY, settings), [settings])
+  useEffect(() => writeStored(RESERVATIONS_KEY, reservations), [reservations])
 
   useEffect(() => {
     const syncTablesFromStorage = () => {
@@ -500,13 +517,13 @@ export default function App() {
       const salesHistory = readStored(SALES_KEY, [])
       const closings = readStored(CLOSINGS_KEY, [])
       const closedTablesHistory = readStored(CLOSED_TABLES_KEY, [])
-      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory }).catch(error => {
+      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory, reservations }).catch(error => {
         console.warn('Nao foi possivel salvar no MongoDB:', error.message)
       })
     }, 650)
 
     return () => clearTimeout(saveTimerRef.current)
-  }, [users, tables, settings])
+  }, [users, tables, settings, reservations])
 
   useEffect(() => {
     if (!remoteLoadedRef.current) return
@@ -517,7 +534,7 @@ export default function App() {
       const salesHistory = readStored(SALES_KEY, [])
       const closings = readStored(CLOSINGS_KEY, [])
       const closedTablesHistory = readStored(CLOSED_TABLES_KEY, [])
-      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory }).catch(error => {
+      saveRemoteState({ users, tables, settings, products, salesHistory, closings, closedTablesHistory, reservations }).catch(error => {
         console.warn('Nao foi possivel salvar produtos no MongoDB:', error.message)
       })
     }
@@ -532,7 +549,7 @@ export default function App() {
       window.removeEventListener('fogao-closings-updated', syncProducts)
       window.removeEventListener('fogao-closed-tables-updated', syncProducts)
     }
-  }, [users, tables, settings])
+  }, [users, tables, settings, reservations])
 
   useEffect(() => {
     if (!currentUser) return
@@ -734,6 +751,65 @@ export default function App() {
     return closedTableRecord
   }
 
+  async function activateReservation(reservation, { tableNumber = '', requestBill = false } = {}) {
+    if (!reservation?.id) return null
+    const reservationItems = (reservation.items || []).map(item => ({
+      ...item,
+      qty: Number(item.qty || 0),
+      lineId: item.lineId || `reservation-${reservation.id}-${item.id}-${Date.now()}`,
+      reservationId: reservation.id,
+      reservationCustomer: reservation.customerName,
+      sentQty: Number(item.sentQty || 0),
+    })).filter(item => item.qty > 0)
+    if (!reservationItems.length) throw new Error('Inclua pelo menos um item na reserva antes de movimentá-la.')
+
+    const normalizedNumber = String(tableNumber || '').trim()
+    let target = normalizedNumber ? tables.find(table => String(table.number) === normalizedNumber && table.status !== 'juntada') : null
+    if (!target) {
+      const number = normalizedNumber || `RET-${reservation.customerName || 'CLIENTE'}`.slice(0, 28)
+      target = {
+        id: `reservation-table-${reservation.id}-${Date.now()}`,
+        number,
+        status: requestBill ? 'conta' : 'ocupada',
+        guests: Math.max(1, Number(reservation.peopleCount || 1)),
+        peopleCount: Math.max(1, Number(reservation.peopleCount || 1)),
+        customerName: reservation.customerName || 'Cliente reserva',
+        openedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        items: [], kitchenSent: false, billRequested: Boolean(requestBill),
+        reservationSource: reservation.id,
+        reservationType: reservation.type,
+      }
+    }
+    const movedTable = {
+      ...target,
+      status: requestBill ? 'conta' : (target.status === 'conta' ? 'conta' : 'ocupada'),
+      billRequested: Boolean(target.billRequested || requestBill),
+      customerName: target.customerName || reservation.customerName,
+      items: [...(target.items || []), ...reservationItems],
+    }
+    const nextTables = tables.some(table => table.id === target.id)
+      ? tables.map(table => table.id === target.id ? movedTable : table)
+      : [...tables, movedTable]
+    const nextReservations = reservations.filter(item => item.id !== reservation.id)
+    setTables(nextTables)
+    setReservations(nextReservations)
+    writeStored(TABLES_KEY, nextTables)
+    writeStored(RESERVATIONS_KEY, nextReservations)
+    await saveRemoteState({ tables: nextTables, reservations: nextReservations })
+
+    if (requestBill) {
+      const cashierPrinterName = getConfiguredPrinterName(settings, 'cashier')
+      const total = tableTotal(movedTable)
+      const job = await enqueuePrintJob({
+        type: 'bill', title: 'CONTA DO CLIENTE', table: movedTable, items: movedTable.items,
+        printerName: cashierPrinterName, waiterName: currentUser?.name || currentUser?.username || 'Atendente', total,
+        dedupeKey: `reservation-bill-${reservation.id}-${Date.now()}`,
+      })
+      return { table: movedTable, job }
+    }
+    return { table: movedTable }
+  }
+
   if (!currentUser) return <Login onLogin={handleLogin} runtimeConfig={runtimeConfig} />
 
   return (
@@ -742,6 +818,7 @@ export default function App() {
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}
+        {page === 'reservas' && <Reservas reservations={reservations} setReservations={setReservations} tables={tables} currentUser={currentUser} onActivate={activateReservation} />}
         {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}

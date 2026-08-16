@@ -10,7 +10,7 @@ import {
 import { readManagerApproval, requireUser } from '../lib/auth.js'
 
 const modelKeys = ['users', 'products', 'tables']
-const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings', 'closedTablesHistory', 'removedTableIds']
+const allowedKeys = ['users', 'tables', 'settings', 'products', 'salesHistory', 'closings', 'closedTablesHistory', 'reservations', 'removedTableIds']
 const waiterSettingKeys = [
   'establishmentName',
   'printers',
