@@ -817,6 +817,14 @@ export default function App() {
     return { table: movedTable }
   }
 
+  async function persistReservations(nextReservations) {
+    lastLocalChangeRef.current = Date.now()
+    setReservations(nextReservations)
+    writeStored(RESERVATIONS_KEY, nextReservations)
+    await saveRemoteState({ reservations: nextReservations })
+    return nextReservations
+  }
+
   if (!currentUser) return <Login onLogin={handleLogin} runtimeConfig={runtimeConfig} />
 
   return (
@@ -825,7 +833,7 @@ export default function App() {
       <main className="content">
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}
-        {page === 'reservas' && <Reservas reservations={reservations} setReservations={setReservations} tables={tables} currentUser={currentUser} onActivate={activateReservation} />}
+        {page === 'reservas' && <Reservas reservations={reservations} setReservations={setReservations} tables={tables} currentUser={currentUser} onActivate={activateReservation} onPersistReservations={persistReservations} />}
         {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} reservations={reservations} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}
