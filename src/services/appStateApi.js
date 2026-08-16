@@ -29,6 +29,10 @@ export async function loadRemoteState() {
       return {}
     }
 
+    // Uma aba pode conservar o identificador de uma sessão que já expirou. A
+    // tela de login trata isso em seguida; não é uma falha de sincronização.
+    if (response.status === 401 || response.status === 403) return {}
+
     if (!response.ok) throw new Error('Nao foi possivel carregar dados do servidor.')
     return await readJsonResponse(response)
   } catch (error) {
