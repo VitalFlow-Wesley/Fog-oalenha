@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, CheckCircle2, ClipboardList, Plus, ReceiptText, Search, ShoppingBag, Table2, Trash2, XCircle } from 'lucide-react'
+import { CalendarClock, CheckCircle2, ChefHat, ClipboardList, Plus, ReceiptText, Search, ShoppingBag, Table2, Trash2, XCircle } from 'lucide-react'
 import { products as defaultProducts } from '../data/mockData.js'
 import { repairData, repairText } from '../text-normalizer.js'
+import { enqueuePrintJob } from '../services/printQueueApi.js'
 
 const PRODUCTS_KEY = 'fogao-products-v1'
 
@@ -22,6 +23,7 @@ export default function Reservas({ reservations = [], setReservations, tables = 
   const [message, setMessage] = useState('')
   const [targetByReservation, setTargetByReservation] = useState({})
   const [productSearch, setProductSearch] = useState('')
+  const [sendingKitchenId, setSendingKitchenId] = useState('')
   const products = useMemo(() => readProducts().filter(product => product.status !== 'Inativo'), [])
   const canManage = ['admin', 'gerente'].includes(currentUser?.role)
   const activeReservations = reservations.filter(item => item.status === 'agendada')
@@ -72,6 +74,26 @@ export default function Reservas({ reservations = [], setReservations, tables = 
     } catch (error) { setMessage(error.message || 'Não foi possível solicitar a conta.') }
   }
 
+  async function sendKitchen(reservation) {
+    if (reservation.kitchenSent || sendingKitchenId) return
+    const items = (reservation.items || []).filter(item => item.imprimeCozinha)
+    if (!items.length) return setMessage('Esta reserva não possui itens configurados para preparo na cozinha.')
+    setSendingKitchenId(reservation.id)
+    try {
+      const queued = await enqueuePrintJob({
+        type: 'kitchen', kind: 'reservation', title: 'RESERVA PARA PREPARO',
+        tableNumber: reservation.type === 'retirada' ? 'RETIRADA' : 'RESERVA',
+        customerName: reservation.customerName, peopleCount: reservation.peopleCount,
+        waiterName: currentUser?.name || currentUser?.username || 'Atendente', items,
+        reservation: { customerName: reservation.customerName, scheduledAt: reservation.scheduledAt, type: reservation.type, note: reservation.note || '' },
+        dedupeKey: `reservation-kitchen-${reservation.id}`,
+      })
+      setReservations(items => items.map(item => item.id === reservation.id ? { ...item, kitchenSent: true, kitchenSentAt: new Date().toISOString(), kitchenPrintJobId: queued._id } : item))
+      setMessage(`Reserva enviada para preparo. Job ${queued._id} está na fila da cozinha.`)
+    } catch (error) { setMessage(error.message || 'Não foi possível enviar a reserva para a cozinha.') }
+    finally { setSendingKitchenId('') }
+  }
+
   function closeReservation(reservation, status) {
     if (!canManage) return
     const reason = window.prompt(status === 'cancelada' ? 'Motivo do cancelamento:' : 'Motivo do fechamento / cliente não compareceu:')
@@ -93,7 +115,7 @@ export default function Reservas({ reservations = [], setReservations, tables = 
         <div className="reservationDraft">{draftItems.length ? draftItems.map((item, index) => <div key={item.lineId}><span>{item.name}</span><button type="button" onClick={() => changeDraftQty(index, -1)}>−</button><strong>{item.qty}x</strong><button type="button" onClick={() => changeDraftQty(index, 1)}>+</button><b>{money(item.price * item.qty)}</b></div>) : <p>Nenhum item escolhido.</p>}<strong>Total reservado: {money(total({ items: draftItems }))}</strong></div>
         <button className="primaryBtn" type="submit"><CalendarClock size={17} /> Salvar reserva</button>
       </form>
-      <section className="reservationPanel"><div className="panelHeading"><ClipboardList size={20} /><h2>Reservas agendadas</h2></div>{activeReservations.length ? activeReservations.map(reservation => <article className="reservationCard" key={reservation.id}><div className="reservationCardTitle"><div><strong>{reservation.customerName}</strong><span>{reservation.type === 'retirada' ? 'Retirada' : 'Mesa'} · {timeLabel(reservation.scheduledAt)}</span></div><b>{money(total(reservation))}</b></div><p>{reservation.items.map(item => `${item.qty}x ${item.name}`).join(' · ')}</p>{reservation.note && <small>Obs.: {reservation.note}</small>}<div className="reservationActions">{reservation.type === 'mesa' && <><select value={targetByReservation[reservation.id] || ''} onChange={event => setTargetByReservation({ ...targetByReservation, [reservation.id]: event.target.value })}><option value="">Transferir para mesa…</option>{tables.filter(table => table.status !== 'juntada').map(table => <option key={table.id} value={table.number}>Mesa {table.number}</option>)}</select><button type="button" onClick={() => transfer(reservation)}><Table2 size={16} /> Transferir</button></>}<button type="button" onClick={() => requestBill(reservation)}><ReceiptText size={16} /> Solicitar conta</button>{canManage && <><button type="button" className="dangerOutline" onClick={() => closeReservation(reservation, 'cancelada')}><XCircle size={16} /> Cancelar</button><button type="button" className="dangerOutline" onClick={() => closeReservation(reservation, 'nao_compareceu')}><Trash2 size={16} /> Fechar cliente</button></>}</div></article>) : <div className="reservationEmpty"><ShoppingBag size={28} /> Nenhuma reserva pendente.</div>}</section>
+      <section className="reservationPanel"><div className="panelHeading"><ClipboardList size={20} /><h2>Reservas agendadas</h2></div>{activeReservations.length ? activeReservations.map(reservation => <article className="reservationCard" key={reservation.id}><div className="reservationCardTitle"><div><strong>{reservation.customerName}</strong><span>{reservation.type === 'retirada' ? 'Retirada' : 'Mesa'} · {timeLabel(reservation.scheduledAt)}</span></div><b>{money(total(reservation))}</b></div><p>{reservation.items.map(item => `${item.qty}x ${item.name}`).join(' · ')}</p>{reservation.note && <small>Obs.: {reservation.note}</small>}<div className="reservationActions"><button type="button" onClick={() => sendKitchen(reservation)} disabled={reservation.kitchenSent || sendingKitchenId === reservation.id}>{reservation.kitchenSent ? <CheckCircle2 size={16} /> : <ChefHat size={16} />}{reservation.kitchenSent ? ' Enviado para cozinha' : sendingKitchenId === reservation.id ? ' Enviando...' : ' Enviar para cozinha'}</button>{reservation.type === 'mesa' && <><select value={targetByReservation[reservation.id] || ''} onChange={event => setTargetByReservation({ ...targetByReservation, [reservation.id]: event.target.value })}><option value="">Transferir para mesa…</option>{tables.filter(table => table.status !== 'juntada').map(table => <option key={table.id} value={table.number}>Mesa {table.number}</option>)}</select><button type="button" onClick={() => transfer(reservation)}><Table2 size={16} /> Transferir</button></>}<button type="button" onClick={() => requestBill(reservation)}><ReceiptText size={16} /> Solicitar conta</button>{canManage && <><button type="button" className="dangerOutline" onClick={() => closeReservation(reservation, 'cancelada')}><XCircle size={16} /> Cancelar</button><button type="button" className="dangerOutline" onClick={() => closeReservation(reservation, 'nao_compareceu')}><Trash2 size={16} /> Fechar cliente</button></>}</div></article>) : <div className="reservationEmpty"><ShoppingBag size={28} /> Nenhuma reserva pendente.</div>}</section>
     </div>
     {canManage && history.length > 0 && <section className="reservationPanel reservationHistory"><div className="panelHeading"><ClipboardList size={20} /><h2>Histórico de cancelamentos</h2></div>{history.slice(0, 12).map(reservation => <div className="reservationHistoryRow" key={reservation.id}><strong>{reservation.customerName}</strong><span>{reservation.status === 'cancelada' ? 'Cancelada' : 'Cliente não compareceu'} · {reservation.closeReason}</span><small>{reservation.closedBy}</small></div>)}</section>}
   </div>

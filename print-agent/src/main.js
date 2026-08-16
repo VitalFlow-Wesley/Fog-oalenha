@@ -136,7 +136,8 @@ function buildCashierText(job) {
 
 function buildKitchenText(job) {
   const isCancellation = job.kind === 'cancellation'
-  const ticketTitle = isCancellation ? 'CANCELAMENTO\nNAO PREPARAR\n' : 'PEDIDO PARA PREPARO\n'
+  const reservation = job.kind === 'reservation' ? job.reservation : null
+  const ticketTitle = isCancellation ? 'CANCELAMENTO\nNAO PREPARAR\n' : reservation ? 'RESERVA\nPEDIDO PARA PREPARO\n' : 'PEDIDO PARA PREPARO\n'
   const lines = [
     '\x1B\x40',
     '\x1B\x61\x01',
@@ -148,8 +149,11 @@ function buildKitchenText(job) {
     '------------------------------------------\n',
     `Mesa: ${job.tableNumber || '-'}\n`,
     job.customerName ? `Cliente: ${job.customerName}\n` : '',
+    reservation ? `Atendimento: ${reservation.type === 'retirada' ? 'RETIRADA' : 'MESA'}\n` : '',
+    reservation?.scheduledAt ? `Reserva para: ${new Date(reservation.scheduledAt).toLocaleString('pt-BR')}\n` : '',
     job.waiterName ? `Garçom: ${job.waiterName}\n` : '',
     job.guests ? `Pessoas: ${job.guests}\n` : '',
+    reservation?.note ? `Obs. reserva: ${textLine(reservation.note)}\n` : '',
     `Horário: ${new Date(job.createdAt || Date.now()).toLocaleString('pt-BR')}\n`,
     '------------------------------------------\n',
   ]

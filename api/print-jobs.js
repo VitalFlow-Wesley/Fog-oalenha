@@ -48,6 +48,7 @@ export default async function handler(req, res) {
         requestedBy: { id: session?.id || '', name: session?.name || session?.username || body.waiterName || '' },
         guests: Number(body.guests ?? body.peopleCount ?? 0), peopleCount: Number(body.peopleCount ?? body.guests ?? 0),
         items: Array.isArray(body.items) ? body.items : [], total: Number(body.total || 0), reprint: Boolean(body.reprint),
+        reservation: body.reservation && typeof body.reservation === 'object' ? body.reservation : null,
         sourceDevice: String(body.sourceDevice || ''), attempts: 0, lastError: '', agentId: '',
         createdAt: new Date(), updatedAt: new Date(), startedAt: null, printedAt: null,
       }
