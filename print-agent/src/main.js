@@ -169,6 +169,36 @@ function buildKitchenText(job) {
   return Buffer.from(lines.join(''), 'latin1')
 }
 
+function paperProblem(status) {
+  const text = JSON.stringify(status || '').toUpperCase()
+  return ['PAPER_OUT', 'PAPER OUT', 'OUT_OF_PAPER', 'OUT OF PAPER', 'PAPER_EMPTY', 'PAPER EMPTY', 'PAPER_JAM', 'PAPER JAM'].some(signal => text.includes(signal))
+}
+
+async function kitchenPaperOut(host, port) {
+  // ESC/POS DLE EOT 4 consulta o sensor de papel. Algumas impressoras TCP não
+  // respondem a esse comando; nesse caso null significa "status indisponível",
+  // jamais "tem papel".
+  return new Promise(resolve => {
+    const socket = net.createConnection({ host, port })
+    let settled = false
+    const finish = value => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      socket.destroy()
+      resolve(value)
+    }
+    const timeout = setTimeout(() => finish(null), 700)
+    socket.on('connect', () => socket.write(Buffer.from([0x10, 0x04, 0x04])))
+    socket.on('data', data => {
+      const status = data?.[0]
+      // Bit 3 do retorno DLE EOT 4 indica fim do papel em ESC/POS compatível.
+      finish(Number.isInteger(status) ? Boolean(status & 0x08) : null)
+    })
+    socket.on('error', () => finish(null))
+  })
+}
+
 async function printCashier(job) {
   const jobTag = `job=${job._id || job.dedupeKey || '-'}`
   if (store.get('simulationMode')) {
@@ -217,8 +247,14 @@ async function printCashier(job) {
         const found = await within(qz.printers.find(requested), 'localização da impressora')
         const names = Array.isArray(found) ? found : [found]
         if (!names.includes(requested)) throw new Error('Impressora do caixa não encontrada: ' + requested)
+        await within(qz.printers.startListening([requested]), 'status da impressora').catch(() => null)
+        const beforeStatus = await within(qz.printers.getStatus(), 'leitura de papel').catch(() => null)
+        const paperProblem = status => /PAPER[_ ]OUT|OUT[_ ]OF[_ ]PAPER|PAPER[_ ]EMPTY|PAPER[_ ]JAM/i.test(JSON.stringify(status || ''))
+        if (paperProblem(beforeStatus)) throw new Error('Impressora do caixa sem papel ou com atolamento.')
         const config = qz.configs.create(requested)
         await within(qz.print(config, [${JSON.stringify(buildCashierText(job))}]), 'envio RAW')
+        const afterStatus = await within(qz.printers.getStatus(), 'confirmação de papel').catch(() => null)
+        if (paperProblem(afterStatus)) throw new Error('Impressora do caixa sem papel ou com atolamento.')
         return requested
       })()
     `)
@@ -243,6 +279,11 @@ async function printKitchen(job) {
   const host = String(store.get('kitchenPrinterIp') || '').trim()
   const port = Number(store.get('kitchenPrinterPort') || 9100)
   if (!host) throw new Error('IP da impressora da cozinha não configurado.')
+
+  const paperOut = await kitchenPaperOut(host, port)
+  if (paperOut === true) throw new Error('Impressora da cozinha sem papel.')
+  if (paperOut === false) emitStatus(`${jobTag} cozinha paper=ok`)
+  else emitStatus(`${jobTag} cozinha paper=status-indisponivel`, 'warning')
 
   const payload = buildKitchenText(job)
   emitStatus(`${jobTag} setor=cozinha method=raw target=${host}:${port}`)
