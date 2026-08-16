@@ -284,6 +284,28 @@
   color: #2d1a12;
 }
 
+.commandProductSearch {
+  min-height: 48px;
+  border: 1px solid #ead7bf;
+  border-radius: 15px;
+  background: #fffdf8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+  color: #6d5748;
+  margin-bottom: 10px;
+}
+
+.commandProductSearch input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  flex: 1;
+  font-size: 14.5px;
+  color: #2d1a12;
+}
+
 .commandCategoryTabs {
   display: flex;
   gap: 8px;

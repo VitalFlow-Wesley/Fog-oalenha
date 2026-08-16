@@ -237,6 +237,7 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
     return (aIndex < 0 ? categoryOrder.length : aIndex) - (bIndex < 0 ? categoryOrder.length : bIndex) || a.localeCompare(b, 'pt-BR')
   }), [availableProducts])
   const [activeCategory, setActiveCategory] = useState(categories[0] || 'Refeições')
+  const [productSearch, setProductSearch] = useState('')
   const [observation, setObservation] = useState('')
   const [cancelRequest, setCancelRequest] = useState(null)
   const [cancelPassword, setCancelPassword] = useState('')
@@ -769,7 +770,12 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
   }
 
   const total = table?.items.reduce((sum, item) => sum + item.price * item.qty, 0) || 0
-  const filteredProducts = availableProducts.filter(p => p.status !== 'Inativo' && p.category === activeCategory)
+  const normalizedProductSearch = productSearch.trim().toLocaleLowerCase('pt-BR')
+  const filteredProducts = availableProducts.filter(product => {
+    if (product.status === 'Inativo') return false
+    if (normalizedProductSearch) return product.name.toLocaleLowerCase('pt-BR').includes(normalizedProductSearch)
+    return product.category === activeCategory
+  })
   const tableLabel = table ? `Mesa ${table.number}${table.mergedTableNumbers?.length ? ` + ${table.mergedTableNumbers.join(' + ')}` : ''}` : ''
   const totalItems = table?.items.reduce((sum, item) => sum + item.qty, 0) || 0
   const updatedLabel = isRefreshing ? 'Atualizando...' : `Atualizado às ${formatUpdateTime(lastUpdate)}`
@@ -875,9 +881,10 @@ export default function Mesas({ tables, setTables, users, currentUser, settings,
 
               <section className="commandPanel commandProductsPanel">
                 <h3>Adicionar pedido</h3>
+                <label className="commandProductSearch"><Search size={19} /><input value={productSearch} onChange={event => setProductSearch(event.target.value)} placeholder="Pesquisar produto..." aria-label="Pesquisar produto" /></label>
                 <label className="commandObs"><Search size={20} /><input className="obsInput" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Observação do item. Ex.: sem cebola" /></label>
                 <div className="commandCategoryTabs">{categories.map(cat => <button className={activeCategory === cat ? 'active' : ''} onClick={() => setActiveCategory(cat)} key={cat}>{categoryLabels[cat] || cat}</button>)}</div>
-                <div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}</div>
+                <div className="commandProductGrid">{filteredProducts.map(product => <button className="commandProductCard" key={product.id} onClick={() => addItem(product)}><div className="productThumb">{productIcons[product.category] || '🍽️'}</div><div><strong>{product.name}</strong><span>{formatMoney(product.price)}</span><small>{product.imprimeCozinha ? 'Vai para cozinha' : 'Sai na comanda'}</small></div><em><Plus size={20} /></em></button>)}{!filteredProducts.length && <p className="empty">Nenhum produto encontrado.</p>}</div>
               </section>
             </div>
           </aside>
