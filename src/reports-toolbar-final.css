@@ -200,3 +200,25 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Preserva os nomes das abas em telas de notebook: as abas ocupam uma linha
+   própria, sem cortar "Fechamentos" no cabeçalho. */
+@media (min-width: 721px) {
+  .reportsPremiumPage.completeReportPage .reportsActions.noPrint {
+    grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) !important;
+    grid-template-areas:
+      "print date"
+      "tabs tabs"
+      "toggle toggle" !important;
+    max-width: 560px !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .reportTabs {
+    min-height: 44px !important;
+  }
+
+  .reportsPremiumPage.completeReportPage .reportTabs button {
+    padding: 0 12px !important;
+    font-size: 13px !important;
+  }
+}
