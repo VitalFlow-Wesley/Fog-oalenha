@@ -267,7 +267,7 @@ export default function PedidosCozinha({ tables, reservations = [], currentUser,
 
   const topCards = [
     { title: 'Pedidos enviados', value: summary.totalOrders, icon: Send, tone: 'fire' },
-    { title: 'Mesas com pedidos', value: summary.tablesWithOrders, icon: Users, tone: 'green' },
+    { title: 'Comandas e reservas', value: summary.tablesWithOrders, icon: Users, tone: 'green' },
     { title: 'Itens enviados', value: summary.totalItems, icon: PackageCheck, tone: 'gold' },
     { title: 'Último envio', value: summary.lastOrder ? summary.lastOrder.time : '--:--', icon: Clock, tone: 'orange' },
   ]
@@ -348,9 +348,9 @@ export default function PedidosCozinha({ tables, reservations = [], currentUser,
 
           {filteredOrders.map(order => (
             <article className="kitchenOrderCard" key={order.id}>
-              <div className="kitchenTableBadge">{String(order.tableNumber).padStart(2, '0')}</div>
+              <div className="kitchenTableBadge">{order.kind === 'reservation' ? 'RES' : String(order.tableNumber).padStart(2, '0')}</div>
               <div className="kitchenOrderMesa">
-                <strong>{order.kind === 'reservation' ? `Reserva · ${order.tableNumber}` : `Mesa ${order.tableNumber}`}</strong>
+                <strong>{order.kind === 'reservation' ? 'Reserva' : `Mesa ${order.tableNumber}`}</strong>
                 {order.customerName && <small className="kitchenCustomerName">{order.customerName}</small>}
                 {order.kind === 'reservation' && <small>{order.reservationType === 'retirada' ? 'Retirada' : 'Vai consumir na mesa'}{order.scheduledAt ? ` · Agendada: ${new Date(order.scheduledAt).toLocaleString('pt-BR')}` : ''}</small>}
                 <span>{order.time}</span>
@@ -386,7 +386,7 @@ export default function PedidosCozinha({ tables, reservations = [], currentUser,
             <Clock size={20} />
             <div>
               <span>Último pedido</span>
-              <strong>{summary.lastOrder ? `Mesa ${summary.lastOrder.tableNumber} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong>
+              <strong>{summary.lastOrder ? `${summary.lastOrder.kind === 'reservation' ? 'Reserva' : `Mesa ${summary.lastOrder.tableNumber}`} às ${summary.lastOrder.time}` : 'Nenhum envio'}</strong>
               {summary.lastOrder?.customerName && <small className="lastOrderCustomer">{summary.lastOrder.customerName}</small>}
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function PedidosCozinha({ tables, reservations = [], currentUser,
       {details && <div className="authModalOverlay noPrint">
         <div className="authModal kitchenDetailsModal">
           <div className="drawerHeader">
-            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>{details.kind === 'reservation' ? `Reserva · ${details.tableNumber}` : `Mesa ${details.tableNumber}`}</h2>{details.customerName && <p className="kitchenDetailsCustomer">Cliente: {details.customerName}</p>}{details.kind === 'reservation' && <p className="kitchenDetailsCustomer">{details.reservationType === 'retirada' ? 'Retirada' : 'Vai consumir na mesa'}{details.scheduledAt ? ` · Agendada: ${new Date(details.scheduledAt).toLocaleString('pt-BR')}` : ''}</p>}</div>
+            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>{details.kind === 'reservation' ? 'Reserva' : `Mesa ${details.tableNumber}`}</h2>{details.customerName && <p className="kitchenDetailsCustomer">Cliente: {details.customerName}</p>}{details.kind === 'reservation' && <p className="kitchenDetailsCustomer">{details.reservationType === 'retirada' ? 'Retirada' : 'Vai consumir na mesa'}{details.scheduledAt ? ` · Agendada: ${new Date(details.scheduledAt).toLocaleString('pt-BR')}` : ''}</p>}</div>
             <button type="button" className="iconBtn" onClick={() => setDetails(null)}><X size={22} /></button>
           </div>
           <p>Pedido enviado às {details.time}</p>
