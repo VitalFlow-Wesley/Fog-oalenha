@@ -81,7 +81,10 @@ function buildKitchenOrders(tables, reservations, orderTimes) {
     })
     .filter(order => order.items.length)
   const reservationOrders = (reservations || [])
-    .filter(reservation => reservation.kitchenSent && (reservation.items || []).length)
+    // A reserva aparece aqui apenas enquanto ainda está agendada/em preparo.
+    // Ao transferir para uma mesa ou encerrar o cliente, a comanda normal da
+    // mesa (ou o histórico do caixa) passa a ser a fonte do acompanhamento.
+    .filter(reservation => reservation.status === 'agendada' && reservation.kitchenSent && (reservation.items || []).length)
     .map(reservation => {
       const items = reservation.items.map(item => ({ ...item, sector: getItemSector(item) })).filter(item => item.sector)
       return {
