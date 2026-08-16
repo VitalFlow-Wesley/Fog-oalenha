@@ -2,6 +2,7 @@ import { ReceiptText, BarChart3, LogOut, Settings, ChefHat, Calculator, Flame, C
 
 const waiterMenu = [
   { key: 'mesas', label: 'Mesas', icon: ReceiptText },
+  { key: 'reservas', label: 'Reservas', icon: CalendarClock },
   { key: 'pedidos-cozinha', label: 'Pedidos enviados', icon: ChefHat },
 ]
 

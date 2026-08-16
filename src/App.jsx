@@ -790,7 +790,14 @@ export default function App() {
     const nextTables = tables.some(table => table.id === target.id)
       ? tables.map(table => table.id === target.id ? movedTable : table)
       : [...tables, movedTable]
-    const nextReservations = reservations.filter(item => item.id !== reservation.id)
+    const nextReservations = reservations.map(item => item.id === reservation.id ? {
+      ...item,
+      status: requestBill ? 'conta_solicitada' : 'transferida',
+      activatedAt: new Date().toISOString(),
+      activatedBy: currentUser?.name || currentUser?.username || 'Atendente',
+      activatedTableId: movedTable.id,
+      activatedTableNumber: movedTable.number,
+    } : item)
     setTables(nextTables)
     setReservations(nextReservations)
     writeStored(TABLES_KEY, nextTables)

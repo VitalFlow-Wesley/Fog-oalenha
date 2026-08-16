@@ -140,9 +140,34 @@ function stateForSession(state, session) {
   if (session.role !== 'garcom') return state
   return {
     tables: Array.isArray(state.tables) ? state.tables : [],
+    reservations: Array.isArray(state.reservations) ? state.reservations : [],
     products: Array.isArray(state.products) ? state.products : [],
     settings: waiterSettings(state.settings),
   }
+}
+
+// Garçons usam a agenda para cadastrar, alterar, transferir para a mesa e
+// solicitar a conta. Encerrar ou cancelar uma reserva é uma decisão de
+// gerência: o servidor não aceita essas transições vindas de uma sessão garçom.
+function protectWaiterReservations(current = [], incoming = []) {
+  const currentById = new Map((Array.isArray(current) ? current : []).map(item => [String(item?.id || ''), item]).filter(([id]) => id))
+  const safeIncoming = []
+  for (const reservation of Array.isArray(incoming) ? incoming : []) {
+    const id = String(reservation?.id || '')
+    const existing = currentById.get(id)
+    if (!existing) {
+      if ((reservation?.status || 'agendada') === 'agendada') safeIncoming.push(reservation)
+      continue
+    }
+    const nextStatus = reservation?.status || 'agendada'
+    const currentStatus = existing?.status || 'agendada'
+    const allowedTransition = currentStatus === 'agendada' && ['agendada', 'transferida', 'conta_solicitada'].includes(nextStatus)
+    safeIncoming.push(allowedTransition ? reservation : existing)
+    currentById.delete(id)
+  }
+  // A snapshot antigo de um garçom nunca pode apagar uma reserva existente.
+  for (const reservation of currentById.values()) safeIncoming.push(reservation)
+  return safeIncoming
 }
 
 async function readConsolidatedState(db) {
@@ -178,7 +203,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'PUT') {
       const body = parseBody(req)
-      const roleKeys = session.role === 'garcom' ? ['tables'] : allowedKeys
+      const roleKeys = session.role === 'garcom' ? ['tables', 'reservations'] : allowedKeys
       const nextState = Object.fromEntries(Object.entries(body).filter(([key]) => roleKeys.includes(key)))
 
       if (!Object.keys(nextState).length) {
@@ -188,6 +213,9 @@ export default async function handler(req, res) {
 
       const persist = async () => {
         const currentState = await readAppState(db)
+        if (session.role === 'garcom' && Array.isArray(nextState.reservations)) {
+          nextState.reservations = protectWaiterReservations(currentState.reservations, nextState.reservations)
+        }
         if (Array.isArray(nextState.tables)) {
           nextState.tables = mergeConcurrentTables(
             await readCollectionState(db, 'tables'),

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, CheckCircle2, ClipboardList, Plus, ReceiptText, ShoppingBag, Table2, Trash2, XCircle } from 'lucide-react'
+import { CalendarClock, CheckCircle2, ClipboardList, Plus, ReceiptText, Search, ShoppingBag, Table2, Trash2, XCircle } from 'lucide-react'
 import { products as defaultProducts } from '../data/mockData.js'
 import { repairData, repairText } from '../text-normalizer.js'
 
@@ -21,10 +21,12 @@ export default function Reservas({ reservations = [], setReservations, tables = 
   const [draftItems, setDraftItems] = useState([])
   const [message, setMessage] = useState('')
   const [targetByReservation, setTargetByReservation] = useState({})
+  const [productSearch, setProductSearch] = useState('')
   const products = useMemo(() => readProducts().filter(product => product.status !== 'Inativo'), [])
   const canManage = ['admin', 'gerente'].includes(currentUser?.role)
   const activeReservations = reservations.filter(item => item.status === 'agendada')
   const history = reservations.filter(item => item.status !== 'agendada')
+  const visibleProducts = products.filter(product => product.name.toLocaleLowerCase('pt-BR').includes(productSearch.trim().toLocaleLowerCase('pt-BR')))
 
   function addProduct(product) {
     setDraftItems(items => {
@@ -87,7 +89,7 @@ export default function Reservas({ reservations = [], setReservations, tables = 
       <form className="reservationPanel" onSubmit={createReservation}><div className="panelHeading"><Plus size={20} /><h2>Nova reserva</h2></div>
         <div className="reservationFormGrid"><label>Nome do cliente<input value={form.customerName} onChange={event => setForm({ ...form, customerName: event.target.value })} placeholder="Ex.: Maria" required /></label><label>Horário previsto<input type="datetime-local" value={form.scheduledAt} onChange={event => setForm({ ...form, scheduledAt: event.target.value })} /></label><label>Atendimento<select value={form.type} onChange={event => setForm({ ...form, type: event.target.value })}><option value="mesa">Vai consumir na mesa</option><option value="retirada">Retirada</option></select></label><label>Pessoas<input type="number" min="1" value={form.peopleCount} onChange={event => setForm({ ...form, peopleCount: event.target.value })} /></label></div>
         <label>Observação<textarea value={form.note} onChange={event => setForm({ ...form, note: event.target.value })} placeholder="Ex.: Galinha inteira; preparar para 13h" /></label>
-        <div className="reservationProducts"><h3>Produtos reservados</h3><div className="reservationProductGrid">{products.slice(0, 48).map(product => <button type="button" key={product.id} onClick={() => addProduct(product)}><strong>{product.name}</strong><span>{money(product.price)}</span></button>)}</div></div>
+        <div className="reservationProducts"><h3>Produtos reservados</h3><label className="reservationSearch"><Search size={17} /><input value={productSearch} onChange={event => setProductSearch(event.target.value)} placeholder="Pesquisar produto..." aria-label="Pesquisar produto" /></label><div className="reservationProductGrid">{visibleProducts.map(product => <button type="button" key={product.id} onClick={() => addProduct(product)}><strong>{product.name}</strong><span>{money(product.price)}</span></button>)}{!visibleProducts.length && <p className="reservationNoProduct">Nenhum produto encontrado.</p>}</div></div>
         <div className="reservationDraft">{draftItems.length ? draftItems.map((item, index) => <div key={item.lineId}><span>{item.name}</span><button type="button" onClick={() => changeDraftQty(index, -1)}>−</button><strong>{item.qty}x</strong><button type="button" onClick={() => changeDraftQty(index, 1)}>+</button><b>{money(item.price * item.qty)}</b></div>) : <p>Nenhum item escolhido.</p>}<strong>Total reservado: {money(total({ items: draftItems }))}</strong></div>
         <button className="primaryBtn" type="submit"><CalendarClock size={17} /> Salvar reserva</button>
       </form>
