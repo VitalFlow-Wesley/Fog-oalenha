@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertCircle, CalendarDays, CheckCircle2, DollarSign, Flame, LockKeyhole, Printer, ReceiptText, ShieldCheck, Star, Table2, Users, X } from 'lucide-react'
 import { loadRemoteState } from '../services/appStateApi.js'
-import { configureQzSecurity } from '../services/qzPrintService.js'
+import { enqueuePrintJob, watchPrintJob } from '../services/printQueueApi.js'
 
 const CLOSED_TABLES_KEY = 'fogao-closed-tables-v1'
 const money = value => `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -187,116 +187,10 @@ function CategoryBars({ categories, total }) {
   return <div className="categoryBars">{categories.map(item => { const percent = item.total / base * 100; return <div className="categoryLine" key={item.name}><div><span>{item.name}</span><b>{percent.toFixed(1).replace('.', ',')}%</b></div><div className="progress"><span style={{ width: `${Math.min(percent, 100)}%` }} /></div><small>{money(item.total)}</small></div> })}</div>
 }
 
-// --- MOTOR DE IMPRESSÃO ESC/POS (DELEGAÇÃO TOTAL PARA O WINDOWS, SEM CRIPTOGRAFIA MANUAL) ---
-async function executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings) {
-  try {
-    const qzModule = await import('qz-tray');
-    const qz = qzModule.default || qzModule;
-    await configureQzSecurity(qz);
-
-    if (!qz) throw new Error("Módulo QZ Tray indisponível localmente.");
-
-    // A mágica: NÃO adicionamos qz.security.setCertificatePromise nem setSignaturePromise aqui.
-    // Assim, o QZ Tray trata como site anônimo e pede a permissão na tela, que foi o que funcionou antes!
-
-    if (!qz.websocket.isActive()) {
-      await qz.websocket.connect();
-    }
-
-    // Busca a impressora configurada (Caixa)
-    const systemSettings = settings || readJson('fogao-a-lenha-system-settings-v1', {});
-    const printers = systemSettings?.printers || [];
-    const printerId = systemSettings?.cashierPrinterId;
-    const selected = printers.find(p => p.id === printerId);
-    const printerName = selected?.name || selected?.label || 'POS-80';
-
-    await qz.printers.find(printerName);
-    const config = qz.configs.create(printerName);
-
-    const removeAccents = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-
-    let payload = [
-      '\x1B' + '\x40', 
-      '\x1B' + '\x61' + '\x31', 
-      '================================\n',
-      '       FECHAMENTO DE CAIXA      \n',
-      '          FOGAO A LENHA         \n',
-      '================================\n',
-      '\x1B' + '\x61' + '\x30', 
-      `Data:     ${date}\n`,
-      `Operador: ${removeAccents(currentUser?.name || currentUser?.username || 'Operador')}\n`,
-      '--------------------------------\n',
-    ];
-
-    const addLine = (label, value) => {
-      payload.push(`${label}\n`);
-      payload.push('\x1B' + '\x61' + '\x32'); 
-      payload.push(`${value}\n`);
-      payload.push('\x1B' + '\x61' + '\x30'); 
-    };
-
-    addLine("Faturamento total:", money(data.total));
-    addLine("Total informado no caixa:", money(informedTotal));
-    addLine("Diferenca final:", money(difference));
-    
-    payload.push('--------------------------------\n');
-    payload.push(`Mesas abertas no salao: ${data.openTables}\n`);
-    payload.push(`Mesas fechadas no dia:  ${data.closedTables}\n`);
-    payload.push(`Total de itens:         ${data.totalOrders}\n`);
-    payload.push(`Ticket medio:           ${money(data.ticketAverage)}\n`);
-    payload.push('--------------------------------\n');
-    
-    payload.push('\x1B' + '\x61' + '\x31');
-    payload.push('RECEBIMENTOS INFORMADOS\n');
-    payload.push('\x1B' + '\x61' + '\x30');
-    addLine("Dinheiro:", money(received.dinheiro));
-    addLine("PIX:", money(received.pix));
-    addLine("Cartao:", money(received.cartao));
-    addLine("Outros:", money(received.outros));
-    payload.push('--------------------------------\n');
-
-    if (data.categories.length > 0) {
-      payload.push('\x1B' + '\x61' + '\x31');
-      payload.push('VENDAS POR CATEGORIA\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      data.categories.forEach(c => addLine(removeAccents(c.name) + ":", money(c.total)));
-      payload.push('--------------------------------\n');
-    }
-
-    if (data.topProductsByQty.length > 0) {
-      payload.push('\x1B' + '\x61' + '\x31');
-      payload.push('PRODUTOS MAIS VENDIDOS\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      data.topProductsByQty.forEach((p, i) => addLine(`${i+1}. ${removeAccents(p.name)} (${p.qty}x):`, money(p.total)));
-      payload.push('--------------------------------\n');
-    }
-
-    if (data.waiters.length > 0) {
-      payload.push('\x1B' + '\x61' + '\x31');
-      payload.push('RANKING POR GARCOM\n');
-      payload.push('\x1B' + '\x61' + '\x30');
-      data.waiters.forEach(w => addLine(`${removeAccents(w.name)} (${w.tables} mesas):`, money(w.total)));
-      payload.push('--------------------------------\n');
-    }
-
-    if (note) {
-      payload.push(`Observacao:\n${removeAccents(note)}\n`);
-      payload.push('--------------------------------\n');
-    }
-
-    payload.push('\x1B' + '\x61' + '\x31'); 
-    payload.push('Relatorio gerado pelo sistema.\n');
-
-    payload.push('\n\n\n\n');
-    payload.push('\x1D' + '\x56' + '\x41' + '\x00'); 
-
-    await qz.print(config, payload);
-    return true;
-  } catch (err) {
-    console.error("Falha na impressão do fechamento:", err);
-    alert(`Erro na impressora: ${err.message || err}`);
-    return false;
-  }
+function cashierPrinterName(settings = {}) {
+  const printers = settings?.printers || []
+  const selected = printers.find(printer => printer.id === settings?.cashierPrinterId)
+  return selected?.name || selected?.label || 'POS-80'
 }
 
 export default function Fechamento({ tables = [], currentUser, settings, onCloseCash }) {
@@ -312,6 +206,7 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
   const [authPassword, setAuthPassword] = useState('')
   const [authObservation, setAuthObservation] = useState('')
   const [modalError, setModalError] = useState('')
+  const [printJob, setPrintJob] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -357,13 +252,30 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
   const hasOpenTables = data.openTables > 0
   const requiresAttention = hasDivergence || hasOpenTables
   const receivedData = { ...data, payments: received, total: informedTotal }
+  const printPending = ['pending', 'processing'].includes(printJob?.status)
+  const printMessage = printJob?.status === 'printed' ? 'Fechamento impresso na POS-80.' : printJob?.status === 'failed' ? `Falha ao imprimir: ${printJob.lastError || 'erro desconhecido.'}` : printPending ? 'Fechamento enviado para a POS-80…' : ''
 
   function setPayment(key, value) {
     setReportedPayments(prev => ({ ...prev, [key]: value }))
   }
 
-  async function handlePrint() { 
-    await executeThermalPrint(data, received, informedTotal, difference, note, currentUser, date, settings);
+  async function handlePrint() {
+    try {
+      const job = await enqueuePrintJob({
+        type: 'bill',
+        kind: 'daily_closing',
+        title: 'FECHAMENTO DE CAIXA',
+        printerName: cashierPrinterName(settings),
+        waiterName: currentUser?.name || currentUser?.username || 'Operador',
+        total: data.total,
+        closing: { date, total: data.total, informedTotal, difference, payments: received, note, openTables: data.openTables, closedTables: data.closedTables, totalOrders: data.totalOrders, ticketAverage: data.ticketAverage, topWaiter: data.topWaiter, categories: data.categories, topProducts: data.topProductsByQty },
+        dedupeKey: `daily-closing-print-${date}-${Date.now()}`,
+      })
+      setPrintJob(job)
+      watchPrintJob(job._id, setPrintJob)
+    } catch (error) {
+      setPrintJob({ status: 'failed', lastError: error?.message || 'Não foi possível criar a impressão do fechamento.' })
+    }
   }
   
   function openCloseModal() {
@@ -469,7 +381,7 @@ export default function Fechamento({ tables = [], currentUser, settings, onClose
       <p className="printFooter">Relatório gerado pelo sistema Fogão a Lenha.</p>
     </div>
 
-    <footer className="closingActions"><button type="button" onClick={handlePrint}><Printer size={20} /> Imprimir fechamento</button><button type="button" className="closeDayBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
+    <footer className="closingActions">{printMessage && <p className={printJob?.status === 'failed' ? 'closingPrintMessage error' : 'closingPrintMessage'}>{printMessage}</p>}<button type="button" onClick={handlePrint} disabled={printPending}><Printer size={20} /> {printPending ? 'Enviando para impressão…' : 'Imprimir fechamento'}</button><button type="button" className="closeDayBtn" onClick={openCloseModal} disabled={closed || isClosing}><LockKeyhole size={20} /> {isClosing ? 'Fechando...' : differenceOk ? 'Fechar caixa do dia' : 'Fechar caixa com divergência'}</button></footer>
 
     {modalOpen && <style>{`.closingModalOverlay{position:fixed;inset:0;z-index:80;background:rgba(31,16,10,.62);display:grid;place-items:center;padding:18px;backdrop-filter:blur(3px)}.closingModalCard{width:min(620px,100%);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid #ead7bf;background:linear-gradient(135deg,#fffdf8,#fff4e4);box-shadow:0 28px 70px rgba(31,16,10,.32);padding:24px;position:relative;color:#351b12}.closingModalCard.hasDivergence{border-color:#e7b18d}.closingModalClose{position:absolute;right:16px;top:16px;width:38px;height:38px;border:1px solid #ead7bf;border-radius:999px;background:#fffaf2;color:#5a2d1f;display:grid;place-items:center;cursor:pointer}.closingModalHeader{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;align-items:center;margin-right:34px}.closingModalHeader>span{width:48px;height:48px;border-radius:16px;background:#f8e8d8;color:#bd381d;display:grid;place-items:center}.closingModalHeader h2{margin:0;font-family:Georgia,serif;font-size:28px;line-height:1.05;color:#32180f}.closingModalHeader p{margin:6px 0 0;color:#7b6253;font-weight:700}.closingModalAlert{margin-top:18px;border:1px solid #f1b38e;border-radius:16px;background:#fff0e6;color:#9d2e1c;padding:13px 14px;display:flex;gap:10px;align-items:flex-start;font-weight:900}.closingModalSummary{margin-top:18px;display:grid;gap:10px}.closingModalSummary p{margin:0;display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid #ead7bf;border-radius:14px;background:#fffaf2;padding:12px 14px}.closingModalSummary span{font-weight:850;color:#5a4033}.closingModalSummary strong{font-size:18px;color:#2f1a12;text-align:right}.closingModalSummary strong.negative{color:#d2472b}.closingModalSummary strong.positive{color:#52740f}.closingModalFields{display:grid;gap:12px;margin-top:18px}.closingModalFields label{display:grid;gap:7px;font-weight:900;color:#3b261d}.closingModalFields input,.closingModalFields textarea{width:100%;border:1px solid #e2cdb3;border-radius:13px;background:#fffaf4;color:#32180f;padding:12px 13px;font-size:15px}.closingModalFields textarea{min-height:96px;resize:vertical}.closingModalNote{margin-top:16px;border-radius:14px;background:#fffaf2;border:1px solid #ead7bf;padding:12px 14px;display:grid;gap:4px}.closingModalError{margin-top:14px;border:1px solid #efb3a0;border-radius:14px;background:#fff0eb;color:#a93420;padding:12px 14px;display:flex;gap:9px;align-items:center;font-weight:900}.closingModalActions{margin-top:20px;display:grid;grid-template-columns:1fr 1.35fr;gap:12px}.closingModalActions button{height:50px;border-radius:14px;font-weight:950;font-size:15px;cursor:pointer}.closingCancelBtn{border:1px solid #e2cdb3;background:#fffaf4;color:#4a2b1f}.closingConfirmBtn{border:0;background:linear-gradient(135deg,#bd381d,#f05a36);color:#fff;box-shadow:0 12px 24px rgba(199,65,35,.22)}@media(max-width:640px){.closingModalOverlay{padding:10px;place-items:end center}.closingModalCard{border-radius:20px 20px 0 0;padding:20px 16px}.closingModalHeader{grid-template-columns:40px minmax(0,1fr);gap:11px}.closingModalHeader>span{width:40px;height:40px;border-radius:13px}.closingModalHeader h2{font-size:24px}.closingModalSummary p{display:grid;gap:4px}.closingModalSummary strong{text-align:left}.closingModalActions{grid-template-columns:1fr}}`}</style>}
     {modalOpen && <div className="closingModalOverlay" role="dialog" aria-modal="true" aria-labelledby="closingModalTitle">

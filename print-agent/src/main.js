@@ -103,6 +103,7 @@ function textLine(text = '', width = 42) {
 }
 
 function buildCashierText(job) {
+  if (job.kind === 'daily_closing') return buildDailyClosingText(job)
   const isPartialPayment = job.kind === 'partial_payment'
   const paymentLabels = { dinheiro: 'DINHEIRO', pix: 'PIX', credito: 'CREDITO', debito: 'DEBITO', outros: 'OUTROS' }
   const lines = [
@@ -139,6 +140,40 @@ function buildCashierText(job) {
   }
   lines.push('Obrigado pela preferencia!\n\n\n\n')
   lines.push('\x1D\x56\x41\x00')
+  return lines.join('')
+}
+
+function buildDailyClosingText(job) {
+  const closing = job.closing || {}
+  const payments = closing.payments || {}
+  const lines = [
+    '\x1B\x40', '\x1B\x61\x01',
+    '================================\n',
+    '       FECHAMENTO DE CAIXA\n',
+    '         FOGAO A LENHA\n',
+    '================================\n', '\x1B\x61\x00',
+    `Data: ${closing.date || '-'}\n`,
+    job.waiterName ? `Operador: ${textLine(job.waiterName)}\n` : '',
+    '--------------------------------\n',
+    `Faturamento: ${money(closing.total)}\n`,
+    `Informado: ${money(closing.informedTotal)}\n`,
+    `Diferenca: ${money(closing.difference)}\n`,
+    '--------------------------------\n',
+    `Comandas fechadas: ${Number(closing.closedTables || 0)}\n`,
+    `Mesas abertas: ${Number(closing.openTables || 0)}\n`,
+    `Itens vendidos: ${Number(closing.totalOrders || 0)}\n`,
+    `Ticket medio: ${money(closing.ticketAverage)}\n`,
+    '--------------------------------\n',
+    'RECEBIMENTOS\n',
+    `Dinheiro: ${money(payments.dinheiro)}\n`,
+    `PIX: ${money(payments.pix)}\n`,
+    `Cartao: ${money(payments.cartao)}\n`,
+    `Outros: ${money(payments.outros)}\n`,
+  ]
+  if (closing.topWaiter?.name) lines.push(`Garcom destaque: ${textLine(closing.topWaiter.name)}\n`)
+  for (const item of (closing.topProducts || []).slice(0, 5)) lines.push(`${Number(item.qty || 0)}x ${textLine(item.name || 'Produto', 29)} ${money(item.total)}\n`)
+  if (closing.note) lines.push(`Obs: ${textLine(closing.note)}\n`)
+  lines.push('\n\n\n\n', '\x1D\x56\x41\x00')
   return lines.join('')
 }
 
