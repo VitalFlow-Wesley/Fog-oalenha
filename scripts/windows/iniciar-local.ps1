@@ -62,8 +62,10 @@ if (-not $health.ok) {
 }
 
 $address = @($health.addresses)[0]
-$url = if ($address) { "http://$address`:3000" } else { 'http://127.0.0.1:3000' }
-Write-Host "Fogão a Lenha local funcionando: $url" -ForegroundColor Green
+$localUrl = 'http://127.0.0.1:3000'
+$networkUrl = if ($address) { "http://$address`:3000" } else { $localUrl }
+Write-Host "Fogão a Lenha local funcionando neste computador: $localUrl" -ForegroundColor Green
+Write-Host "Acesso pelos celulares: $networkUrl" -ForegroundColor Green
 
 if ($ComAgenteImpressao) {
   $env:FOGAO_PRINT_API_URL = 'http://127.0.0.1:3000/api/print-jobs'
@@ -112,4 +114,4 @@ if ($ComAgenteImpressao) {
     Write-Host "Agente de impressão iniciado (PID $($agentProcess.Id))." -ForegroundColor Green
   } else { Write-Host "Agente de impressão já está rodando (PID $agentPid)." }
 }
-if (-not $SemNavegador) { Start-Process $url }
+if (-not $SemNavegador) { Start-Process $localUrl }
