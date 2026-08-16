@@ -56,8 +56,8 @@ function getPeopleCount(table = {}) {
   return Math.max(1, Number(table.peopleCount ?? table.guests ?? 1) || 1)
 }
 
-function buildKitchenOrders(tables, orderTimes) {
-  return tables
+function buildKitchenOrders(tables, reservations, orderTimes) {
+  const tableOrders = tables
     .filter(table => table.kitchenSent || table.status === 'enviado')
     .map(table => {
       const items = (table.items || [])
@@ -80,6 +80,21 @@ function buildKitchenOrders(tables, orderTimes) {
       }
     })
     .filter(order => order.items.length)
+  const reservationOrders = (reservations || [])
+    .filter(reservation => reservation.kitchenSent && (reservation.items || []).length)
+    .map(reservation => {
+      const items = reservation.items.map(item => ({ ...item, sector: getItemSector(item) })).filter(item => item.sector)
+      return {
+        id: `reservation-${reservation.id}`,
+        kind: 'reservation', tableNumber: reservation.type === 'retirada' ? 'RETIRADA' : 'RESERVA',
+        customerName: String(reservation.customerName || '').trim(), guests: Number(reservation.peopleCount || 1), peopleCount: Number(reservation.peopleCount || 1),
+        time: reservation.kitchenSentAt ? new Date(reservation.kitchenSentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : currentTime(),
+        scheduledAt: reservation.scheduledAt || null, reservationType: reservation.type, waiterName: reservation.createdBy || 'Atendente',
+        items, sectors: [...new Set(items.map(item => item.sector))], observations: [...new Set([reservation.note, ...items.map(item => item.observation)].filter(Boolean))],
+        printJobIds: reservation.kitchenPrintJobId ? [reservation.kitchenPrintJobId] : [],
+      }
+    }).filter(order => order.items.length)
+  return [...tableOrders, ...reservationOrders]
 }
 
 // --- MOTOR DE IMPRESSÃO ESC/POS DA COZINHA (DELEGAÇÃO PARA O WINDOWS) ---
@@ -149,7 +164,7 @@ async function executeThermalPrint(order, currentUser, settings) {
   }
 }
 
-export default function PedidosCozinha({ tables, currentUser, settings }) {
+export default function PedidosCozinha({ tables, reservations = [], currentUser, settings }) {
   const [activeSector, setActiveSector] = useState('todos')
   const [search, setSearch] = useState('')
   const [period, setPeriod] = useState('Hoje')
@@ -174,7 +189,7 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
     })
   }, [tables])
 
-  const orders = useMemo(() => buildKitchenOrders(tables, orderTimes), [tables, orderTimes])
+  const orders = useMemo(() => buildKitchenOrders(tables, reservations, orderTimes), [tables, reservations, orderTimes])
 
   const summary = useMemo(() => {
     const sentItems = orders.flatMap(order => order.items)
@@ -232,7 +247,7 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
     }
     await enqueuePrintJob({
       type: original.type,
-      kind: 'reprint',
+      kind: original.kind === 'reservation' ? 'reservation' : 'reprint',
       title: `REIMPRESSÃO — ${original.title || 'PEDIDO DE PREPARO'}`,
       reprint: true,
       dedupeKey: `reprint-${original._id}-${Date.now()}`,
@@ -245,6 +260,7 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
       items: original.items,
       printerName: original.printerName || getPrinterName(settings),
       total: original.total,
+      reservation: original.reservation,
       originalJobId: original._id,
     });
   }
@@ -334,8 +350,9 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
             <article className="kitchenOrderCard" key={order.id}>
               <div className="kitchenTableBadge">{String(order.tableNumber).padStart(2, '0')}</div>
               <div className="kitchenOrderMesa">
-                <strong>Mesa {order.tableNumber}</strong>
+                <strong>{order.kind === 'reservation' ? `Reserva · ${order.tableNumber}` : `Mesa ${order.tableNumber}`}</strong>
                 {order.customerName && <small className="kitchenCustomerName">{order.customerName}</small>}
+                {order.kind === 'reservation' && <small>{order.reservationType === 'retirada' ? 'Retirada' : 'Vai consumir na mesa'}{order.scheduledAt ? ` · Agendada: ${new Date(order.scheduledAt).toLocaleString('pt-BR')}` : ''}</small>}
                 <span>{order.time}</span>
               </div>
 
@@ -401,7 +418,7 @@ export default function PedidosCozinha({ tables, currentUser, settings }) {
       {details && <div className="authModalOverlay noPrint">
         <div className="authModal kitchenDetailsModal">
           <div className="drawerHeader">
-            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>Mesa {details.tableNumber}</h2>{details.customerName && <p className="kitchenDetailsCustomer">Cliente: {details.customerName}</p>}</div>
+            <div><span className="eyebrow">DETALHES DO PEDIDO</span><h2>{details.kind === 'reservation' ? `Reserva · ${details.tableNumber}` : `Mesa ${details.tableNumber}`}</h2>{details.customerName && <p className="kitchenDetailsCustomer">Cliente: {details.customerName}</p>}{details.kind === 'reservation' && <p className="kitchenDetailsCustomer">{details.reservationType === 'retirada' ? 'Retirada' : 'Vai consumir na mesa'}{details.scheduledAt ? ` · Agendada: ${new Date(details.scheduledAt).toLocaleString('pt-BR')}` : ''}</p>}</div>
             <button type="button" className="iconBtn" onClick={() => setDetails(null)}><X size={22} /></button>
           </div>
           <p>Pedido enviado às {details.time}</p>

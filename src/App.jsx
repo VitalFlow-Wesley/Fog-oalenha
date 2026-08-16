@@ -826,7 +826,7 @@ export default function App() {
         {page === 'dashboard' && <Dashboard tables={tables} setPage={setPage} />}
         {page === 'mesas' && <Mesas tables={tables} setTables={setTables} users={users} currentUser={currentUser} settings={settings} onCloseTable={handleCloseTable} onPartialCloseTable={handlePartialCloseTable} />}
         {page === 'reservas' && <Reservas reservations={reservations} setReservations={setReservations} tables={tables} currentUser={currentUser} onActivate={activateReservation} />}
-        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} currentUser={currentUser} settings={settings} />}
+        {page === 'pedidos-cozinha' && <PedidosCozinha tables={tables} reservations={reservations} currentUser={currentUser} settings={settings} />}
         {page === 'relatorios' && <Relatorios tables={tables} />}
         {page === 'fechamento' && <Fechamento tables={tables} currentUser={currentUser} onCloseCash={handleCloseCash} />}
         {page === 'usuarios' && <Usuarios users={users} setUsers={setUsers} tables={tables} setTables={setTables} currentUser={currentUser} settings={settings} setSettings={setSettings} />}
