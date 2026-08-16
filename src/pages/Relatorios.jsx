@@ -492,7 +492,11 @@ export default function Relatorios({ tables = [], settings, currentUser }) {
         type: 'bill', kind: 'report', title: mode === 'fechamentos' ? 'HISTORICO DE CAIXA' : 'RELATORIO DE VENDAS',
         printerName: cashierPrinterName(settings), waiterName: currentUser?.name || currentUser?.username || 'Operador',
         total: mode === 'fechamentos' ? Number(selectedClosing?.total || 0) : Number(report.total || 0),
-        report: { mode, dateLabel, report, selectedClosing },
+        report: {
+          mode, dateLabel, report, selectedClosing,
+          includeClosedTables: mode === 'completo' && includeClosedTables,
+          closedTables: mode === 'completo' && includeClosedTables ? closedTablesForDate : [],
+        },
         dedupeKey: `report-${mode}-${selectedDate}-${Date.now()}`,
       })
       watchPrintJob(job._id, () => {})

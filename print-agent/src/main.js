@@ -152,11 +152,12 @@ function buildReportText(job) {
   const payload = job.report || {}
   const closing = payload.selectedClosing || null
   const isClosingHistory = payload.mode === 'fechamentos' && closing
+  const isComplete = payload.mode === 'completo'
   const report = payload.report || {}
   const lines = [
     '\x1B\x40', '\x1B\x61\x01',
     '================================\n',
-    isClosingHistory ? '      HISTORICO DE CAIXA\n' : '       RELATORIO DE VENDAS\n',
+    isClosingHistory ? '      HISTORICO DE CAIXA\n' : isComplete ? '       RELATORIO COMPLETO\n' : '       RELATORIO SIMPLES\n',
     '         FOGAO A LENHA\n',
     '================================\n', '\x1B\x61\x00',
     `Data: ${ascii(payload.dateLabel || '-')}\n`,
@@ -190,6 +191,27 @@ function buildReportText(job) {
     if (products.length) {
       lines.push('--------------------------------\nMAIS VENDIDOS\n')
       for (const product of products.slice(0, 5)) add(`${Number(product.qty || 0)}x ${textLine(ascii(product.name), 23)}:`, money(product.total))
+    }
+    if (isComplete) {
+      const categories = report.categories || []
+      if (categories.length) {
+        lines.push('--------------------------------\nCATEGORIAS\n')
+        for (const category of categories.slice(0, 6)) add(`${category.name} (${Number(category.qty || 0)}):`, money(category.total))
+      }
+      const revenue = report.topProductsByRevenue || []
+      if (revenue.length) {
+        lines.push('--------------------------------\nMAIOR FATURAMENTO\n')
+        for (const product of revenue.slice(0, 5)) add(`${Number(product.qty || 0)}x ${textLine(ascii(product.name), 20)}:`, money(product.total))
+      }
+      if (payload.includeClosedTables) {
+        const closedTables = payload.closedTables || []
+        lines.push('--------------------------------\nFECHAMENTOS DO DIA\n')
+        if (closedTables.length) {
+          for (const table of closedTables.slice(0, 12)) add(`Mesa ${table.tableNumber || '-'} ${textLine(ascii(table.waiterName || ''), 14)}:`, money(table.total))
+        } else {
+          lines.push('Nenhum fechamento no periodo.\n')
+        }
+      }
     }
   }
   lines.push('\x1B\x61\x01', 'Relatorio gerado pelo sistema.\n\n\n\n', '\x1D\x56\x41\x00')
